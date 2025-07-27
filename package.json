@@ -1,6 +1,7 @@
 {
 	"scripts": {
-		"dev": "tsx watch src/Server.ts"
+		"dev": "tsx watch src/Server.ts",
+		"prototype": "tsx testing/run_prototype.ts"
 	},
 	"type": "module",
 	"dependencies": {
