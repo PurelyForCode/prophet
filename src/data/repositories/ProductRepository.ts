@@ -12,17 +12,17 @@ import { ProductStock } from "../../domain/product_management/entities/product/v
 import { SafetyStock } from "../../domain/product_management/entities/product/value_objects/SafetyStock.js";
 import { Variant } from "../../domain/product_management/entities/variant/Variant.js";
 import { idGenerator } from "../utils/IdGenerator.js";
-import { ProductDAO, ProductTable } from "../dao/ProductDAO.js";
-import { VariantDAO, VariantTable } from "../dao/VariantDAO.js";
+import { ProductDAO, ProductDTO, ProductTable } from "../dao/ProductDAO.js";
 import { ProductSettingDAO } from "../dao/ProductSettingDAO.js";
+import { VariantRepository } from "./VariantRepository.js";
 
 export class ProductRepository implements IProductRepository {
   private productDAO: ProductDAO;
-  private variantDAO: VariantDAO;
+  private variantRepo: VariantRepository;
   private settingDAO: ProductSettingDAO;
   constructor(knex: Knex.Transaction | Knex) {
     this.productDAO = new ProductDAO(knex);
-    this.variantDAO = new VariantDAO(knex);
+    this.variantRepo = new VariantRepository(knex);
     this.settingDAO = new ProductSettingDAO(knex);
   }
 
@@ -35,7 +35,7 @@ export class ProductRepository implements IProductRepository {
     if (!product) {
       return null;
     }
-    const variants = await this.variantDAO.findAllByProductId(product.id);
+    const variants = await this.variantRepo.findAllByProductId(product.id);
     return this.mapToEntity(product, variants);
   }
 
@@ -44,7 +44,7 @@ export class ProductRepository implements IProductRepository {
     if (!product) {
       return null;
     }
-    const variants = await this.variantDAO.findAllByProductId(product.id);
+    const variants = await this.variantRepo.findAllByProductId(product.id);
     return this.mapToEntity(product, variants);
   }
 
@@ -104,51 +104,24 @@ export class ProductRepository implements IProductRepository {
     });
   }
 
-  mapToEntity(table: ProductTable, variantRows: VariantTable[]): Product {
-    const variants = new Map();
-    variantRows.map((variant) => {
-      const variantName = new ProductName(variant.name);
-      const variantStock = new ProductStock(variant.stock);
-      const variantSafetyStock = new SafetyStock(variant.safety_stock);
-      const variantSetting = new ProductSetting(
-        variant.setting_service_level,
-        variant.setting_safety_stock_calculation_method as SafetyStockCalculationMethod,
-        variant.setting_classification as ProductClassification,
-        variant.setting_fill_rate,
-        variant.setting_updated_at
-      );
-      const variantInstance = Variant.create(
-        variant.id,
-        variant.product_id,
-        variant.account_id,
-        variantName,
-        variantStock,
-        variantSafetyStock,
-        variantSetting,
-        variant.created_at,
-        variant.updated_at,
-        variant.deleted_at
-      );
-      variants.set(variantInstance.id, variantInstance);
-    });
-
+  mapToEntity(product: ProductDTO, variants: Map<EntityId, Variant>): Product {
     return Product.create(
-      table.id,
-      table.account_id,
-      table.product_category_id,
-      new ProductName(table.name),
-      new ProductStock(table.stock),
-      new SafetyStock(table.safety_stock),
+      product.id,
+      product.accountId,
+      product.productCategoryId,
+      new ProductName(product.name),
+      new ProductStock(product.stock),
+      new SafetyStock(product.safetyStock),
       new ProductSetting(
-        table.setting_service_level,
-        table.setting_safety_stock_calculation_method as SafetyStockCalculationMethod,
-        table.setting_classification as ProductClassification,
-        table.setting_fill_rate,
-        table.setting_updated_at
+        product.setting.serviceLevel,
+        product.setting.safetyStockCalculationMethod,
+        product.setting.classification,
+        product.setting.fillRate,
+        product.setting.updatedAt
       ),
-      table.created_at,
-      table.updated_at,
-      table.deleted_at,
+      product.createdAt,
+      product.updatedAt,
+      product.deletedAt,
       variants
     );
   }

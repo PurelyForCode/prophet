@@ -4,6 +4,8 @@ import { Product } from "../../domain/product_management/entities/product/Produc
 import { ProductRepository } from "../repositories/ProductRepository.js";
 import { VariantRepository } from "../repositories/VariantRepository.js";
 import { Variant } from "../../domain/product_management/entities/variant/Variant.js";
+import { SaleRepository } from "../repositories/SaleRepository.js";
+import { Sale } from "../../domain/sales/entities/sale/Sale.js";
 
 type RepositoryConstructor<T> = new (
   knex: Knex | Knex.Transaction
@@ -15,6 +17,7 @@ export class RepositoryFactory {
   constructor() {
     this.register(Product, ProductRepository);
     this.register(Variant, VariantRepository);
+    this.register(Sale, SaleRepository);
   }
 
   private register<T>(entity: Function, repositoryConstructor: Function) {

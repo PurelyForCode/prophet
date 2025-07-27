@@ -4,7 +4,7 @@ export type SaleStatusValues = "completed" | "in progress" | "cancelled";
 
 export class SaleStatus {
   public readonly value: SaleStatusValues;
-  constructor(value: SaleStatusValues) {
+  constructor(value: string) {
     if (
       value === "completed" ||
       value === "in progress" ||

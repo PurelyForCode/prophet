@@ -1,6 +1,14 @@
 import { Knex } from "knex";
 import { EntityId } from "../../core/types/EntityId.js";
 
+export type ProductSettingQueryDTO = {
+  classification: string;
+  safetyStockCalculationMethod: string;
+  serviceLevel: number;
+  fillRate: number;
+  updatedAt: Date;
+};
+
 export type ProductSettingDTO = {
   classification: string;
   safetyStockCalculationMethod: string;
@@ -8,6 +16,7 @@ export type ProductSettingDTO = {
   fillRate: number;
   updatedAt: Date;
 };
+
 export type ProductSettingTable = {
   id: string;
   product_id: string;
@@ -84,3 +93,10 @@ export class ProductSettingDAO {
     }
   }
 }
+export type JoinedProductSettingTableColumns = {
+  setting_classification: string;
+  setting_safety_stock_calculation_method: string;
+  setting_service_level: number;
+  setting_fill_rate: number;
+  setting_updated_at: Date;
+};

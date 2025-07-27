@@ -9,8 +9,8 @@ import { SaleQuantity } from "./value_objects/SaleQuantity.js";
 import { SaleStatus } from "./value_objects/SaleStatus.js";
 
 export type SaleUpdateableFields = Partial<{
-  quantity: SaleQuantity;
-  status: SaleStatus;
+  quantity: number;
+  status: string;
   date: Date;
 }>;
 
@@ -148,3 +148,10 @@ export class Sale extends AggregateRoot {
     this.addTrackedEntity(this, EntityAction.deleted);
   }
 }
+
+export type UpdateSaleInput = Partial<{
+  saleId: EntityId;
+  date: Date;
+  quantity: number;
+  status: string;
+}>;

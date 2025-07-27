@@ -9,6 +9,7 @@ import {
 } from "../../core/interfaces/IUnitOfWork.js";
 import { ProductRepository } from "../repositories/ProductRepository.js";
 import { RepositoryFactory } from "./RepositoryFactory.js";
+import { SaleRepository } from "../repositories/SaleRepository.js";
 
 export class UnitOfWork implements IUnitOfWork {
   private trx: Knex.Transaction | null = null;
@@ -16,6 +17,22 @@ export class UnitOfWork implements IUnitOfWork {
     private readonly knex: Knex,
     private readonly repositoryFactory: RepositoryFactory
   ) {}
+
+  getProductRepository() {
+    if (this.trx) {
+      return new ProductRepository(this.trx);
+    } else {
+      return new ProductRepository(this.knex);
+    }
+  }
+
+  getSaleRepository() {
+    if (this.trx) {
+      return new SaleRepository(this.trx);
+    } else {
+      return new SaleRepository(this.knex);
+    }
+  }
 
   async transaction(
     config?: { isolationLevel: IsolationLevel } | undefined
@@ -39,14 +56,6 @@ export class UnitOfWork implements IUnitOfWork {
       throw new Error("No transaction in progress");
     }
     await this.trx.commit();
-  }
-
-  getProductRepository() {
-    if (this.trx) {
-      return new ProductRepository(this.trx);
-    } else {
-      return new ProductRepository(this.knex);
-    }
   }
 
   async save(aggregateRoot: AggregateRoot): Promise<void> {

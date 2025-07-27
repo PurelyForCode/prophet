@@ -38,10 +38,10 @@ export class SaleService {
       sale.date = input.date;
     }
     if (input.quantity) {
-      sale.quantity = input.quantity;
+      sale.quantity = new SaleQuantity(input.quantity);
     }
     if (input.status) {
-      sale.status = input.status;
+      sale.status = new SaleStatus(input.status);
     }
     sale.updatedAt = new Date();
   }

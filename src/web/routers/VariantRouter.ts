@@ -6,6 +6,7 @@ import { repositoryFactory } from "../../data/utils/RepositoryFactory.js";
 import { idGenerator } from "../../data/utils/IdGenerator.js";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
+import saleRouter from "./SaleRouter.js";
 import { fakeId } from "../../fakeId.js";
 
 const app = new Hono();
@@ -45,5 +46,6 @@ app.post(
 app.delete("/:variantId");
 app.patch("/:variantId");
 app.get("/:variantId");
+app.route("/sales", saleRouter);
 
 export default app;

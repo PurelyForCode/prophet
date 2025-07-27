@@ -14,6 +14,7 @@ import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js";
 import { fakeId } from "../../fakeId.js";
 import { ArchiveProductUsecase } from "../../features/product_management/product/archive_product/Usecase.js";
 import { UpdateProductUsecase } from "../../features/product_management/product/update_product/Usecase.js";
+import saleRouter from "./SaleRouter.js";
 
 const app = new Hono();
 
@@ -64,7 +65,7 @@ app.post(
         settings: body.settings ?? undefined,
       });
     });
-    return c.json({ message: "Product created successfully" });
+    return c.json({ message: "Successfully created product" });
   }
 );
 app.delete(
@@ -121,9 +122,10 @@ app.patch(
         },
       });
     });
-    return c.json({ message: "Successfully archived product" });
+    return c.json({ message: "Successfully updated product" });
   }
 );
 app.route("/:productId/variants", variantRouter);
+app.route("/:productId/sales", saleRouter);
 
 export default app;

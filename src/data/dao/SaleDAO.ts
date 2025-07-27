@@ -20,6 +20,18 @@ export type SaleDTO = {
   updated_at: Date;
   deleted_at: Date | null;
 };
+export type SaleQueryDTO = {
+  id: string;
+  account_id: string;
+  product_id: string;
+  variant_id: string | null;
+  quantity: number;
+  status: string;
+  date: Date;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at: Date | null;
+};
 
 export type SaleDatabaseTable = {
   id: string;
@@ -53,7 +65,49 @@ export class SaleDAO {
       .where({ id: input.id });
   }
 
-  async query(filters: SaleFilterParams): Promise<SaleDTO[]> {
+  async findById(id: EntityId): Promise<SaleDTO | null> {
+    const row = await this.knex<SaleDatabaseTable>(this.tableName)
+      .select()
+      .where("id", "=", id)
+      .first();
+    if (row) {
+      return row;
+    } else {
+      return null;
+    }
+  }
+
+  async queryOne(
+    id: EntityId,
+    filters:
+      | Partial<{
+          productId: EntityId;
+          variantId: EntityId;
+        }>
+      | undefined
+  ): Promise<SaleQueryDTO | null> {
+    const builder = this.knex<SaleDatabaseTable>(`${this.tableName} as s`)
+      .select("s.*")
+      .where("s.id", "=", id)
+      .first();
+
+    if (filters) {
+      if (filters.productId) {
+        builder.where("s.product_id", "=", filters.productId);
+      }
+      if (filters.variantId) {
+        builder.where("s.variant_id", "=", filters.variantId);
+      }
+    }
+    const row = await builder;
+    if (row) {
+      return this.mapToQueryDTO(row);
+    } else {
+      return null;
+    }
+  }
+
+  async query(filters: SaleFilterParams): Promise<SaleQueryDTO[]> {
     const builder = this.knex<SaleDatabaseTable>(
       `${this.tableName} as s`
     ).select("s.*");
@@ -68,8 +122,15 @@ export class SaleDAO {
           builder.where("s.variant_id", "=", filters.variantId);
         }
       }
+      if (filters.archived) {
+        builder.whereNotNull("s.deleted_at");
+      }
     }
     const rows = await builder;
     return rows;
+  }
+
+  mapToQueryDTO(row: SaleDatabaseTable): SaleQueryDTO {
+    return row;
   }
 }
