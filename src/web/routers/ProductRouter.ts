@@ -1,20 +1,21 @@
 import { Hono } from "hono";
-import { UnitOfWork } from "../../data/utils/UnitOfWork.js";
-import { repositoryFactory } from "../../data/utils/RepositoryFactory.js";
+import { UnitOfWork } from "../../infra/utils/UnitOfWork.js";
+import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js";
 import { knexInstance } from "../../config/Knex.js";
 import { zValidator } from "@hono/zod-validator";
 import * as z from "zod/v4";
-import { idGenerator } from "../../data/utils/IdGenerator.js";
+import { idGenerator } from "../../infra/utils/IdGenerator.js";
 import { productSettingSchema } from "../validation/ProductSettingSchema.js";
 import variantRouter from "./VariantRouter.js";
-import { ProductDAO } from "../../data/dao/ProductDAO.js";
+import { ProductDAO } from "../../infra/dao/ProductDAO.js";
 import { CreateProductUsecase } from "../../features/product_management/product/create_product/Usecase.js";
-import { runInTransaction } from "../../data/utils/UnitOfWork.js";
+import { runInTransaction } from "../../infra/utils/UnitOfWork.js";
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js";
 import { fakeId } from "../../fakeId.js";
 import { ArchiveProductUsecase } from "../../features/product_management/product/archive_product/Usecase.js";
 import { UpdateProductUsecase } from "../../features/product_management/product/update_product/Usecase.js";
 import saleRouter from "./SaleRouter.js";
+import { domainEventBus } from "../../infra/utils/DomainEventBus.js";
 
 const app = new Hono();
 
@@ -56,7 +57,7 @@ app.post(
   async (c) => {
     const body = c.req.valid("json");
     const uow = new UnitOfWork(knexInstance, repositoryFactory);
-    const usecase = new CreateProductUsecase(uow, idGenerator);
+    const usecase = new CreateProductUsecase(uow, domainEventBus, idGenerator);
     await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
       await usecase.call({
         accountId: fakeId,

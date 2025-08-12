@@ -170,22 +170,23 @@ CREATE TABLE delivery_item (
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
-CREATE TABLE forecast(
+CREATE TABLE sales_forecast(
     id UUID PRIMARY KEY,
     product_id UUID NOT NULL REFERENCES product(id),
     variant_id UUID REFERENCES variant(id),
     account_id UUID NOT NULL REFERENCES account(id),
-    months_of_data INTEGER,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
+    data_start_date DATE,
+    data_end_date DATE,
+    forecast_start_date DATE NOT NULL,
+    forecast_end_date DATE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     deleted_at TIMESTAMPTZ DEFAULT NULL
 );
 
-CREATE TABLE forecast_instance(
+CREATE TABLE sales_forecast_entry(
     id UUID PRIMARY KEY,
-    forecast_id UUID NOT NULL REFERENCES forecast(id),
+    sales_forecast_id UUID NOT NULL REFERENCES sales_forecast(id),
     yhat FLOAT NOT NULL,
     yhat_upper FLOAT NOT NULL,
     yhat_lower FLOAT NOT NULL,

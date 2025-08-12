@@ -1,10 +1,5 @@
 import { serve } from "@hono/node-server";
 import { app } from "./web/App.js";
-import {
-  generateSalesData,
-  LinearPattern,
-} from "../testing/SalePatternPrototyping.js";
-import { knexInstance } from "./config/Knex.js";
 
 const server = serve({ port: 3000, fetch: app.fetch }, (info) => {
   console.log("Running");

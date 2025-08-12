@@ -1,8 +1,8 @@
+import { IDomainEventBus } from "../../../../core/interfaces/IDomainEventBus.js";
 import { IIdGenerator } from "../../../../core/interfaces/IIdGenerator.js";
 import { IUnitOfWork } from "../../../../core/interfaces/IUnitOfWork.js";
 import { Usecase } from "../../../../core/interfaces/Usecase.js";
 import { EntityId } from "../../../../core/types/EntityId.js";
-import { IdGenerator } from "../../../../data/utils/IdGenerator.js";
 import { ProductName } from "../../../../domain/product_management/entities/product/value_objects/ProductName.js";
 import {
   ProductClassification,
@@ -26,6 +26,7 @@ export type CreateProductInput = {
 export class CreateProductUsecase implements Usecase<any, any> {
   constructor(
     private readonly uow: IUnitOfWork,
+    private readonly eventBus: IDomainEventBus,
     private readonly idGenerator: IIdGenerator
   ) {}
   async call(input: CreateProductInput) {
@@ -56,6 +57,7 @@ export class CreateProductUsecase implements Usecase<any, any> {
       now: now,
     });
 
+    await this.eventBus.dispatch(product, this.uow);
     await this.uow.save(product);
   }
 }

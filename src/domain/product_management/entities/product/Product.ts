@@ -1,4 +1,3 @@
-import { fi } from "zod/locales";
 import { ResourceIsArchivedException } from "../../../../core/exceptions/ResourceIsArchivedException.js";
 import {
   AggregateRoot,
@@ -10,19 +9,16 @@ import { DuplicateVariantNameException } from "../../exceptions/DuplicateVariant
 import { VariantNotFoundException } from "../../exceptions/VariantNotFoundException.js";
 import { Variant, VariantUpdateableFields } from "../variant/Variant.js";
 import { ProductName } from "./value_objects/ProductName.js";
-import {
-  ProductSetting,
-  UpdateProductSettingFields,
-} from "./value_objects/ProductSetting.js";
+import { ProductSetting } from "./value_objects/ProductSetting.js";
 import { ProductStock } from "./value_objects/ProductStock.js";
 import { SafetyStock } from "./value_objects/SafetyStock.js";
-import { Entity } from "../../../../core/interfaces/Entity.js";
 
 export type UpdateProductFields = Partial<{
-  safetyStock: number;
-  name: string;
-  stock: number;
-  settings: UpdateProductSettingFields;
+  safetyStock: SafetyStock;
+  name: ProductName;
+  stock: ProductStock;
+  settings: ProductSetting;
+  updatedAt: Date;
 }>;
 
 export class Product extends AggregateRoot {
@@ -34,7 +30,6 @@ export class Product extends AggregateRoot {
   private _createdAt: Date;
   private _updatedAt: Date;
   private _deletedAt: Date | null;
-  // controlled
   private _variants: EntityCollection<Variant>;
   private _settings: ProductSetting;
 
@@ -78,10 +73,6 @@ export class Product extends AggregateRoot {
   }
   public get settings(): ProductSetting {
     return this._settings;
-  }
-  public set settings(value: ProductSetting) {
-    this._settings = value;
-    this.addTrackedEntity(this, EntityAction.updated);
   }
   public get createdAt(): Date {
     return this._createdAt;
@@ -191,12 +182,14 @@ export class Product extends AggregateRoot {
       now,
       null
     );
+
     this.variants.set(variant.id, variant);
     this.addTrackedEntity(variant, EntityAction.created);
     return variant;
   }
 
   updateVariant(variantId: EntityId, fields: VariantUpdateableFields) {
+    const now = new Date();
     const variant = this.variants.get(variantId);
     if (!variant) {
       throw new VariantNotFoundException();
@@ -205,7 +198,7 @@ export class Product extends AggregateRoot {
     fields.stock && (variant.stock = fields.stock);
     fields.safetyStock && (variant.safetyStock = fields.safetyStock);
     fields.settings && (variant.settings = fields.settings);
-    variant.updatedAt = new Date();
+    variant.updatedAt = now;
     this.addTrackedEntity(variant, EntityAction.updated);
   }
 
@@ -228,20 +221,11 @@ export class Product extends AggregateRoot {
     this.addTrackedEntity(variant, EntityAction.updated);
   }
 
-  updateSetting(fields: UpdateProductSettingFields) {
-    const currentSetting = this.settings;
-    const now = new Date();
-    const updatedSetting = new ProductSetting(
-      fields.serviceLevel ?? currentSetting.serviceLevel,
-      fields.safetyStockCalculationMethod ??
-        currentSetting.safetyStockCalculationMethod,
-      fields.classification ?? currentSetting.classification,
-      fields.fillRate ?? currentSetting.fillRate,
-      now
-    );
-    this.settings = updatedSetting;
+  updateSetting(setting: ProductSetting) {
+    this._settings = setting;
     this.addTrackedEntity(this, EntityAction.updated);
   }
+
   archive() {
     this.deletedAt = new Date();
     this.addTrackedEntity(this, EntityAction.updated);

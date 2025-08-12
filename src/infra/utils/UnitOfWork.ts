@@ -79,6 +79,7 @@ export class UnitOfWork implements IUnitOfWork {
         await repo.update(entity);
       }
     }
+    aggregateRoot.clearTrackedEntities();
   }
 }
 export async function runInTransaction<T>(

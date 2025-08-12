@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { CreateVariantController } from "../../features/product_management/variant/create_variant/Controller.js";
-import { UnitOfWork } from "../../data/utils/UnitOfWork.js";
+import { UnitOfWork } from "../../infra/utils/UnitOfWork.js";
 import { knexInstance } from "../../config/Knex.js";
-import { repositoryFactory } from "../../data/utils/RepositoryFactory.js";
-import { idGenerator } from "../../data/utils/IdGenerator.js";
+import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js";
+import { idGenerator } from "../../infra/utils/IdGenerator.js";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import saleRouter from "./SaleRouter.js";

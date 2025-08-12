@@ -1,7 +1,7 @@
 import { Knex } from "knex";
-import { SaleDatabaseTable } from "../src/data/dao/SaleDAO.js";
+import { SaleDatabaseTable } from "../src/infra/dao/SaleDAO.js";
 import { fakeId } from "../src/fakeId.js";
-import { idGenerator } from "../src/data/utils/IdGenerator.js";
+import { idGenerator } from "../src/infra/utils/IdGenerator.js";
 import { knexInstance } from "../src/config/Knex.js";
 
 // Base interface for all patterns

@@ -31,7 +31,6 @@ export class ProductService {
     if (!(await this.isNameUnique(productRepo, input.name))) {
       throw new DuplicateProductNameException();
     }
-
     const product = Product.create(
       input.id,
       input.accountId,
@@ -45,6 +44,7 @@ export class ProductService {
       null,
       new Map()
     );
+    // create prophet settings table
     product.addTrackedEntity(product, EntityAction.created);
     return product;
   }
@@ -63,24 +63,21 @@ export class ProductService {
   async updateProduct(
     productRepo: IProductRepository,
     product: Product,
+    updatedAt: Date,
     fields: UpdateProductFields
   ) {
     if (product.deletedAt) {
       throw new ProductIsAlreadyArchived();
     }
-    const now = new Date();
     if (fields.name) {
-      const name = new ProductName(fields.name);
-      if (!(await this.isNameUnique(productRepo, name))) {
+      if (!(await this.isNameUnique(productRepo, fields.name))) {
         throw new DuplicateProductNameException();
       }
-      product.name = name;
+      product.name = fields.name;
     }
-    fields.stock && (product.stock = new ProductStock(fields.stock));
-    fields.safetyStock &&
-      (product.safetyStock = new SafetyStock(fields.safetyStock));
-
+    fields.stock && (product.stock = fields.stock);
+    fields.safetyStock && (product.safetyStock = fields.safetyStock);
     fields.settings && product.updateSetting(fields.settings);
-    product.updatedAt = now;
+    product.updatedAt = updatedAt;
   }
 }

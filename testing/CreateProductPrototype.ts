@@ -1,5 +1,5 @@
 import { knexInstance } from "../src/config/Knex.js";
-import { ProductDAO } from "../src/data/dao/ProductDAO.js";
+import { ProductDAO } from "../src/infra/dao/ProductDAO.js";
 import { fakeId } from "../src/fakeId.js";
 
 export async function prototypeProduct(id: string) {

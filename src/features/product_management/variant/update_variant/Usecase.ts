@@ -1,5 +1,4 @@
 import { IUnitOfWork } from "../../../../core/interfaces/IUnitOfWork.js";
-import { Usecase } from "../../../../core/interfaces/Usecase.js";
 import { EntityId } from "../../../../core/types/EntityId.js";
 import { ProductName } from "../../../../domain/product_management/entities/product/value_objects/ProductName.js";
 import {
@@ -10,13 +9,12 @@ import {
 import { ProductStock } from "../../../../domain/product_management/entities/product/value_objects/ProductStock.js";
 import { SafetyStock } from "../../../../domain/product_management/entities/product/value_objects/SafetyStock.js";
 import { ProductNotFoundException } from "../../../../domain/product_management/exceptions/ProductNotFoundException.js";
-import { ProductService } from "../../../../domain/product_management/services/ProductService.js";
 
-export type UpdateProductInput = {
+export type UpdateVariantInput = {
   fields: Partial<{
     name: string;
-    safetyStock: number;
     stock: number;
+    safetyStock: number;
     settings: Partial<{
       serviceLevel: number;
       classification: ProductClassification;
@@ -25,17 +23,18 @@ export type UpdateProductInput = {
     }>;
   }>;
   productId: EntityId;
+  variantId: EntityId;
 };
 
-export class UpdateProductUsecase implements Usecase<any, any> {
+export class UpdateVariantUsecase {
   constructor(private readonly uow: IUnitOfWork) {}
-  async call(input: UpdateProductInput) {
+  async call(input: UpdateVariantInput) {
     const productRepo = this.uow.getProductRepository();
     const product = await productRepo.findById(input.productId);
     if (!product) {
       throw new ProductNotFoundException();
     }
-    const productService = new ProductService();
+
     const now = new Date();
     const name = input.fields.name
       ? new ProductName(input.fields.name)
@@ -47,10 +46,10 @@ export class UpdateProductUsecase implements Usecase<any, any> {
       ? new ProductStock(input.fields.stock)
       : undefined;
 
-    let setting = undefined;
+    let settings = undefined;
     if (input.fields.settings) {
       const currentSetting = product.settings;
-      setting = new ProductSetting(
+      settings = new ProductSetting(
         input.fields.settings.serviceLevel ?? currentSetting.serviceLevel,
         input.fields.settings.safetyStockCalculationMethod ??
           currentSetting.safetyStockCalculationMethod,
@@ -60,12 +59,13 @@ export class UpdateProductUsecase implements Usecase<any, any> {
       );
     }
 
-    await productService.updateProduct(productRepo, product, now, {
+    product.updateVariant(input.variantId, {
       name: name,
       safetyStock: safetyStock,
-      settings: setting,
+      settings: settings,
       stock: stock,
     });
     await this.uow.save(product);
+    return;
   }
 }
