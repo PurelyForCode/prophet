@@ -3,16 +3,12 @@ import { EntityId } from "../../core/types/EntityId.js";
 import { IProductRepository } from "../../domain/product_management/repositories/IProductRepository.js";
 import { Product } from "../../domain/product_management/entities/product/Product.js";
 import { ProductName } from "../../domain/product_management/entities/product/value_objects/ProductName.js";
-import {
-  ProductClassification,
-  ProductSetting,
-  SafetyStockCalculationMethod,
-} from "../../domain/product_management/entities/product/value_objects/ProductSetting.js";
+import { ProductSetting } from "../../domain/product_management/entities/product/value_objects/ProductSetting.js";
 import { ProductStock } from "../../domain/product_management/entities/product/value_objects/ProductStock.js";
 import { SafetyStock } from "../../domain/product_management/entities/product/value_objects/SafetyStock.js";
 import { Variant } from "../../domain/product_management/entities/variant/Variant.js";
 import { idGenerator } from "../utils/IdGenerator.js";
-import { ProductDAO, ProductDTO, ProductTable } from "../dao/ProductDAO.js";
+import { ProductDAO, ProductDTO } from "../dao/ProductDAO.js";
 import { ProductSettingDAO } from "../dao/ProductSettingDAO.js";
 import { VariantRepository } from "./VariantRepository.js";
 

@@ -10,6 +10,14 @@ import {
 import { ProductRepository } from "../repositories/ProductRepository.js";
 import { RepositoryFactory } from "./RepositoryFactory.js";
 import { SaleRepository } from "../repositories/SaleRepository.js";
+import { IDeliveryItemRepository } from "../../domain/delivery_management/repositories/IDeliveryItemRepository.js";
+import { DeliveryItemRepository } from "../repositories/DeliveryItemRepository.js";
+import { IDeliveryRepository } from "../../domain/delivery_management/repositories/IDeliveryRepository.js";
+import { DeliveryRepository } from "../repositories/DeliveryRepository.js";
+import { ISuppliedProductRepository } from "../../domain/delivery_management/repositories/ISuppliedProductRepository.js";
+import { ISupplierRepository } from "../../domain/delivery_management/repositories/ISupplierRepository.js";
+import { SupplierRepository } from "../repositories/SupplierRepository.js";
+import { SuppliedProductRepository } from "../repositories/SuppliedProductRepository.js";
 
 export class UnitOfWork implements IUnitOfWork {
   private trx: Knex.Transaction | null = null;
@@ -17,6 +25,20 @@ export class UnitOfWork implements IUnitOfWork {
     private readonly knex: Knex,
     private readonly repositoryFactory: RepositoryFactory
   ) {}
+  getSupplierRepository(): ISupplierRepository {
+    if (this.trx) {
+      return new SupplierRepository(this.trx);
+    } else {
+      return new SupplierRepository(this.knex);
+    }
+  }
+  getSuppliedProductRepository(): ISuppliedProductRepository {
+    if (this.trx) {
+      return new SuppliedProductRepository(this.trx);
+    } else {
+      return new SuppliedProductRepository(this.knex);
+    }
+  }
 
   getProductRepository() {
     if (this.trx) {
@@ -31,6 +53,22 @@ export class UnitOfWork implements IUnitOfWork {
       return new SaleRepository(this.trx);
     } else {
       return new SaleRepository(this.knex);
+    }
+  }
+
+  getDeliveryItemRepository(): IDeliveryItemRepository {
+    if (this.trx) {
+      return new DeliveryItemRepository(this.trx);
+    } else {
+      return new DeliveryItemRepository(this.knex);
+    }
+  }
+
+  getDeliveryRepository(): IDeliveryRepository {
+    if (this.trx) {
+      return new DeliveryRepository(this.trx);
+    } else {
+      return new DeliveryRepository(this.knex);
     }
   }
 

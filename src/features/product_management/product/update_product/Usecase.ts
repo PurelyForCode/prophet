@@ -10,7 +10,7 @@ import {
 import { ProductStock } from "../../../../domain/product_management/entities/product/value_objects/ProductStock.js";
 import { SafetyStock } from "../../../../domain/product_management/entities/product/value_objects/SafetyStock.js";
 import { ProductNotFoundException } from "../../../../domain/product_management/exceptions/ProductNotFoundException.js";
-import { ProductService } from "../../../../domain/product_management/services/ProductService.js";
+import { ProductManager } from "../../../../domain/product_management/services/ProductManager.js";
 
 export type UpdateProductInput = {
   fields: Partial<{
@@ -35,7 +35,7 @@ export class UpdateProductUsecase implements Usecase<any, any> {
     if (!product) {
       throw new ProductNotFoundException();
     }
-    const productService = new ProductService();
+    const productService = new ProductManager();
     const now = new Date();
     const name = input.fields.name
       ? new ProductName(input.fields.name)

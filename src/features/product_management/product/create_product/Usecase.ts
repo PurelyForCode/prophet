@@ -9,7 +9,7 @@ import {
   ProductSetting,
   SafetyStockCalculationMethod,
 } from "../../../../domain/product_management/entities/product/value_objects/ProductSetting.js";
-import { ProductService } from "../../../../domain/product_management/services/ProductService.js";
+import { ProductManager } from "../../../../domain/product_management/services/ProductManager.js";
 
 export type CreateProductInput = {
   accountId: EntityId;
@@ -47,7 +47,7 @@ export class CreateProductUsecase implements Usecase<any, any> {
       productSettings = ProductSetting.defaultConfiguration(now);
     }
 
-    const productService = new ProductService();
+    const productService = new ProductManager();
     const product = await productService.createProduct(productRepo, {
       id: this.idGenerator.generate(),
       accountId: input.accountId,

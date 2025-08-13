@@ -9,7 +9,7 @@ import { DuplicateProductNameException } from "../exceptions/DuplicateNameExcept
 import { ProductIsAlreadyArchived } from "../exceptions/ProductIsAlreadyArchived.js";
 import { IProductRepository } from "../repositories/IProductRepository.js";
 
-export class ProductService {
+export class ProductManager {
   async isNameUnique(
     productRepo: IProductRepository,
     name: ProductName
@@ -44,7 +44,6 @@ export class ProductService {
       null,
       new Map()
     );
-    // create prophet settings table
     product.addTrackedEntity(product, EntityAction.created);
     return product;
   }
@@ -79,5 +78,6 @@ export class ProductService {
     fields.safetyStock && (product.safetyStock = fields.safetyStock);
     fields.settings && product.updateSetting(fields.settings);
     product.updatedAt = updatedAt;
+    product.addTrackedEntity(product, EntityAction.updated);
   }
 }

@@ -38,35 +38,30 @@ export class Product extends AggregateRoot {
   }
   public set productCategoryId(value: EntityId | null) {
     this._productCategoryId = value;
-    this.addTrackedEntity(this, EntityAction.updated);
   }
   public get accountId(): EntityId {
     return this._accountId;
   }
   public set accountId(value: EntityId) {
     this._accountId = value;
-    this.addTrackedEntity(this, EntityAction.updated);
   }
   public get name(): ProductName {
     return this._name;
   }
   public set name(value: ProductName) {
     this._name = value;
-    this.addTrackedEntity(this, EntityAction.updated);
   }
   public get stock(): ProductStock {
     return this._stock;
   }
   public set stock(value: ProductStock) {
     this._stock = value;
-    this.addTrackedEntity(this, EntityAction.updated);
   }
   public get safetyStock(): SafetyStock {
     return this._safetyStock;
   }
   public set safetyStock(value: SafetyStock) {
     this._safetyStock = value;
-    this.addTrackedEntity(this, EntityAction.updated);
   }
   public get variants(): EntityCollection<Variant> {
     return this._variants;

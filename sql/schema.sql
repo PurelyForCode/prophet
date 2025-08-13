@@ -135,16 +135,15 @@ CREATE TABLE product_supplier (
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
     supplier_id UUID NOT NULL REFERENCES supplier(id) ON DELETE CASCADE ON UPDATE CASCADE,
     variant_id UUID REFERENCES variant(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    min_order INTEGER,
-    max_order INTEGER,
+    min_orderable INTEGER,
+    max_orderable INTEGER,
 
     UNIQUE (product_id, supplier_id, variant_id)
 );
 
 CREATE TYPE delivery_status AS ENUM (
-    'arrived',
+    'completed',
     'delivering',
-    'preparing',
     'cancelled'
 );
 
@@ -152,12 +151,14 @@ CREATE TABLE delivery (
     id UUID PRIMARY KEY,
     supplier_id UUID NOT NULL REFERENCES supplier(id),
     account_id UUID NOT NULL REFERENCES account(id),
-    status delivery_status NOT NULL DEFAULT 'preparing',
-    arrived_at TIMESTAMPTZ,
+    status delivery_status NOT NULL DEFAULT 'delivering',
+    completed_at TIMESTAMPTZ,
     delivery_requested_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     cancelled_at TIMESTAMPTZ,
+    scheduled_arrival_date TIMESTAMP,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE delivery_item (
@@ -166,8 +167,6 @@ CREATE TABLE delivery_item (
     variant_id UUID NOT NULL REFERENCES variant(id),
     delivery_id UUID NOT NULL REFERENCES delivery(id),
     quantity INTEGER NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
 CREATE TABLE sales_forecast(

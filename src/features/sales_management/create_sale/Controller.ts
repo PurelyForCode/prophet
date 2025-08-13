@@ -1,3 +1,0 @@
-class CreateSaleController {
-  handle() {}
-}
