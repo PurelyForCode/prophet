@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { CreateVariantController } from "../../features/product_management/variant/create_variant/Controller.js";
 import { UnitOfWork } from "../../infra/utils/UnitOfWork.js";
 import { knexInstance } from "../../config/Knex.js";
 import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js";
@@ -8,6 +7,7 @@ import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import saleRouter from "./SaleRouter.js";
 import { fakeId } from "../../fakeId.js";
+import { CreateVariantUsecase } from "../../features/product_management/variant/create_variant/Usecase.js";
 
 const app = new Hono();
 
@@ -30,17 +30,17 @@ app.post(
   async (c) => {
     const body = c.req.valid("json");
     const param = c.req.valid("param");
-    const controller = new CreateVariantController(
+    const usecase = new CreateVariantUsecase(
       new UnitOfWork(knexInstance, repositoryFactory),
       idGenerator
     );
-    const result = await controller.handle({
+    const result = await usecase.call({
       accountId: fakeId,
       name: body.name,
       productId: param.productId,
       stock: body.stock,
     });
-    return c.json(result);
+    return c.json({ message: "Successfully created variant" });
   }
 );
 app.delete("/:variantId");
