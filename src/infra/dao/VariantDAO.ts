@@ -5,7 +5,8 @@ import {
   ProductSettingDTO,
   ProductSettingQueryDTO,
 } from "./ProductSettingDAO.js";
-import { SaleDAO } from "./SaleDAO.js";
+import { SaleDAO, SaleQueryDTO } from "./SaleDAO.js";
+import { bigint, boolean } from "zod";
 
 export type VariantQueryDTO = {
   id: string;
@@ -146,6 +147,46 @@ export class VariantDAO {
     //TODO
     throw new Error();
   }
+  async queryOneFromProduct(
+    variantId: EntityId,
+    productId: EntityId,
+    include: VariantIncludeParams
+  ) {
+    const builder = this.knex(`${this.tableName} as v`)
+      .select("v.*")
+      .where({ id: variantId })
+      .and.where({ product_id: productId })
+      .first();
+    let sales: undefined | SaleQueryDTO[] = undefined;
+    let setting: undefined | ProductSettingQueryDTO = undefined;
+    if (include && typeof include !== "boolean") {
+      if (include.setting) {
+        this.joinSettings(builder);
+      }
+      if (include.sales) {
+        sales = await new SaleDAO(this.knex).query({
+          productId: productId,
+          variantId: variantId,
+        });
+      }
+    }
+    const row = (await builder) as VariantDatabaseTable &
+      JoinedProductSettingTableColumns;
+
+    if (include && typeof include !== "boolean") {
+      if (include.setting) {
+        setting = {
+          classification: row.setting_classification,
+          fillRate: row.setting_fill_rate,
+          safetyStockCalculationMethod:
+            row.setting_safety_stock_calculation_method,
+          serviceLevel: row.setting_service_level,
+          updatedAt: row.setting_updated_at,
+        };
+      }
+    }
+    return this.mapToQueryDTO(row, setting, sales);
+  }
 
   async query(
     filters: VariantFiltersParams,
@@ -170,15 +211,7 @@ export class VariantDAO {
 
     if (include && typeof include !== "boolean") {
       if (include.setting) {
-        builder
-          .join("product_setting as s", "v.id", "=", "s.variant_id")
-          .select(
-            "s.classification as setting_classification",
-            "s.safety_stock_calculation_method as setting_safety_stock_calculation_method",
-            "s.service_level as setting_service_level",
-            "s.fill_rate as setting_fill_rate",
-            "s.updated_at as setting_updated_at"
-          );
+        this.joinSettings(builder);
       }
     }
     let variants: VariantQueryDTO[] = [];
@@ -278,5 +311,17 @@ export class VariantDAO {
       stock: row.stock,
       updatedAt: row.updated_at,
     };
+  }
+
+  joinSettings(builder: Knex.QueryBuilder) {
+    builder
+      .join("product_setting as s", "v.id", "=", "s.variant_id")
+      .select(
+        "s.classification as setting_classification",
+        "s.safety_stock_calculation_method as setting_safety_stock_calculation_method",
+        "s.service_level as setting_service_level",
+        "s.fill_rate as setting_fill_rate",
+        "s.updated_at as setting_updated_at"
+      );
   }
 }

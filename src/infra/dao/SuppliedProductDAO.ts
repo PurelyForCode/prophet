@@ -11,6 +11,15 @@ export type SuppliedProductDTO = {
   max: number;
 };
 
+export type SuppliedProductQueryDTO = {
+  id: EntityId;
+  productId: EntityId;
+  variantId: EntityId | null;
+  supplierId: EntityId;
+  min: number;
+  max: number;
+};
+
 export type SuppliedProductDatabaseTable = {
   id: EntityId;
   product_id: EntityId;
@@ -84,5 +93,39 @@ export class SuppliedProductDAO {
       supplierId: row.supplier_id,
       variantId: row.variant_id,
     };
+  }
+
+  private mapToQueryDTO(
+    row: SuppliedProductDatabaseTable
+  ): SuppliedProductQueryDTO {
+    return {
+      id: row.id,
+      max: row.max_orderable,
+      min: row.min_orderable,
+      productId: row.product_id,
+      supplierId: row.supplier_id,
+      variantId: row.variant_id,
+    };
+  }
+
+  async query(
+    filters: Partial<{
+      supplierId: EntityId;
+    }>
+  ): Promise<SuppliedProductDTO[]> {
+    const builder = this.knex<SuppliedProductDatabaseTable>(
+      `${this.tableName} as sp`
+    ).select("sp.*");
+    if (filters) {
+      if (filters.supplierId) {
+        builder.where("sp.supplier_id", "=", filters.supplierId);
+      }
+    }
+    const rows = await builder;
+    const suppliers = [];
+    for (const row of rows) {
+      suppliers.push(this.mapToQueryDTO(row));
+    }
+    return suppliers;
   }
 }

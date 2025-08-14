@@ -1,15 +1,21 @@
 import { Knex } from "knex";
-import { Repository } from "../../core/interfaces/Repository.js";
+import { IRepository } from "../../core/interfaces/Repository.js";
 import { Product } from "../../domain/product_management/entities/product/Product.js";
 import { ProductRepository } from "../repositories/ProductRepository.js";
 import { VariantRepository } from "../repositories/VariantRepository.js";
 import { Variant } from "../../domain/product_management/entities/variant/Variant.js";
 import { SaleRepository } from "../repositories/SaleRepository.js";
 import { Sale } from "../../domain/sales/entities/sale/Sale.js";
+import { DeliveryRepository } from "../repositories/DeliveryRepository.js";
+import { Delivery } from "../../domain/delivery_management/entities/delivery/Delivery.js";
+import { DeliveryItem } from "../../domain/delivery_management/entities/delivery_item/DeliveryItem.js";
+import { DeliveryItemRepository } from "../repositories/DeliveryItemRepository.js";
+import { SupplierRepository } from "../repositories/SupplierRepository.js";
+import { Supplier } from "../../domain/delivery_management/entities/supplier/Supplier.js";
 
 type RepositoryConstructor<T> = new (
   knex: Knex | Knex.Transaction
-) => Repository<T>;
+) => IRepository<T>;
 
 export class RepositoryFactory {
   private repositoryRegistry = new Map<Function, Function>();
@@ -18,6 +24,9 @@ export class RepositoryFactory {
     this.register(Product, ProductRepository);
     this.register(Variant, VariantRepository);
     this.register(Sale, SaleRepository);
+    this.register(Delivery, DeliveryRepository);
+    this.register(DeliveryItem, DeliveryItemRepository);
+    this.register(Supplier, SupplierRepository);
   }
 
   private register<T>(entity: Function, repositoryConstructor: Function) {
@@ -27,7 +36,7 @@ export class RepositoryFactory {
   getRepoOfEntity<T>(
     entityConstructor: Function,
     knex: Knex | Knex.Transaction
-  ): Repository<T> {
+  ): IRepository<T> {
     const repoConstructor = this.repositoryRegistry.get(entityConstructor) as
       | RepositoryConstructor<T>
       | undefined;

@@ -1,4 +1,4 @@
-import { Repository } from "../../../core/interfaces/Repository.js";
+import { IRepository } from "../../../core/interfaces/Repository.js";
 import { Delivery } from "../entities/delivery/Delivery.js";
 
-export interface IDeliveryRepository extends Repository<Delivery> {}
+export interface IDeliveryRepository extends IRepository<Delivery> {}

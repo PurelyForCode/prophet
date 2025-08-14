@@ -57,11 +57,13 @@ CREATE TABLE product_category(
     name VARCHAR(100) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE product(
     id UUID PRIMARY KEY,
     account_id UUID NOT NULL REFERENCES account(id) ON DELETE NO ACTION ON UPDATE CASCADE,
+    product_id UUID REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
     product_category_id UUID REFERENCES product_category(id) ON DELETE SET NULL ON UPDATE CASCADE,
     name VARCHAR(100) NOT NULL,
     stock INTEGER NOT NULL DEFAULT(0),
@@ -157,7 +159,7 @@ CREATE TABLE delivery (
     cancelled_at TIMESTAMPTZ,
     scheduled_arrival_date TIMESTAMP,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     deleted_at TIMESTAMPTZ
 );
 
@@ -166,7 +168,7 @@ CREATE TABLE delivery_item (
     product_id UUID NOT NULL REFERENCES product(id),
     variant_id UUID NOT NULL REFERENCES variant(id),
     delivery_id UUID NOT NULL REFERENCES delivery(id),
-    quantity INTEGER NOT NULL,
+    quantity INTEGER NOT NULL
 );
 
 CREATE TABLE sales_forecast(

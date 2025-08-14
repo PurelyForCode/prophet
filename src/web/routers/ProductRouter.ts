@@ -44,6 +44,7 @@ app.get(
     return c.json(result);
   }
 );
+
 app.post(
   "/",
   zValidator(
@@ -66,9 +67,11 @@ app.post(
         settings: body.settings ?? undefined,
       });
     });
+    c.status(201);
     return c.json({ message: "Successfully created product" });
   }
 );
+
 app.delete(
   "/:productId",
 

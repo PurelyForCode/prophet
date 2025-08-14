@@ -12,13 +12,10 @@ async function main() {
     { days: 365, pattern: new LinearPattern({ max: 100, min: 1 }) },
   ]);
 
-  console.log("✅ Sales data generation complete.");
-  // 🚀 Close Knex to ensure Node exits
   await knexInstance.destroy();
 }
 
-// Run and catch errors
 main().catch((err) => {
-  console.error("❌ Script failed:", err);
+  console.error("Script failed:", err);
   process.exit(1);
 });

@@ -1,4 +1,4 @@
-import { Repository } from "../../../core/interfaces/Repository.js";
+import { IRepository } from "../../../core/interfaces/Repository.js";
 import { Sale } from "../entities/sale/Sale.js";
 
-export interface ISaleRepository extends Repository<Sale> {}
+export interface ISaleRepository extends IRepository<Sale> {}

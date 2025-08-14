@@ -131,6 +131,7 @@ export async function runInTransaction<T>(
     await uow.commit();
     return result;
   } catch (error) {
+    console.log(error);
     await uow.rollback();
     throw error;
   }

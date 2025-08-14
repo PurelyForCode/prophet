@@ -5,7 +5,7 @@ export const knexInstance = knexBuilder({
   connection: {
     host: "localhost",
     database: "prophet_db",
-    user: "postgres",
+    user: "app_user",
     password: "password",
     port: 5432,
     pool: {

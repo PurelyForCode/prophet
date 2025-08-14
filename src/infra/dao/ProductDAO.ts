@@ -8,11 +8,9 @@ import {
   VariantDAO,
   VariantQueryDTO,
   VariantIncludeParams,
-  VariantDTO,
 } from "./VariantDAO.js";
 import { ProductSettingQueryDTO } from "./ProductSettingDAO.js";
 import { SaleDAO, SaleQueryDTO } from "./SaleDAO.js";
-import { bigint } from "zod";
 
 export type ProductQueryDTO = {
   id: string;
@@ -92,13 +90,17 @@ export class ProductDAO {
   }
 
   async existsByName(name: string) {
-    const row = await this.knex("product")
+    const builder = this.knex("product")
       .select(
         this.knex.raw("exists (select 1 from product where name = ?)", [name])
       )
       .first();
-
-    return row.exists;
+    const row = await builder;
+    if (row) {
+      return row.exists;
+    } else {
+      return false;
+    }
   }
 
   async findOneById(id: EntityId): Promise<ProductDTO | null> {

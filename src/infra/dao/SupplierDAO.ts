@@ -1,6 +1,25 @@
 import { Knex } from "knex";
 import { EntityId } from "../../core/types/EntityId.js";
-import { id } from "zod/locales";
+import {
+  SuppliedProductDAO,
+  SuppliedProductQueryDTO,
+} from "./SuppliedProductDAO.js";
+import { SupplierName } from "../../domain/delivery_management/entities/supplier/value_objects/SupplierName.js";
+
+export type SupplierQueryDTO = {
+  id: EntityId;
+  accountId: EntityId;
+  name: string;
+  leadTime: number;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  productsSupplied: undefined | SuppliedProductQueryDTO[];
+};
+
+export type SupplierInclude = Partial<{
+  productsSupplied: boolean;
+}>;
 
 export type SupplierDTO = {
   id: EntityId;
@@ -75,6 +94,56 @@ export class SupplierDAO {
     }
   }
 
+  async query(
+    filters?: Partial<{
+      name: SupplierName;
+    }>,
+    include?: SupplierInclude
+  ) {
+    const rows = await this.knex<SupplierDatabaseTable>(
+      `${this.tableName} as s`
+    ).select("s.*");
+    const suppliers = [];
+    for (const row of rows) {
+      const included = await this.include(row.supplier_id, include);
+      suppliers.push(this.mapToQueryDTO(row, included.productSupplied));
+    }
+    return suppliers;
+  }
+
+  async queryById(id: EntityId, include?: SupplierInclude) {
+    const row = await this.knex<SupplierDatabaseTable>(`${this.tableName} as s`)
+      .select("s.*")
+      .where("s.id", "=", id)
+      .first();
+    if (!row) {
+      return null;
+    }
+    const included = await this.include(row.supplier_id, include);
+    return this.mapToQueryDTO(row, included.productSupplied);
+  }
+
+  async include(supplierId: EntityId, include: SupplierInclude | undefined) {
+    if (!include) {
+      return {
+        productSupplied: undefined,
+      };
+    }
+
+    let productsSupplied: undefined | SuppliedProductQueryDTO[] = undefined;
+    if (include) {
+      if (include.productsSupplied) {
+        const suppliedProductDAO = new SuppliedProductDAO(this.knex);
+        productsSupplied = await suppliedProductDAO.query({
+          supplierId: supplierId,
+        });
+      }
+    }
+    return {
+      productSupplied: productsSupplied,
+    };
+  }
+
   private mapToDTO(row: SupplierDatabaseTable): SupplierDTO {
     return {
       accountId: row.account_id,
@@ -84,6 +153,22 @@ export class SupplierDAO {
       leadTime: row.lead_time,
       name: row.name,
       updatedAt: row.updated_at,
+    };
+  }
+
+  private mapToQueryDTO(
+    row: SupplierDatabaseTable,
+    productsSupplied: undefined | SuppliedProductQueryDTO[]
+  ): SupplierQueryDTO {
+    return {
+      accountId: row.account_id,
+      createdAt: row.created_at,
+      deletedAt: row.deleted_at,
+      id: row.id,
+      leadTime: row.lead_time,
+      name: row.name,
+      updatedAt: row.updated_at,
+      productsSupplied: productsSupplied,
     };
   }
 }

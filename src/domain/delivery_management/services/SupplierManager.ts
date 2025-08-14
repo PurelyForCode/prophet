@@ -27,7 +27,7 @@ export class SupplierManager {
     }
     const now = new Date();
     const leadTimeValueObject = fields.leadTime;
-    return Supplier.create(
+    const supplier = Supplier.create(
       fields.id,
       fields.accountId,
       fields.name,
@@ -37,6 +37,8 @@ export class SupplierManager {
       null,
       new Map()
     );
+    supplier.addTrackedEntity(supplier, EntityAction.created);
+    return supplier;
   }
 
   deleteSupplier(supplier: Supplier) {
