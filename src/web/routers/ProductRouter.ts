@@ -36,7 +36,7 @@ app.get(
   async (c) => {
     const params = c.req.valid("param");
     const productDAO = new ProductDAO(knexInstance);
-    const result = await productDAO.queryOne(params.productId, {
+    const result = await productDAO.queryById(params.productId, {
       sales: true,
       variants: { setting: true, sales: true },
       setting: true,

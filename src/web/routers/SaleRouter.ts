@@ -46,7 +46,7 @@ app.get(
   async (c) => {
     const params = c.req.valid("param");
     const saleDAO = new SaleDAO(knexInstance);
-    const saleDTO = await saleDAO.queryOne(params.saleId, {
+    const saleDTO = await saleDAO.queryById(params.saleId, {
       productId: params.productId,
       variantId: params.variantId,
     });

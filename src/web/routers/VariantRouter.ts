@@ -127,7 +127,7 @@ app.get(
   async (c) => {
     const params = c.req.valid("param");
     const variantDAO = new VariantDAO(knexInstance);
-    const variant = await variantDAO.queryOneFromProduct(
+    const variant = await variantDAO.queryOneByProductId(
       params.variantId,
       params.productId,
       {
