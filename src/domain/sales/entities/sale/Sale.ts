@@ -1,4 +1,5 @@
 import { InvalidEntityCreated } from "../../../../core/exceptions/InvalidEntityCreated.js";
+import { ResourceIsArchivedException } from "../../../../core/exceptions/ResourceIsArchivedException.js";
 import { ValueException } from "../../../../core/exceptions/ValueException.js";
 import {
   AggregateRoot,
@@ -9,87 +10,77 @@ import { SaleQuantity } from "./value_objects/SaleQuantity.js";
 import { SaleStatus } from "./value_objects/SaleStatus.js";
 
 export type SaleUpdateableFields = Partial<{
-  quantity: number;
-  status: string;
+  quantity: SaleQuantity;
+  status: SaleStatus;
   date: Date;
 }>;
 
 export class Sale extends AggregateRoot {
-  private _accountId: EntityId;
-  private _productId: EntityId;
-  private _variantId: EntityId | null;
-  private _quantity: SaleQuantity;
-  private _status: SaleStatus;
-  private _date: Date;
-  private _createdAt: Date;
-  private _updatedAt: Date;
-  private _deletedAt: Date | null;
+  private accountId: EntityId;
+  private productId: EntityId;
+  private quantity: SaleQuantity;
+  private status: SaleStatus;
+  private date: Date;
+  private createdAt: Date;
+  private updatedAt: Date;
+  private deletedAt: Date | null;
 
-  public get accountId(): EntityId {
-    return this._accountId;
+  getAccountId(): EntityId {
+    return this.accountId;
   }
-  public set accountId(value: EntityId) {
-    this._accountId = value;
+  setAccountId(value: EntityId) {
+    this.throwIfArchived();
+    this.accountId = value;
   }
 
-  public get productId(): EntityId {
-    return this._productId;
+  getProductId(): EntityId {
+    return this.productId;
   }
-  public set productId(value: EntityId) {
-    this._productId = value;
+
+  getQuantity(): SaleQuantity {
+    return this.quantity;
   }
-  public get variantId(): EntityId | null {
-    return this._variantId;
+  setQuantity(value: SaleQuantity) {
+    this.throwIfArchived();
+    this.quantity = value;
   }
-  public set variantId(value: EntityId | null) {
-    this._variantId = value;
+
+  getStatus(): SaleStatus {
+    return this.status;
   }
-  public get quantity(): SaleQuantity {
-    return this._quantity;
+  setStatus(value: SaleStatus) {
+    this.throwIfArchived();
+    this.status = value;
   }
-  public set quantity(value: SaleQuantity) {
-    this._quantity = value;
-    this.addTrackedEntity(this, EntityAction.updated);
+
+  getDate(): Date {
+    return this.date;
   }
-  public get status(): SaleStatus {
-    return this._status;
+  setDate(value: Date) {
+    this.throwIfArchived();
+    this.date = value;
   }
-  public set status(value: SaleStatus) {
-    this._status = value;
-    this.addTrackedEntity(this, EntityAction.updated);
+
+  getCreatedAt(): Date {
+    return this.createdAt;
   }
-  public get date(): Date {
-    return this._date;
+
+  getUpdatedAt(): Date {
+    return this.updatedAt;
   }
-  public set date(value: Date) {
-    this._date = value;
-    this.addTrackedEntity(this, EntityAction.updated);
+  setUpdatedAt(value: Date) {
+    this.throwIfArchived();
+    this.updatedAt = value;
   }
-  public get createdAt(): Date {
-    return this._createdAt;
-  }
-  public set createdAt(value: Date) {
-    this._createdAt = value;
-  }
-  public get updatedAt(): Date {
-    return this._updatedAt;
-  }
-  public set updatedAt(value: Date) {
-    this._updatedAt = value;
-    this.addTrackedEntity(this, EntityAction.updated);
-  }
-  public get deletedAt(): Date | null {
-    return this._deletedAt;
-  }
-  public set deletedAt(value: Date | null) {
-    this._deletedAt = value;
+
+  getDeletedAt(): Date | null {
+    return this.deletedAt;
   }
 
   private constructor(
     id: EntityId,
     accountId: EntityId,
     productId: EntityId,
-    variantId: EntityId | null,
     quantity: SaleQuantity,
     status: SaleStatus,
     date: Date,
@@ -98,41 +89,38 @@ export class Sale extends AggregateRoot {
     deletedAt: Date | null
   ) {
     super(id);
-    this._accountId = accountId;
-    this._productId = productId;
-    this._variantId = variantId;
-    this._quantity = quantity;
-    this._status = status;
-    this._date = date;
-    this._createdAt = createdAt;
-    this._updatedAt = updatedAt;
-    this._deletedAt = deletedAt;
+    this.accountId = accountId;
+    this.productId = productId;
+    this.quantity = quantity;
+    this.status = status;
+    this.date = date;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+    this.deletedAt = deletedAt;
   }
 
-  static create(
-    id: EntityId,
-    accountId: EntityId,
-    productId: EntityId,
-    variantId: EntityId | null,
-    quantity: SaleQuantity,
-    status: SaleStatus,
-    date: Date,
-    createdAt: Date,
-    updatedAt: Date,
-    deletedAt: Date | null
-  ): Sale {
+  static create(params: {
+    id: EntityId;
+    accountId: EntityId;
+    productId: EntityId;
+    quantity: SaleQuantity;
+    status: SaleStatus;
+    date: Date;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+  }): Sale {
     try {
       const sale = new Sale(
-        id,
-        accountId,
-        productId,
-        variantId,
-        quantity,
-        status,
-        date,
-        createdAt,
-        updatedAt,
-        deletedAt
+        params.id,
+        params.accountId,
+        params.productId,
+        params.quantity,
+        params.status,
+        params.date,
+        params.createdAt,
+        params.updatedAt,
+        params.deletedAt
       );
       return sale;
     } catch (error) {
@@ -140,12 +128,20 @@ export class Sale extends AggregateRoot {
     }
   }
   archive() {
+    this.throwIfArchived();
     this.deletedAt = new Date();
     this.addTrackedEntity(this, EntityAction.updated);
   }
 
   delete() {
+    this.throwIfArchived();
     this.addTrackedEntity(this, EntityAction.deleted);
+  }
+
+  throwIfArchived() {
+    if (this.deletedAt) {
+      throw new ResourceIsArchivedException("sale");
+    }
   }
 }
 

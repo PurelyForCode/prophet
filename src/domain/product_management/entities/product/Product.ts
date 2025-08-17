@@ -22,71 +22,16 @@ export type UpdateProductFields = Partial<{
 }>;
 
 export class Product extends AggregateRoot {
-  private _productCategoryId: EntityId | null;
-  private _accountId: EntityId;
-  private _name: ProductName;
-  private _stock: ProductStock;
-  private _safetyStock: SafetyStock;
-  private _createdAt: Date;
-  private _updatedAt: Date;
-  private _deletedAt: Date | null;
-  private _variants: EntityCollection<Variant>;
-  private _settings: ProductSetting;
-
-  public get productCategoryId(): EntityId | null {
-    return this._productCategoryId;
-  }
-  public set productCategoryId(value: EntityId | null) {
-    this._productCategoryId = value;
-  }
-  public get accountId(): EntityId {
-    return this._accountId;
-  }
-  public set accountId(value: EntityId) {
-    this._accountId = value;
-  }
-  public get name(): ProductName {
-    return this._name;
-  }
-  public set name(value: ProductName) {
-    this._name = value;
-  }
-  public get stock(): ProductStock {
-    return this._stock;
-  }
-  public set stock(value: ProductStock) {
-    this._stock = value;
-  }
-  public get safetyStock(): SafetyStock {
-    return this._safetyStock;
-  }
-  public set safetyStock(value: SafetyStock) {
-    this._safetyStock = value;
-  }
-  public get variants(): EntityCollection<Variant> {
-    return this._variants;
-  }
-  public get settings(): ProductSetting {
-    return this._settings;
-  }
-  public get createdAt(): Date {
-    return this._createdAt;
-  }
-  public set createdAt(value: Date) {
-    this._createdAt = value;
-  }
-  public get updatedAt(): Date {
-    return this._updatedAt;
-  }
-  public set updatedAt(value: Date) {
-    this._updatedAt = value;
-  }
-  public get deletedAt(): Date | null {
-    return this._deletedAt;
-  }
-  public set deletedAt(value: Date | null) {
-    this._deletedAt = value;
-  }
+  private productCategoryId: EntityId | null;
+  private accountId: EntityId;
+  private name: ProductName;
+  private stock: ProductStock;
+  private safetyStock: SafetyStock;
+  private createdAt: Date;
+  private updatedAt: Date;
+  private deletedAt: Date | null;
+  private variants: EntityCollection<Variant>;
+  private settings: ProductSetting;
 
   private constructor(
     id: EntityId,
@@ -102,44 +47,73 @@ export class Product extends AggregateRoot {
     variants: EntityCollection<Variant>
   ) {
     super(id);
-    this._accountId = accountId;
-    this._productCategoryId = productCategoryId;
-    this._variants = variants;
-    this._name = name;
-    this._stock = stock;
-    this._safetyStock = safetyStock;
-    this._settings = settings;
-    this._createdAt = createdAt;
-    this._updatedAt = updatedAt;
-    this._deletedAt = deletedAt;
+    this.accountId = accountId;
+    this.productCategoryId = productCategoryId;
+    this.variants = variants;
+    this.name = name;
+    this.stock = stock;
+    this.safetyStock = safetyStock;
+    this.settings = settings;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+    this.deletedAt = deletedAt;
   }
 
-  public static create(
-    id: EntityId,
-    accountId: EntityId,
-    productCategoryId: EntityId | null,
-    name: ProductName,
-    stock: ProductStock,
-    safetyStock: SafetyStock,
-    settings: ProductSetting,
-    createdAt: Date,
-    updatedAt: Date,
-    deletedAt: Date | null,
-    variants: EntityCollection<Variant>
-  ) {
+  public static create(params: {
+    id: EntityId;
+    accountId: EntityId;
+    productCategoryId: EntityId | null;
+    name: ProductName;
+    stock: ProductStock;
+    safetyStock: SafetyStock;
+    settings: ProductSetting;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+    variants: EntityCollection<Variant>;
+  }) {
     return new Product(
-      id,
-      accountId,
-      productCategoryId,
-      name,
-      stock,
-      safetyStock,
-      settings,
-      createdAt,
-      updatedAt,
-      deletedAt,
-      variants
+      params.id,
+      params.accountId,
+      params.productCategoryId,
+      params.name,
+      params.stock,
+      params.safetyStock,
+      params.settings,
+      params.createdAt,
+      params.updatedAt,
+      params.deletedAt,
+      params.variants
     );
+  }
+
+  getName() {
+    return this.name;
+  }
+  setName(name: ProductName) {
+    this.name = name;
+  }
+  setStock(stock: ProductStock) {
+    this.stock = stock;
+  }
+  getStock() {
+    return this.stock;
+  }
+  setSafetyStock(safetyStock: SafetyStock) {
+    this.safetyStock = safetyStock;
+  }
+  getSafetyStock() {
+    return this.safetyStock;
+  }
+  setUpdatedAt(date: Date) {
+    this.updatedAt = date;
+  }
+  getUpdatedAt() {
+    return this.updatedAt;
+  }
+
+  getDeletedAt() {
+    return this.deletedAt;
   }
 
   addVariant(
@@ -148,12 +122,10 @@ export class Product extends AggregateRoot {
     name: ProductName,
     stock: ProductStock
   ) {
-    if (this.deletedAt) {
-      throw new ResourceIsArchivedException("Product");
-    }
+    this.throwIfArchived();
     const variants = this.variants.values();
     for (const v of variants) {
-      if (v.name.value === name.value) {
+      if (v.getName().value === name.value) {
         throw new DuplicateVariantNameException();
       }
     }
@@ -184,30 +156,32 @@ export class Product extends AggregateRoot {
   }
 
   updateVariant(variantId: EntityId, fields: VariantUpdateableFields) {
+    this.throwIfArchived();
     const now = new Date();
     const variant = this.variants.get(variantId);
     if (!variant) {
       throw new VariantNotFoundException();
     }
-    fields.name && (variant.name = fields.name);
-    fields.stock && (variant.stock = fields.stock);
-    fields.safetyStock && (variant.safetyStock = fields.safetyStock);
-    fields.settings && (variant.settings = fields.settings);
-    variant.updatedAt = now;
+    fields.name && variant.setName(fields.name);
+    fields.stock && variant.setStock(fields.stock);
+    fields.safetyStock && variant.setSafetyStock(fields.safetyStock);
+    fields.settings && variant.setSettings(fields.settings);
+    variant.setUpdatedAt(now);
     this.addTrackedEntity(variant, EntityAction.updated);
   }
 
-  deleteVariant(variantId: EntityId) {
+  removeVariant(variantId: EntityId) {
+    this.throwIfArchived();
     const variant = this.variants.get(variantId);
     if (!variant) {
       throw new VariantNotFoundException();
     }
     this.variants.delete(variantId);
-    variant.delete();
     this.addTrackedEntity(variant, EntityAction.deleted);
   }
 
   archiveVariant(variantId: EntityId) {
+    this.throwIfArchived();
     const variant = this.variants.get(variantId);
     if (!variant) {
       throw new VariantNotFoundException();
@@ -217,15 +191,24 @@ export class Product extends AggregateRoot {
   }
 
   updateSetting(setting: ProductSetting) {
-    this._settings = setting;
+    this.throwIfArchived();
+    this.settings = setting;
     this.addTrackedEntity(this, EntityAction.updated);
   }
 
   archive() {
+    this.throwIfArchived();
     this.deletedAt = new Date();
     this.addTrackedEntity(this, EntityAction.updated);
   }
+
   delete() {
     this.addTrackedEntity(this, EntityAction.deleted);
+  }
+
+  throwIfArchived() {
+    if (this.deletedAt) {
+      throw new ResourceIsArchivedException("Product");
+    }
   }
 }

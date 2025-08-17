@@ -1,58 +1,73 @@
-import { AggregateRoot } from "../../../../core/interfaces/AggregateRoot.js";
+import {
+  AggregateRoot,
+  EntityAction,
+} from "../../../../core/interfaces/AggregateRoot.js";
 import { EntityId } from "../../../../core/types/EntityId.js";
 import { CategoryName } from "./value_objects/CategoryName.js";
 
+export type UpdateCategoryFields = Partial<{ name: CategoryName }>;
 export class Category extends AggregateRoot {
   private constructor(
     id: EntityId,
-    private _accountId: EntityId,
-    private _name: CategoryName,
-    private _createdAt: Date,
-    private _updatedAt: Date,
-    private _deletedAt: Date | null
+    private accountId: EntityId,
+    private name: CategoryName,
+    private createdAt: Date,
+    private updatedAt: Date,
+    private deletedAt: Date | null
   ) {
     super(id);
   }
 
-  public static create(
-    id: EntityId,
-    accountId: EntityId,
-    name: CategoryName,
-    createdAt: Date,
-    updatedAt: Date,
-    deletedAt: Date | null
-  ) {
-    return new Category(id, accountId, name, createdAt, updatedAt, deletedAt);
+  public static create(params: {
+    id: EntityId;
+    accountId: EntityId;
+    name: CategoryName;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+  }) {
+    return new Category(
+      params.id,
+      params.accountId,
+      params.name,
+      params.createdAt,
+      params.updatedAt,
+      params.deletedAt
+    );
   }
 
-  public get deletedAt(): Date | null {
-    return this._deletedAt;
+  getDeletedAt(): Date | null {
+    return this.deletedAt;
   }
-  public set deletedAt(value: Date | null) {
-    this._deletedAt = value;
+  getUpdatedAt(): Date {
+    return this.updatedAt;
   }
-  public get updatedAt(): Date {
-    return this._updatedAt;
+  setUpdatedAt(value: Date) {
+    this.updatedAt = value;
   }
-  public set updatedAt(value: Date) {
-    this._updatedAt = value;
+  getCreatedAt(): Date {
+    return this.createdAt;
   }
-  public get createdAt(): Date {
-    return this._createdAt;
+  setCreatedAt(value: Date) {
+    this.createdAt = value;
   }
-  public set createdAt(value: Date) {
-    this._createdAt = value;
+  getName(): CategoryName {
+    return this.name;
   }
-  public get name(): CategoryName {
-    return this._name;
+  setName(value: CategoryName) {
+    this.name = value;
   }
-  public set name(value: CategoryName) {
-    this._name = value;
+  getAccountId(): EntityId {
+    return this.accountId;
   }
-  public get accountId(): EntityId {
-    return this._accountId;
+  setAccountId(value: EntityId) {
+    this.accountId = value;
   }
-  public set accountId(value: EntityId) {
-    this._accountId = value;
+  archive() {
+    this.deletedAt = new Date();
+    this.addTrackedEntity(this, EntityAction.updated);
+  }
+  delete() {
+    this.addTrackedEntity(this, EntityAction.deleted);
   }
 }

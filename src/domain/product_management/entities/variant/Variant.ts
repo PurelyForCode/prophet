@@ -1,3 +1,4 @@
+import { ResourceIsArchivedException } from "../../../../core/exceptions/ResourceIsArchivedException.js";
 import { Entity } from "../../../../core/interfaces/Entity.js";
 import { EntityId } from "../../../../core/types/EntityId.js";
 import { ProductName } from "../product/value_objects/ProductName.js";
@@ -13,66 +14,71 @@ export type VariantUpdateableFields = Partial<{
 }>;
 
 export class Variant extends Entity {
-  private readonly _productId: EntityId;
-  private _accountId: EntityId;
-  private _name: ProductName;
-  private _stock: ProductStock;
-  private _safetyStock: SafetyStock;
-  private _settings: ProductSetting;
-  private _createdAt: Date;
-  private _updatedAt: Date;
-  private _deletedAt: Date | null;
+  private productId: EntityId;
+  private accountId: EntityId;
+  private name: ProductName;
+  private stock: ProductStock;
+  private safetyStock: SafetyStock;
+  private createdAt: Date;
+  private updatedAt: Date;
+  private deletedAt: Date | null;
+  private settings: ProductSetting;
 
-  public get deletedAt(): Date | null {
-    return this._deletedAt;
+  getDeletedAt(): Date | null {
+    return this.deletedAt;
   }
-  public set deletedAt(value: Date | null) {
-    this._deletedAt = value;
+
+  getSettings(): ProductSetting {
+    return this.settings;
   }
-  public get settings(): ProductSetting {
-    return this._settings;
+  setSettings(value: ProductSetting) {
+    this.throwIfArchived();
+    this.settings = value;
   }
-  public set settings(value: ProductSetting) {
-    this._settings = value;
+  getSafetyStock(): SafetyStock {
+    return this.safetyStock;
   }
-  public get safetyStock(): SafetyStock {
-    return this._safetyStock;
+  setSafetyStock(value: SafetyStock) {
+    this.throwIfArchived();
+    this.safetyStock = value;
   }
-  public set safetyStock(value: SafetyStock) {
-    this._safetyStock = value;
+  getProductId(): EntityId {
+    return this.productId;
   }
-  public get productId(): EntityId {
-    return this._productId;
+  getName(): ProductName {
+    return this.name;
   }
-  public get name(): ProductName {
-    return this._name;
+  setName(value: ProductName) {
+    this.throwIfArchived();
+    this.name = value;
   }
-  public set name(value: ProductName) {
-    this._name = value;
+  getStock(): ProductStock {
+    return this.stock;
   }
-  public get stock(): ProductStock {
-    return this._stock;
+  setStock(value: ProductStock) {
+    this.throwIfArchived();
+    this.stock = value;
   }
-  public set stock(value: ProductStock) {
-    this._stock = value;
+  getCreatedAt(): Date {
+    return this.createdAt;
   }
-  public get createdAt(): Date {
-    return this._createdAt;
+  setCreatedAt(value: Date) {
+    this.throwIfArchived();
+    this.createdAt = value;
   }
-  public set createdAt(value: Date) {
-    this._createdAt = value;
+  getUpdatedAt(): Date {
+    return this.updatedAt;
   }
-  public get updatedAt(): Date {
-    return this._updatedAt;
+  setUpdatedAt(value: Date) {
+    this.throwIfArchived();
+    this.updatedAt = value;
   }
-  public set updatedAt(value: Date) {
-    this._updatedAt = value;
+  getAccountId(): EntityId {
+    return this.accountId;
   }
-  public get accountId(): EntityId {
-    return this._accountId;
-  }
-  public set accountId(value: EntityId) {
-    this._accountId = value;
+  setAccountId(value: EntityId) {
+    this.throwIfArchived();
+    this.accountId = value;
   }
 
   private constructor(
@@ -88,15 +94,15 @@ export class Variant extends Entity {
     deletedAt: Date | null
   ) {
     super(id);
-    this._productId = productId;
-    this._accountId = accountId;
-    this._name = name;
-    this._stock = stock;
-    this._safetyStock = safetyStock;
-    this._settings = settings;
-    this._createdAt = createdAt;
-    this._updatedAt = updatedAt;
-    this._deletedAt = deletedAt;
+    this.productId = productId;
+    this.accountId = accountId;
+    this.name = name;
+    this.stock = stock;
+    this.safetyStock = safetyStock;
+    this.settings = settings;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+    this.deletedAt = deletedAt;
   }
 
   public static create(
@@ -126,7 +132,13 @@ export class Variant extends Entity {
   }
 
   archive() {
+    this.throwIfArchived();
     this.deletedAt = new Date();
   }
-  delete() {}
+
+  throwIfArchived() {
+    if (this.deletedAt) {
+      throw new ResourceIsArchivedException("Product");
+    }
+  }
 }

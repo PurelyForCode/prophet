@@ -73,18 +73,6 @@ CREATE TABLE product(
     deleted_at TIMESTAMPTZ DEFAULT NULL
 );
 
-CREATE TABLE variant(
-    id UUID PRIMARY KEY,
-    account_id UUID NOT NULL REFERENCES account(id) ON DELETE NO ACTION ON UPDATE CASCADE,
-    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    name VARCHAR(100) NOT NULL,
-    stock INTEGER NOT NULL DEFAULT(0),
-    safety_stock INTEGER NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    deleted_at TIMESTAMPTZ DEFAULT NULL
-);
-
 CREATE TYPE safety_stock_calculation_method AS ENUM (
     'manual',
     'dynamic',
@@ -99,7 +87,6 @@ CREATE TYPE product_classification AS ENUM (
 CREATE TABLE product_setting(
     id UUID PRIMARY KEY,
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    variant_id UUID REFERENCES variant(id) ON DELETE CASCADE ON UPDATE CASCADE,
     safety_stock_calculation_method safety_stock_calculation_method NOT NULL,
     service_level INTEGER NOT NULL, 
     fill_rate INTEGER NOT NULL,
@@ -113,7 +100,6 @@ CREATE TABLE sale (
     id UUID PRIMARY KEY,
     account_id UUID NOT NULL REFERENCES account(id) ON DELETE NO ACTION ON UPDATE CASCADE,
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    variant_id UUID REFERENCES variant(id) ON DELETE CASCADE ON UPDATE CASCADE,
     quantity INTEGER NOT NULL,
     status sale_status NOT NULL,
     date DATE NOT NULL, 
@@ -133,14 +119,12 @@ CREATE TABLE supplier (
 );
 
 CREATE TABLE product_supplier (
-    id UUID PRIMARY KEY,
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
     supplier_id UUID NOT NULL REFERENCES supplier(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    variant_id UUID REFERENCES variant(id) ON DELETE CASCADE ON UPDATE CASCADE,
     min_orderable INTEGER,
     max_orderable INTEGER,
 
-    UNIQUE (product_id, supplier_id, variant_id)
+    PRIMARY KEY (product_id, supplier_id)
 );
 
 CREATE TYPE delivery_status AS ENUM (
@@ -166,7 +150,6 @@ CREATE TABLE delivery (
 CREATE TABLE delivery_item (
     id UUID PRIMARY KEY,
     product_id UUID NOT NULL REFERENCES product(id),
-    variant_id UUID NOT NULL REFERENCES variant(id),
     delivery_id UUID NOT NULL REFERENCES delivery(id),
     quantity INTEGER NOT NULL
 );
@@ -174,7 +157,6 @@ CREATE TABLE delivery_item (
 CREATE TABLE sales_forecast(
     id UUID PRIMARY KEY,
     product_id UUID NOT NULL REFERENCES product(id),
-    variant_id UUID REFERENCES variant(id),
     account_id UUID NOT NULL REFERENCES account(id),
     data_start_date DATE,
     data_end_date DATE,
