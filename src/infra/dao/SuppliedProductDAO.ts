@@ -5,7 +5,6 @@ import { SupplierDTO } from "./SupplierDAO.js";
 export type SuppliedProductDTO = {
   id: EntityId;
   productId: EntityId;
-  variantId: EntityId | null;
   supplierId: EntityId;
   min: number;
   max: number;
@@ -14,7 +13,6 @@ export type SuppliedProductDTO = {
 export type SuppliedProductQueryDTO = {
   id: EntityId;
   productId: EntityId;
-  variantId: EntityId | null;
   supplierId: EntityId;
   min: number;
   max: number;
@@ -23,7 +21,6 @@ export type SuppliedProductQueryDTO = {
 export type SuppliedProductDatabaseTable = {
   id: EntityId;
   product_id: EntityId;
-  variant_id: EntityId | null;
   supplier_id: EntityId;
   min_orderable: number;
   max_orderable: number;
@@ -33,14 +30,7 @@ export class SuppliedProductDAO {
   private tableName = "product_supplier";
   constructor(private readonly knex: Knex) {}
   async insert(table: SuppliedProductDatabaseTable) {
-    await this.knex<SuppliedProductDatabaseTable>(this.tableName).insert({
-      id: table.id,
-      max_orderable: table.max_orderable,
-      min_orderable: table.min_orderable,
-      product_id: table.product_id,
-      supplier_id: table.supplier_id,
-      variant_id: table.variant_id,
-    });
+    await this.knex<SuppliedProductDatabaseTable>(this.tableName).insert(table);
   }
 
   async delete(id: EntityId) {
@@ -49,14 +39,7 @@ export class SuppliedProductDAO {
 
   async update(table: SuppliedProductDatabaseTable) {
     await this.knex<SuppliedProductDatabaseTable>(this.tableName)
-      .update({
-        id: table.id,
-        max_orderable: table.max_orderable,
-        min_orderable: table.min_orderable,
-        product_id: table.product_id,
-        supplier_id: table.supplier_id,
-        variant_id: table.variant_id,
-      })
+      .update(table)
       .where({ id: table.id });
   }
 
@@ -84,30 +67,6 @@ export class SuppliedProductDAO {
     return suppliers;
   }
 
-  private mapToDTO(row: SuppliedProductDatabaseTable): SuppliedProductDTO {
-    return {
-      id: row.id,
-      max: row.max_orderable,
-      min: row.min_orderable,
-      productId: row.product_id,
-      supplierId: row.supplier_id,
-      variantId: row.variant_id,
-    };
-  }
-
-  private mapToQueryDTO(
-    row: SuppliedProductDatabaseTable
-  ): SuppliedProductQueryDTO {
-    return {
-      id: row.id,
-      max: row.max_orderable,
-      min: row.min_orderable,
-      productId: row.product_id,
-      supplierId: row.supplier_id,
-      variantId: row.variant_id,
-    };
-  }
-
   async query(
     filters: Partial<{
       supplierId: EntityId;
@@ -127,5 +86,27 @@ export class SuppliedProductDAO {
       suppliers.push(this.mapToQueryDTO(row));
     }
     return suppliers;
+  }
+
+  private mapToDTO(row: SuppliedProductDatabaseTable): SuppliedProductDTO {
+    return {
+      id: row.id,
+      max: row.max_orderable,
+      min: row.min_orderable,
+      productId: row.product_id,
+      supplierId: row.supplier_id,
+    };
+  }
+
+  private mapToQueryDTO(
+    row: SuppliedProductDatabaseTable
+  ): SuppliedProductQueryDTO {
+    return {
+      id: row.id,
+      max: row.max_orderable,
+      min: row.min_orderable,
+      productId: row.product_id,
+      supplierId: row.supplier_id,
+    };
   }
 }

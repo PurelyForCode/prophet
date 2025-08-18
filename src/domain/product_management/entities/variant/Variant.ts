@@ -15,6 +15,7 @@ export type VariantUpdateableFields = Partial<{
 
 export class Variant extends Entity {
   private productId: EntityId;
+  private productCategoryId: EntityId | null;
   private accountId: EntityId;
   private name: ProductName;
   private stock: ProductStock;
@@ -84,6 +85,7 @@ export class Variant extends Entity {
   private constructor(
     id: EntityId,
     productId: EntityId,
+    productCategoryId: EntityId | null,
     accountId: EntityId,
     name: ProductName,
     stock: ProductStock,
@@ -95,6 +97,7 @@ export class Variant extends Entity {
   ) {
     super(id);
     this.productId = productId;
+    this.productCategoryId = productCategoryId;
     this.accountId = accountId;
     this.name = name;
     this.stock = stock;
@@ -105,29 +108,31 @@ export class Variant extends Entity {
     this.deletedAt = deletedAt;
   }
 
-  public static create(
-    id: EntityId,
-    productId: EntityId,
-    accountId: EntityId,
-    name: ProductName,
-    stock: ProductStock,
-    safetyStock: SafetyStock,
-    settings: ProductSetting,
-    createdAt: Date,
-    updatedAt: Date,
-    deletedAt: Date | null
-  ): Variant {
+  public static create(params: {
+    id: EntityId;
+    productId: EntityId;
+    productCategoryId: EntityId | null;
+    accountId: EntityId;
+    name: ProductName;
+    stock: ProductStock;
+    safetyStock: SafetyStock;
+    settings: ProductSetting;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+  }): Variant {
     return new Variant(
-      id,
-      productId,
-      accountId,
-      name,
-      stock,
-      safetyStock,
-      settings,
-      createdAt,
-      updatedAt,
-      deletedAt
+      params.id,
+      params.productId,
+      params.productCategoryId,
+      params.accountId,
+      params.name,
+      params.stock,
+      params.safetyStock,
+      params.settings,
+      params.createdAt,
+      params.updatedAt,
+      params.deletedAt
     );
   }
 

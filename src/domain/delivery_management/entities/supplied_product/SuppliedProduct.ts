@@ -4,55 +4,63 @@ import { SuppliedProductMax } from "./value_objects/SuppliedProductMax.js";
 import { SuppliedProductMin } from "./value_objects/SuppliedProductMin.js";
 
 export class SuppliedProduct extends Entity {
-  public get max(): SuppliedProductMax {
-    return this._max;
+  getMax(): SuppliedProductMax {
+    return this.max;
   }
-  public set max(value: SuppliedProductMax) {
-    this._max = value;
+  setMax(value: SuppliedProductMax) {
+    this.max = value;
   }
-  public get min(): SuppliedProductMin {
-    return this._min;
+  getMin(): SuppliedProductMin {
+    return this.min;
   }
-  public set min(value: SuppliedProductMin) {
-    this._min = value;
+  setMin(value: SuppliedProductMin) {
+    this.min = value;
   }
-  public get supplierId(): EntityId {
-    return this._supplierId;
+  getSupplierId(): EntityId {
+    return this.supplierId;
   }
-  public set supplierId(value: EntityId) {
-    this._supplierId = value;
+  setSupplierId(value: EntityId) {
+    this.supplierId = value;
   }
-  public get varaintId(): EntityId | null {
-    return this._varaintId;
+  getVaraintId(): EntityId | null {
+    return this.varaintId;
   }
-  public set varaintId(value: EntityId | null) {
-    this._varaintId = value;
+  setVaraintId(value: EntityId | null) {
+    this.varaintId = value;
   }
-  public get productId(): EntityId {
-    return this._productId;
+  getProductId(): EntityId {
+    return this.productId;
   }
-  public set productId(value: EntityId) {
-    this._productId = value;
+  setProductId(value: EntityId) {
+    this.productId = value;
   }
+
   private constructor(
     id: EntityId,
-    private _productId: EntityId,
-    private _varaintId: EntityId | null,
-    private _supplierId: EntityId,
-    private _min: SuppliedProductMin,
-    private _max: SuppliedProductMax
+    private productId: EntityId,
+    private varaintId: EntityId | null,
+    private supplierId: EntityId,
+    private min: SuppliedProductMin,
+    private max: SuppliedProductMax
   ) {
     super(id);
   }
 
-  static create(
-    id: EntityId,
-    productId: EntityId,
-    varaintId: EntityId | null,
-    supplierId: EntityId,
-    min: SuppliedProductMin,
-    max: SuppliedProductMax
-  ) {
-    return new SuppliedProduct(id, productId, varaintId, supplierId, min, max);
+  static create(params: {
+    id: EntityId;
+    productId: EntityId;
+    varaintId: EntityId | null;
+    supplierId: EntityId;
+    min: SuppliedProductMin;
+    max: SuppliedProductMax;
+  }) {
+    return new SuppliedProduct(
+      params.id,
+      params.productId,
+      params.varaintId,
+      params.supplierId,
+      params.min,
+      params.max
+    );
   }
 }

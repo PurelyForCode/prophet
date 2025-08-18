@@ -4,7 +4,6 @@ import { EntityId } from "../../core/types/EntityId.js";
 export type DeliveryItemDTO = {
   id: EntityId;
   productId: EntityId;
-  variantId: EntityId | null;
   deliveryId: EntityId;
   quantity: number;
 };
@@ -12,7 +11,6 @@ export type DeliveryItemDTO = {
 export type DeliveryItemDatabaseTable = {
   id: EntityId;
   product_id: EntityId;
-  variant_id: EntityId | null;
   delivery_id: EntityId;
   quantity: number;
 };
@@ -20,18 +18,20 @@ export type DeliveryItemDatabaseTable = {
 export class DeliveryItemDAO {
   constructor(private readonly knex: Knex) {}
   private tableName = "delivery_item";
+
   async insert(table: DeliveryItemDatabaseTable) {
     await this.knex<DeliveryItemDatabaseTable>(this.tableName).insert({
       delivery_id: table.delivery_id,
       id: table.id,
       product_id: table.product_id,
       quantity: table.quantity,
-      variant_id: table.variant_id,
     });
   }
+
   async delete(deliveryItemId: EntityId) {
     await this.knex(this.tableName).delete().where({ id: deliveryItemId });
   }
+
   async update(table: DeliveryItemDatabaseTable) {
     await this.knex<DeliveryItemDatabaseTable>(this.tableName)
       .update({
@@ -39,10 +39,10 @@ export class DeliveryItemDAO {
         id: table.id,
         product_id: table.product_id,
         quantity: table.quantity,
-        variant_id: table.variant_id,
       })
       .where({ id: table.id });
   }
+
   async findById(id: EntityId): Promise<DeliveryItemDTO | null> {
     const row = await this.knex<DeliveryItemDatabaseTable>(this.tableName)
       .select("*")
@@ -70,20 +70,7 @@ export class DeliveryItemDAO {
   async findByProductId(productId: EntityId): Promise<DeliveryItemDTO[]> {
     const rows = await this.knex<DeliveryItemDatabaseTable>(this.tableName)
       .select("*")
-      .where({ product_id: productId })
-      .whereNull("variantId");
-
-    const deliveryItems = [];
-    for (const row of rows) {
-      deliveryItems.push(this.mapToDTO(row));
-    }
-    return deliveryItems;
-  }
-  async findByVariantId(productId: EntityId, variantId: EntityId) {
-    const rows = await this.knex<DeliveryItemDatabaseTable>(this.tableName)
-      .select("*")
-      .where({ product_id: productId })
-      .where({ variant_id: variantId });
+      .where({ product_id: productId });
 
     const deliveryItems = [];
     for (const row of rows) {
@@ -98,7 +85,6 @@ export class DeliveryItemDAO {
       id: row.id,
       productId: row.product_id,
       quantity: row.quantity,
-      variantId: row.variant_id,
     };
   }
 }

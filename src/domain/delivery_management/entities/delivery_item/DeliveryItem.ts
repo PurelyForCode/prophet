@@ -9,46 +9,43 @@ export type UpdateDeliveryItemFields = Partial<{
 export class DeliveryItem extends Entity {
   private constructor(
     id: EntityId,
-    private _productId: EntityId,
-    private _variantId: EntityId | null,
-    private _deliveryId: EntityId,
-    private _quantity: DeliveryItemQuantity
+    private productId: EntityId,
+    private deliveryId: EntityId,
+    private quantity: DeliveryItemQuantity
   ) {
     super(id);
   }
 
-  public static create(
-    id: EntityId,
-    productId: EntityId,
-    variantId: EntityId | null,
-    deliveryId: EntityId,
-    quantity: DeliveryItemQuantity
-  ) {
-    return new DeliveryItem(id, productId, variantId, deliveryId, quantity);
+  public static create(params: {
+    id: EntityId;
+    productId: EntityId;
+    deliveryId: EntityId;
+    quantity: DeliveryItemQuantity;
+  }) {
+    return new DeliveryItem(
+      params.id,
+      params.productId,
+      params.deliveryId,
+      params.quantity
+    );
   }
 
-  public get quantity(): DeliveryItemQuantity {
-    return this._quantity;
+  public getQuantity(): DeliveryItemQuantity {
+    return this.quantity;
   }
-  public set quantity(value: DeliveryItemQuantity) {
-    this._quantity = value;
+  public setQuantity(value: DeliveryItemQuantity) {
+    this.quantity = value;
   }
-  public get deliveryId(): EntityId {
-    return this._deliveryId;
+  public getDeliveryId(): EntityId {
+    return this.deliveryId;
   }
-  public set deliveryId(value: EntityId) {
-    this._deliveryId = value;
+  public setDeliveryId(value: EntityId) {
+    this.deliveryId = value;
   }
-  public get variantId(): EntityId | null {
-    return this._variantId;
+  public getProductId(): EntityId {
+    return this.productId;
   }
-  public set variantId(value: EntityId | null) {
-    this._variantId = value;
-  }
-  public get productId(): EntityId {
-    return this._productId;
-  }
-  public set productId(value: EntityId) {
-    this._productId = value;
+  public setProductId(value: EntityId) {
+    this.productId = value;
   }
 }

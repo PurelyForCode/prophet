@@ -6,12 +6,12 @@ import {
   ProductSettingQueryDTO,
 } from "./ProductSettingDAO.js";
 import { SaleDAO, SaleQueryDTO } from "./SaleDAO.js";
-import { bigint, boolean } from "zod";
 
 export type VariantQueryDTO = {
   id: string;
-  productId: string;
   accountId: string;
+  productId: string;
+  productCategoryId: string | null;
   name: string;
   stock: number;
   safetyStock: number;
@@ -19,13 +19,14 @@ export type VariantQueryDTO = {
   updatedAt: Date;
   deletedAt: Date | null;
   setting: ProductSettingQueryDTO | undefined;
-  sales: any;
+  sales: SaleQueryDTO[] | undefined;
 };
 
 export type VariantDTO = {
   id: string;
-  productId: string;
   accountId: string;
+  productId: string;
+  productCategoryId: string | null;
   name: string;
   stock: number;
   safetyStock: number;
@@ -47,14 +48,15 @@ export type VariantFiltersParams =
   | Partial<{
       name: string;
       productId: EntityId;
-      archived: true | undefined;
+      archived: boolean;
     }>
   | undefined;
 
 type VariantDatabaseTable = {
   id: string;
-  product_id: string;
   account_id: string;
+  product_id: string;
+  product_category_id: string | null;
   name: string;
   stock: number;
   safety_stock: number;
@@ -64,7 +66,7 @@ type VariantDatabaseTable = {
 };
 
 export class VariantDAO {
-  private tableName = "variant";
+  private tableName = "product";
   constructor(private readonly knex: Knex.Transaction | Knex) {}
 
   async delete(id: EntityId) {
@@ -82,20 +84,14 @@ export class VariantDAO {
   }
 
   async findById(id: EntityId) {
-    const row = await this.knex<
+    const builder = this.knex<
       VariantDatabaseTable & JoinedProductSettingTableColumns
     >(`${this.tableName} as v`)
       .select("v.*")
       .where("v.id", id)
-      .join("product_setting as s", "v.id", "=", "s.variant_id")
-      .select(
-        "s.classification as setting_classification",
-        "s.safety_stock_calculation_method as setting_safety_stock_calculation_method",
-        "s.service_level as setting_service_level",
-        "s.fill_rate as setting_fill_rate",
-        "s.updated_at as setting_updated_at"
-      )
       .first();
+    this.joinSettings(builder);
+    const row = await builder;
     if (row) {
       return this.mapToDTO(row);
     } else {
@@ -104,18 +100,14 @@ export class VariantDAO {
   }
 
   async findByName(name: string) {
-    const row = await this.knex(`${this.tableName} as v`)
+    const builder = this.knex<
+      VariantDatabaseTable & JoinedProductSettingTableColumns
+    >(`${this.tableName} as v`)
       .select("v.*")
       .where("v.name", name)
-      .join("product_setting as s", "v.id", "=", "s.variant_id")
-      .select(
-        "s.classification as setting_classification",
-        "s.safety_stock_calculation_method as setting_safety_stock_calculation_method",
-        "s.service_level as setting_service_level",
-        "s.fill_rate as setting_fill_rate",
-        "s.updated_at as setting_updated_at"
-      )
       .first();
+    this.joinSettings(builder);
+    const row = await builder;
     if (row) {
       return this.mapToDTO(row);
     } else {
@@ -124,29 +116,16 @@ export class VariantDAO {
   }
 
   async findAllByProductId(productId: EntityId): Promise<VariantDTO[]> {
-    const rows = await this.knex(`${this.tableName} as v`)
+    const builder = this.knex(`${this.tableName} as v`)
       .select("v.*")
-      .join("product_setting as s", "v.id", "=", "s.variant_id")
-      .select(
-        "s.classification as setting_classification",
-        "s.safety_stock_calculation_method as setting_safety_stock_calculation_method",
-        "s.service_level as setting_service_level",
-        "s.fill_rate as setting_fill_rate",
-        "s.updated_at as setting_updated_at"
-      )
       .where("v.product_id", "=", productId);
+    this.joinSettings(builder);
+    const rows = await builder;
     return rows.map((row) => {
       return this.mapToDTO(row);
     });
   }
 
-  async queryOne(
-    id: EntityId,
-    include: VariantIncludeParams
-  ): Promise<VariantQueryDTO> {
-    //TODO
-    throw new Error();
-  }
   async queryOneFromProduct(
     variantId: EntityId,
     productId: EntityId,
@@ -154,11 +133,12 @@ export class VariantDAO {
   ) {
     const builder = this.knex(`${this.tableName} as v`)
       .select("v.*")
-      .where({ id: variantId })
-      .and.where({ product_id: productId })
+      .where("v.id", "=", variantId)
+      .and.where("v.product_id", "=", productId)
       .first();
     let sales: undefined | SaleQueryDTO[] = undefined;
     let setting: undefined | ProductSettingQueryDTO = undefined;
+
     if (include && typeof include !== "boolean") {
       if (include.setting) {
         this.joinSettings(builder);
@@ -185,6 +165,7 @@ export class VariantDAO {
         };
       }
     }
+
     return this.mapToQueryDTO(row, setting, sales);
   }
 
@@ -194,26 +175,12 @@ export class VariantDAO {
   ): Promise<VariantQueryDTO[]> {
     const builder = this.knex(`${this.tableName} as v`).select("v.*");
 
-    if (filters && filters.archived) {
-      builder.whereNotNull("v.deleted_at");
-    } else {
-      builder.whereNull("v.deleted_at");
-    }
-
-    if (filters) {
-      if (filters.productId) {
-        builder.where("v.product_id", "=", filters.productId);
-      }
-      if (filters.name) {
-        builder.where("v.name", "=", filters.name);
-      }
-    }
-
     if (include && typeof include !== "boolean") {
       if (include.setting) {
         this.joinSettings(builder);
       }
     }
+
     let variants: VariantQueryDTO[] = [];
     const rows = (await builder) as (VariantDatabaseTable &
       JoinedProductSettingTableColumns)[];
@@ -244,30 +211,26 @@ export class VariantDAO {
       const dto = this.mapToQueryDTO(variant, setting, sales);
       variants.push(dto);
     }
-    //  = rows.map(async (variant) => {
-    //   let setting: ProductSettingDTO | undefined;
-    //   let sales: any[] | undefined;
-    //   if (include && typeof include !== "boolean") {
-    //     if (include.setting) {
-    //       setting = {
-    //         classification: variant.setting_classification,
-    //         fillRate: variant.setting_fill_rate,
-    //         safetyStockCalculationMethod:
-    //           variant.setting_safety_stock_calculation_method,
-    //         serviceLevel: variant.setting_service_level,
-    //         updatedAt: variant.setting_updated_at,
-    //       };
-    //     }
-    //     if (include.sales) {
-    //       sales = await new SaleDAO(this.knex).query({
-    //         productId: variant.product_id,
-    //         variantId: variant.id,
-    //       });
-    //     }
-    //   }
-    //   return this.mapToDTO(variant, setting, sales);
-    // });
+
     return variants;
+  }
+
+  filter(builder: Knex, filters: VariantFiltersParams) {
+    if (filters) {
+      if (filters.productId) {
+        builder.where("v.product_id", "=", filters.productId);
+      }
+
+      if (filters.name) {
+        builder.where("v.name", "=", filters.name);
+      }
+
+      if (filters.archived) {
+        builder.whereNotNull("v.deleted_at");
+      } else {
+        builder.whereNull("v.deleted_at");
+      }
+    }
   }
 
   mapToQueryDTO(
@@ -276,6 +239,7 @@ export class VariantDAO {
     sales: any | undefined
   ): VariantQueryDTO {
     return {
+      productCategoryId: variant.product_category_id,
       accountId: variant.account_id,
       productId: variant.product_id,
       createdAt: variant.created_at,
@@ -293,6 +257,7 @@ export class VariantDAO {
     row: VariantDatabaseTable & JoinedProductSettingTableColumns
   ): VariantDTO {
     return {
+      productCategoryId: row.product_category_id,
       accountId: row.account_id,
       productId: row.product_id,
       createdAt: row.created_at,
@@ -315,7 +280,7 @@ export class VariantDAO {
 
   joinSettings(builder: Knex.QueryBuilder) {
     builder
-      .join("product_setting as s", "v.id", "=", "s.variant_id")
+      .join("product_setting as s", "v.id", "=", "s.product_id")
       .select(
         "s.classification as setting_classification",
         "s.safety_stock_calculation_method as setting_safety_stock_calculation_method",

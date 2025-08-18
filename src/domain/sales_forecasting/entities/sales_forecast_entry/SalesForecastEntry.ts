@@ -2,40 +2,40 @@ import { Entity } from "../../../../core/interfaces/Entity.js";
 import { EntityId } from "../../../../core/types/EntityId.js";
 
 export class SalesForecastEntry extends Entity {
-  private _sales_forecast_id: EntityId;
-  public get sales_forecast_id(): EntityId {
-    return this._sales_forecast_id;
+  private salesForecastId: EntityId;
+  getSalesForecastId(): EntityId {
+    return this.salesForecastId;
   }
-  public set sales_forecast_id(value: EntityId) {
-    this._sales_forecast_id = value;
+  setSalesForecastId(value: EntityId) {
+    this.salesForecastId = value;
   }
-  private _yhat: number;
-  public get yhat(): number {
-    return this._yhat;
+  private yhat: number;
+  getYhat(): number {
+    return this.yhat;
   }
-  public set yhat(value: number) {
-    this._yhat = value;
+  setYhat(value: number) {
+    this.yhat = value;
   }
-  private _yhatLower: number;
-  public get yhatLower(): number {
-    return this._yhatLower;
+  private yhatLower: number;
+  getYhatLower(): number {
+    return this.yhatLower;
   }
-  public set yhatLower(value: number) {
-    this._yhatLower = value;
+  setYhatLower(value: number) {
+    this.yhatLower = value;
   }
-  private _yhatUpper: number;
-  public get yhatUpper(): number {
-    return this._yhatUpper;
+  yhatUpper: number;
+  getYhatUpper(): number {
+    return this.yhatUpper;
   }
-  public set yhatUpper(value: number) {
-    this._yhatUpper = value;
+  setYhatUpper(value: number) {
+    this.yhatUpper = value;
   }
-  private _date: Date;
-  public get date(): Date {
-    return this._date;
+  private date: Date;
+  getDate(): Date {
+    return this.date;
   }
-  public set date(value: Date) {
-    this._date = value;
+  setDate(value: Date) {
+    this.date = value;
   }
 
   private constructor(
@@ -47,27 +47,28 @@ export class SalesForecastEntry extends Entity {
     date: Date
   ) {
     super(id);
-    (this._sales_forecast_id = salesForecastId), (this._yhat = yhat);
-    this._yhatLower = yhatLower;
-    this._yhatUpper = yhatUpper;
-    this._date = date;
+    this.salesForecastId = salesForecastId;
+    this.yhat = yhat;
+    this.yhatLower = yhatLower;
+    this.yhatUpper = yhatUpper;
+    this.date = date;
   }
 
-  public static create(
-    id: EntityId,
-    salesForecastId: EntityId,
-    yhat: number,
-    yhatLower: number,
-    yhatUpper: number,
-    date: Date
-  ) {
+  public static create(params: {
+    id: EntityId;
+    salesForecastId: EntityId;
+    yhat: number;
+    yhatLower: number;
+    yhatUpper: number;
+    date: Date;
+  }) {
     return new SalesForecastEntry(
-      id,
-      salesForecastId,
-      yhat,
-      yhatLower,
-      yhatUpper,
-      date
+      params.id,
+      params.salesForecastId,
+      params.yhat,
+      params.yhatLower,
+      params.yhatUpper,
+      params.date
     );
   }
 }

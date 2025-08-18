@@ -19,7 +19,6 @@ export class DeliveryItemRepository implements IDeliveryItemRepository {
       id: entity.id,
       product_id: entity.productId,
       quantity: entity.quantity.value,
-      variant_id: entity.variantId,
     });
   }
   async create(entity: DeliveryItem): Promise<void> {
@@ -28,7 +27,6 @@ export class DeliveryItemRepository implements IDeliveryItemRepository {
       id: entity.id,
       product_id: entity.productId,
       quantity: entity.quantity.value,
-      variant_id: entity.variantId,
     });
   }
 
@@ -57,8 +55,9 @@ export class DeliveryItemRepository implements IDeliveryItemRepository {
     const quantity = new DeliveryItemQuantity(item.quantity);
     return DeliveryItem.create(
       item.id,
+
       item.productId,
-      item.variantId,
+
       item.deliveryId,
       quantity
     );

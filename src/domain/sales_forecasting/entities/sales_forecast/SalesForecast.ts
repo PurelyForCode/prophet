@@ -2,23 +2,21 @@ import {
   AggregateRoot,
   EntityAction,
 } from "../../../../core/interfaces/AggregateRoot.js";
-import { Entity } from "../../../../core/interfaces/Entity.js";
 import { EntityId } from "../../../../core/types/EntityId.js";
 import { HistoricalDaysCount } from "./value_objects/HistoricalDaysCount.js";
 
 export class SalesForecast extends AggregateRoot {
-  private _accountId: EntityId;
-  private _productId: EntityId;
-  private _variantId: EntityId | null;
-  private _historicalDaysCount: HistoricalDaysCount;
-  private _forecastStartDate: Date;
-  private _forecastEndDate: Date;
-  private _createdAt: Date;
-  private _updatedAt: Date;
-  private _deletedAt: Date | null;
+  private accountId: EntityId;
+  private productId: EntityId;
+  private historicalDaysCount: HistoricalDaysCount;
+  private forecastStartDate: Date;
+  private forecastEndDate: Date;
+  private createdAt: Date;
+  private updatedAt: Date;
+  private deletedAt: Date | null;
 
   archive() {
-    this._deletedAt = new Date();
+    this.deletedAt = new Date();
     this.addTrackedEntity(this, EntityAction.updated);
   }
 
@@ -30,7 +28,6 @@ export class SalesForecast extends AggregateRoot {
     id: EntityId,
     accountId: EntityId,
     productId: EntityId,
-    variantId: EntityId | null,
     historicalDaysCount: HistoricalDaysCount,
     forecastStartDate: Date,
     forecastEndDate: Date,
@@ -39,111 +36,100 @@ export class SalesForecast extends AggregateRoot {
     deletedAt: Date | null
   ) {
     super(id);
-    this._accountId = accountId;
-    this._productId = productId;
-    this._variantId = variantId;
-    this._historicalDaysCount = historicalDaysCount;
-    this._forecastStartDate = forecastStartDate;
-    this._forecastEndDate = forecastEndDate;
-    this._createdAt = createdAt;
-    this._updatedAt = updatedAt;
-    this._deletedAt = deletedAt;
+    this.accountId = accountId;
+    this.productId = productId;
+    this.historicalDaysCount = historicalDaysCount;
+    this.forecastStartDate = forecastStartDate;
+    this.forecastEndDate = forecastEndDate;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+    this.deletedAt = deletedAt;
   }
 
-  public static create(
-    id: EntityId,
-    accountId: EntityId,
-    productId: EntityId,
-    variantId: EntityId | null,
-    historicalDaysCount: HistoricalDaysCount,
-    forecastStartDate: Date,
-    forecastEndDate: Date,
-    createdAt: Date,
-    updatedAt: Date,
-    deletedAt: Date | null
-  ): SalesForecast {
+  public static create(params: {
+    id: EntityId;
+    accountId: EntityId;
+    productId: EntityId;
+    historicalDaysCount: HistoricalDaysCount;
+    forecastStartDate: Date;
+    forecastEndDate: Date;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+  }): SalesForecast {
     return new SalesForecast(
-      id,
-      accountId,
-      productId,
-      variantId ?? null,
-      historicalDaysCount,
-      forecastStartDate,
-      forecastEndDate,
-      createdAt,
-      updatedAt,
-      deletedAt
+      params.id,
+      params.accountId,
+      params.productId,
+      params.historicalDaysCount,
+      params.forecastStartDate,
+      params.forecastEndDate,
+      params.createdAt,
+      params.updatedAt,
+      params.deletedAt
     );
   }
 
-  public get accountId(): EntityId {
-    return this._accountId;
+  public getAccountId(): EntityId {
+    return this.accountId;
   }
-  public set accountId(value: EntityId) {
-    this._accountId = value;
+  public setAccountId(value: EntityId) {
+    this.accountId = value;
     this.addTrackedEntity(this, EntityAction.updated);
   }
-  public get productId(): EntityId {
-    return this._productId;
+  public getProductId(): EntityId {
+    return this.productId;
   }
-  public set productId(value: EntityId) {
-    this._productId = value;
-    this.addTrackedEntity(this, EntityAction.updated);
-  }
-
-  public get variantId(): EntityId | null {
-    return this._variantId;
-  }
-  public set variantId(value: EntityId | null) {
-    this._variantId = value;
+  public setProductId(value: EntityId) {
+    this.productId = value;
     this.addTrackedEntity(this, EntityAction.updated);
   }
 
-  public get historicalDaysCount(): HistoricalDaysCount {
-    return this._historicalDaysCount;
+  public getHistoricalDaysCount(): HistoricalDaysCount {
+    return this.historicalDaysCount;
   }
-  public set historicalDaysCount(value: HistoricalDaysCount) {
-    this._historicalDaysCount = value;
+  public setHistoricalDaysCount(value: HistoricalDaysCount) {
+    this.historicalDaysCount = value;
     this.addTrackedEntity(this, EntityAction.updated);
   }
 
-  public get forecastStartDate(): Date {
-    return this._forecastStartDate;
+  public getForecastStartDate(): Date {
+    return this.forecastStartDate;
   }
-  public set forecastStartDate(value: Date) {
-    this._forecastStartDate = value;
+  public setForecastStartDate(value: Date) {
+    this.forecastStartDate = value;
     this.addTrackedEntity(this, EntityAction.updated);
   }
 
-  public get forecastEndDate(): Date {
-    return this._forecastEndDate;
+  public getForecastEndDate(): Date {
+    return this.forecastEndDate;
   }
-  public set forecastEndDate(value: Date) {
-    this._forecastEndDate = value;
+  public setForecastEndDate(value: Date) {
+    this.forecastEndDate = value;
     this.addTrackedEntity(this, EntityAction.updated);
   }
 
-  public get createdAt(): Date {
-    return this._createdAt;
+  public getCreatedAt(): Date {
+    return this.createdAt;
   }
-  public set createdAt(value: Date) {
-    this._createdAt = value;
+  public setCreatedAt(value: Date) {
+    this.createdAt = value;
     this.addTrackedEntity(this, EntityAction.updated);
   }
 
-  public get updatedAt(): Date {
-    return this._updatedAt;
+  public getUpdatedAt(): Date {
+    return this.updatedAt;
   }
-  public set updatedAt(value: Date) {
-    this._updatedAt = value;
+  public setUpdatedAt(value: Date) {
+    this.updatedAt = value;
     this.addTrackedEntity(this, EntityAction.updated);
   }
 
-  public get deletedAt(): Date | null {
-    return this._deletedAt;
+  public getDeletedAt(): Date | null {
+    return this.deletedAt;
   }
-  public set deletedAt(value: Date | null) {
-    this._deletedAt = value;
+  public setDeletedAt(value: Date | null) {
+    this.deletedAt = value;
     this.addTrackedEntity(this, EntityAction.updated);
   }
 }

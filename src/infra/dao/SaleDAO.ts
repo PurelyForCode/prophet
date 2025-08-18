@@ -5,7 +5,7 @@ export type SaleFilterParams =
   | Partial<{
       productId: EntityId;
       variantId: EntityId | null;
-      archived: true | undefined;
+      archived: boolean;
     }>
   | undefined;
 export type SaleDTO = {

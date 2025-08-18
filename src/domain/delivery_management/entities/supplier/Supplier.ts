@@ -16,87 +16,89 @@ export type UpdateSupplierFields = Partial<{
 export class Supplier extends AggregateRoot {
   private constructor(
     id: EntityId,
-    private _accountId: EntityId,
-    private _name: SupplierName,
-    private _leadTime: LeadTime,
-    private _createdAt: Date,
-    private _updatedAt: Date,
-    private _deletedAt: Date | null,
-    private _productsSupplied: EntityCollection<SuppliedProduct>
+    private accountId: EntityId,
+    private name: SupplierName,
+    private leadTime: LeadTime,
+    private createdAt: Date,
+    private updatedAt: Date,
+    private deletedAt: Date | null,
+    private suppliedProducts: EntityCollection<SuppliedProduct>
   ) {
     super(id);
   }
 
-  static create(
-    id: EntityId,
-    accountId: EntityId,
-    name: SupplierName,
-    leadTime: LeadTime,
-    createdAt: Date,
-    updatedAt: Date,
-    deletedAt: Date | null,
-    productsSupplied: EntityCollection<SuppliedProduct>
-  ) {
+  static create(params: {
+    id: EntityId;
+    accountId: EntityId;
+    name: SupplierName;
+    leadTime: LeadTime;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+    productsSupplied: EntityCollection<SuppliedProduct>;
+  }) {
     return new Supplier(
-      id,
-      accountId,
-      name,
-      leadTime,
-      createdAt,
-      updatedAt,
-      deletedAt,
-      productsSupplied
+      params.id,
+      params.accountId,
+      params.name,
+      params.leadTime,
+      params.createdAt,
+      params.updatedAt,
+      params.deletedAt,
+      params.productsSupplied
     );
   }
 
+  // TODO
   addSuppliedProduct(product: SuppliedProduct) {}
   removeSuppliedProduct(productId: SuppliedProduct) {}
   updateSuppliedProduct(productId: SuppliedProduct) {}
+
   archive() {
-    this._deletedAt = new Date();
+    this.deletedAt = new Date();
     this.addTrackedEntity(this, EntityAction.deleted);
   }
 
-  public get productsSupplied(): EntityCollection<SuppliedProduct> {
-    return this._productsSupplied;
+  public getSuppliedProducts(): EntityCollection<SuppliedProduct> {
+    return this.suppliedProducts;
   }
-  public set productsSupplied(value: EntityCollection<SuppliedProduct>) {
-    this._productsSupplied = value;
+  public setSuppliedProducts(value: EntityCollection<SuppliedProduct>) {
+    this.suppliedProducts = value;
   }
-  public get deletedAt(): Date | null {
-    return this._deletedAt;
+  public getDeletedAt(): Date | null {
+    return this.deletedAt;
   }
-  public set deletedAt(value: Date | null) {
-    this._deletedAt = value;
+  public setDeletedAt(value: Date | null) {
+    this.deletedAt = value;
   }
-  public get updatedAt(): Date {
-    return this._updatedAt;
+  public getUpdatedAt(): Date {
+    return this.updatedAt;
   }
-  public set updatedAt(value: Date) {
-    this._updatedAt = value;
+  public setUpdatedAt(value: Date) {
+    this.updatedAt = value;
   }
-  public get createdAt(): Date {
-    return this._createdAt;
+  public getCreatedAt(): Date {
+    return this.createdAt;
   }
-  public set createdAt(value: Date) {
-    this._createdAt = value;
+  public setCreatedAt(value: Date) {
+    this.createdAt = value;
   }
-  public get leadTime(): LeadTime {
-    return this._leadTime;
+  public getLeadTime(): LeadTime {
+    return this.leadTime;
   }
-  public set leadTime(value: LeadTime) {
-    this._leadTime = value;
+  public setLeadTime(value: LeadTime) {
+    this.leadTime = value;
   }
-  public get name(): SupplierName {
-    return this._name;
+  public getName(): SupplierName {
+    return this.name;
   }
-  public set name(value: SupplierName) {
-    this._name = value;
+  public setName(value: SupplierName) {
+    this.name = value;
   }
-  public get accountId(): EntityId {
-    return this._accountId;
+  public getAccountId(): EntityId {
+    return this.accountId;
   }
-  public set accountId(value: EntityId) {
-    this._accountId = value;
+  public setAccountId(value: EntityId) {
+    this.accountId = value;
   }
 }

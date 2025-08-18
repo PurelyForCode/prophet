@@ -52,13 +52,14 @@ export type ProductFiltersParams =
   | Partial<{
       name: string;
       id: EntityId;
-      archived: true | undefined;
+      archived: boolean;
     }>
   | undefined;
 
 export type ProductDatabaseTable = {
   id: string;
   account_id: string;
+  product_id: null;
   product_category_id: string | null;
   name: string;
   stock: number;
@@ -138,7 +139,11 @@ export class ProductDAO {
     return rows.map((row) => this.mapToDTO(row));
   }
 
-  async queryOne(id: EntityId, include: ProductIncludeParams) {
+  async queryOne(
+    id: EntityId,
+    include: ProductIncludeParams,
+    archived: boolean
+  ) {
     let variants: VariantQueryDTO[] | undefined = undefined;
     let sales: any[] | undefined = undefined;
     let setting: ProductSettingQueryDTO | undefined = undefined;
@@ -147,7 +152,7 @@ export class ProductDAO {
       .where("p.id", "=", id)
       .first();
 
-    const included = await this.include(id, include, undefined);
+    const included = await this.include(id, include, archived);
     variants = included.variants;
     sales = included.sales;
     if (include) {
@@ -166,7 +171,6 @@ export class ProductDAO {
         updatedAt: row.setting_updated_at,
       };
     }
-
     return this.mapToQueryDTO(row, variants, setting, sales);
   }
 
@@ -190,7 +194,7 @@ export class ProductDAO {
           updatedAt: row.setting_updated_at,
         };
       }
-      const included = await this.include(row.id, include, filters?.archived);
+      const included = await this.include(row.id, include, false);
       productDTOs.push(
         this.mapToQueryDTO(row, included.variants, setting, included.sales)
       );
@@ -206,8 +210,11 @@ export class ProductDAO {
       if (filters.name) {
         builder.whereLike("p.name", `${filters.name}%`);
       }
-      if (filters.archived) {
+
+      if (filters.archived === true) {
         builder.whereNotNull("p.deleted_at");
+      } else {
+        builder.whereNull("p.deleted_at");
       }
     }
   }
@@ -215,10 +222,10 @@ export class ProductDAO {
   async include(
     productId: EntityId,
     include: ProductIncludeParams,
-    archived: true | undefined
+    archived: true | false
   ): Promise<{
     variants: VariantQueryDTO[] | undefined;
-    sales: any[] | undefined;
+    sales: SaleQueryDTO[] | undefined;
   }> {
     let variants: VariantQueryDTO[] | undefined;
     let sales: SaleQueryDTO[] | undefined;
@@ -227,7 +234,7 @@ export class ProductDAO {
         if (typeof include.variants === "boolean") {
           variants = await new VariantDAO(this.knex).query(
             { productId: productId, archived: archived },
-            false
+            true
           );
         } else {
           variants = await new VariantDAO(this.knex).query(
@@ -257,8 +264,7 @@ export class ProductDAO {
         "s.service_level as setting_service_level",
         "s.fill_rate as setting_fill_rate",
         "s.updated_at as setting_updated_at"
-      )
-      .whereNull("s.variant_id");
+      );
   }
 
   mapToQueryDTO(
@@ -277,7 +283,6 @@ export class ProductDAO {
       createdAt: product.created_at,
       updatedAt: product.updated_at,
       deletedAt: product.deleted_at,
-      //TODO
       sales: sales,
       setting: setting,
       variants: variants,

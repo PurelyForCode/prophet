@@ -91,27 +91,30 @@ export class Product extends AggregateRoot {
     return this.name;
   }
   setName(name: ProductName) {
+    this.throwIfArchived();
     this.name = name;
-  }
-  setStock(stock: ProductStock) {
-    this.stock = stock;
   }
   getStock() {
     return this.stock;
   }
-  setSafetyStock(safetyStock: SafetyStock) {
-    this.safetyStock = safetyStock;
+  setStock(stock: ProductStock) {
+    this.throwIfArchived();
+    this.stock = stock;
   }
   getSafetyStock() {
     return this.safetyStock;
   }
-  setUpdatedAt(date: Date) {
-    this.updatedAt = date;
+  setSafetyStock(safetyStock: SafetyStock) {
+    this.throwIfArchived();
+    this.safetyStock = safetyStock;
   }
   getUpdatedAt() {
     return this.updatedAt;
   }
-
+  setUpdatedAt(date: Date) {
+    this.throwIfArchived();
+    this.updatedAt = date;
+  }
   getDeletedAt() {
     return this.deletedAt;
   }
@@ -137,18 +140,20 @@ export class Product extends AggregateRoot {
       this.settings.fillRate,
       now
     );
-    const variant = Variant.create(
-      id,
-      this.id,
-      accountId,
-      name,
-      stock,
-      new SafetyStock(0),
-      parentSetting,
-      now,
-      now,
-      null
-    );
+
+    const variant = Variant.create({
+      accountId: accountId,
+      createdAt: now,
+      deletedAt: null,
+      id: id,
+      name: name,
+      productCategoryId: this.productCategoryId,
+      productId: this.id,
+      safetyStock: this.safetyStock,
+      settings: parentSetting,
+      stock: stock,
+      updatedAt: now,
+    });
 
     this.variants.set(variant.id, variant);
     this.addTrackedEntity(variant, EntityAction.created);
