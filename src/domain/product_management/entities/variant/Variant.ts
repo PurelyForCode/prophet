@@ -16,6 +16,12 @@ export type VariantUpdateableFields = Partial<{
 export class Variant extends Entity {
   private productId: EntityId;
   private productCategoryId: EntityId | null;
+  getProductCategoryId(): EntityId | null {
+    return this.productCategoryId;
+  }
+  setProductCategoryId(value: EntityId | null) {
+    this.productCategoryId = value;
+  }
   private accountId: EntityId;
   private name: ProductName;
   private stock: ProductStock;

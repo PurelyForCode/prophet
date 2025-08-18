@@ -22,12 +22,6 @@ export class SuppliedProduct extends Entity {
   setSupplierId(value: EntityId) {
     this.supplierId = value;
   }
-  getVaraintId(): EntityId | null {
-    return this.varaintId;
-  }
-  setVaraintId(value: EntityId | null) {
-    this.varaintId = value;
-  }
   getProductId(): EntityId {
     return this.productId;
   }
@@ -38,7 +32,6 @@ export class SuppliedProduct extends Entity {
   private constructor(
     id: EntityId,
     private productId: EntityId,
-    private varaintId: EntityId | null,
     private supplierId: EntityId,
     private min: SuppliedProductMin,
     private max: SuppliedProductMax
@@ -49,7 +42,6 @@ export class SuppliedProduct extends Entity {
   static create(params: {
     id: EntityId;
     productId: EntityId;
-    varaintId: EntityId | null;
     supplierId: EntityId;
     min: SuppliedProductMin;
     max: SuppliedProductMax;
@@ -57,7 +49,6 @@ export class SuppliedProduct extends Entity {
     return new SuppliedProduct(
       params.id,
       params.productId,
-      params.varaintId,
       params.supplierId,
       params.min,
       params.max

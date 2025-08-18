@@ -31,7 +31,7 @@ export class GenerateSaleForecastUsecase {
     }
     let variant = null;
     if (input.variantId) {
-      const variant = product.variants.get(input.variantId);
+      const variant = product.getVariants().get(input.variantId);
       if (!variant) {
         throw new VariantNotFoundException();
       }

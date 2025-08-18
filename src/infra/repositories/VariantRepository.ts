@@ -50,17 +50,18 @@ export class VariantRepository implements IVariantRepository {
 
   async update(entity: Variant): Promise<void> {
     await this.variantDAO.update({
-      account_id: entity.accountId,
-      created_at: entity.createdAt,
-      deleted_at: entity.deletedAt,
+      account_id: entity.getAccountId(),
+      product_category_id: entity.getProductCategoryId(),
+      created_at: entity.getCreatedAt(),
+      deleted_at: entity.getDeletedAt(),
       id: entity.id,
-      name: entity.name.value,
-      product_id: entity.productId,
-      safety_stock: entity.safetyStock.value,
-      stock: entity.stock.value,
-      updated_at: entity.updatedAt,
+      name: entity.getName().value,
+      product_id: entity.getProductId(),
+      safety_stock: entity.getSafetyStock().value,
+      stock: entity.getStock().value,
+      updated_at: entity.getUpdatedAt(),
     });
-    const variantSetting = entity.settings;
+    const variantSetting = entity.getSettings();
     await this.settingDAO.update({
       classification: variantSetting.classification,
       fill_rate: variantSetting.fillRate,
@@ -68,23 +69,24 @@ export class VariantRepository implements IVariantRepository {
         variantSetting.safetyStockCalculationMethod,
       service_level: variantSetting.serviceLevel,
       updated_at: variantSetting.updatedAt,
-      product_id: entity.productId,
-      variant_id: entity.id,
+      product_id: entity.id,
     });
   }
+
   async create(entity: Variant): Promise<void> {
     await this.variantDAO.insert({
-      account_id: entity.accountId,
-      created_at: entity.createdAt,
-      deleted_at: entity.deletedAt,
+      account_id: entity.getAccountId(),
+      product_category_id: entity.getProductCategoryId(),
+      created_at: entity.getCreatedAt(),
+      deleted_at: entity.getDeletedAt(),
       id: entity.id,
-      name: entity.name.value,
-      product_id: entity.productId,
-      safety_stock: entity.safetyStock.value,
-      stock: entity.stock.value,
-      updated_at: entity.updatedAt,
+      name: entity.getName().value,
+      product_id: entity.getProductId(),
+      safety_stock: entity.getSafetyStock().value,
+      stock: entity.getStock().value,
+      updated_at: entity.getUpdatedAt(),
     });
-    const variantSetting = entity.settings;
+    const variantSetting = entity.getSettings();
     await this.settingDAO.insert({
       classification: variantSetting.classification,
       fill_rate: variantSetting.fillRate,
@@ -93,8 +95,7 @@ export class VariantRepository implements IVariantRepository {
       service_level: variantSetting.serviceLevel,
       updated_at: variantSetting.updatedAt,
       id: idGenerator.generate(),
-      product_id: entity.productId,
-      variant_id: entity.id,
+      product_id: entity.id,
     });
   }
 
@@ -109,17 +110,18 @@ export class VariantRepository implements IVariantRepository {
       row.setting.fillRate,
       row.setting.updatedAt
     );
-    return Variant.create(
-      row.id,
-      row.productId,
-      row.accountId,
-      name,
-      stock,
-      safetyStock,
-      setting,
-      row.createdAt,
-      row.updatedAt,
-      row.deletedAt
-    );
+    return Variant.create({
+      id: row.id,
+      productId: row.productId,
+      accountId: row.accountId,
+      name: name,
+      stock: stock,
+      safetyStock: safetyStock,
+      settings: setting,
+      productCategoryId: row.productCategoryId,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      deletedAt: row.deletedAt,
+    });
   }
 }

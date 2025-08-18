@@ -145,8 +145,7 @@ export class VariantDAO {
       }
       if (include.sales) {
         sales = await new SaleDAO(this.knex).query({
-          productId: productId,
-          variantId: variantId,
+          productId: variantId,
         });
       }
     }
@@ -201,10 +200,7 @@ export class VariantDAO {
         }
 
         if (include.sales) {
-          sales = await new SaleDAO(this.knex).query({
-            productId: variant.product_id,
-            variantId: variant.id,
-          });
+          sales = await new SaleDAO(this.knex).query({ productId: variant.id });
         }
       }
 

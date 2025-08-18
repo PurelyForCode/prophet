@@ -4,7 +4,6 @@ import { EntityId } from "../../core/types/EntityId.js";
 export type SaleFilterParams =
   | Partial<{
       productId: EntityId;
-      variantId: EntityId | null;
       archived: boolean;
     }>
   | undefined;
@@ -12,7 +11,6 @@ export type SaleDTO = {
   id: string;
   account_id: string;
   product_id: string;
-  variant_id: string | null;
   quantity: number;
   status: string;
   date: Date;
@@ -24,7 +22,6 @@ export type SaleQueryDTO = {
   id: string;
   account_id: string;
   product_id: string;
-  variant_id: string | null;
   quantity: number;
   status: string;
   date: Date;
@@ -37,7 +34,6 @@ export type SaleDatabaseTable = {
   id: string;
   account_id: string;
   product_id: string;
-  variant_id: string | null;
   quantity: number;
   status: string;
   date: Date;
@@ -82,7 +78,6 @@ export class SaleDAO {
     filters:
       | Partial<{
           productId: EntityId;
-          variantId: EntityId;
         }>
       | undefined
   ): Promise<SaleQueryDTO | null> {
@@ -94,9 +89,6 @@ export class SaleDAO {
     if (filters) {
       if (filters.productId) {
         builder.where("s.product_id", "=", filters.productId);
-      }
-      if (filters.variantId) {
-        builder.where("s.variant_id", "=", filters.variantId);
       }
     }
     const row = await builder;
@@ -115,15 +107,10 @@ export class SaleDAO {
       if (filters.productId) {
         builder.where("s.product_id", "=", filters.productId);
       }
-      if (filters.variantId !== undefined) {
-        if (filters.variantId === null) {
-          builder.whereNull("s.variant_id");
-        } else {
-          builder.where("s.variant_id", "=", filters.variantId);
-        }
-      }
       if (filters.archived) {
         builder.whereNotNull("s.deleted_at");
+      } else {
+        builder.whereNull("s.deleted_at");
       }
     }
     const rows = await builder;

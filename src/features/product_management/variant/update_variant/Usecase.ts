@@ -48,7 +48,7 @@ export class UpdateVariantUsecase {
 
     let settings = undefined;
     if (input.fields.settings) {
-      const currentSetting = product.settings;
+      const currentSetting = product.getSetting();
       settings = new ProductSetting(
         input.fields.settings.serviceLevel ?? currentSetting.serviceLevel,
         input.fields.settings.safetyStockCalculationMethod ??

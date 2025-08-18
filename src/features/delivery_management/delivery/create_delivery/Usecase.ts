@@ -45,13 +45,12 @@ export class CreateDeliveryUsecase {
       for (const item of input.items) {
         const id = this.idGenerator.generate();
         const quantity = new DeliveryItemQuantity(item.quantity);
-        const deliveryItem = DeliveryItem.create(
-          id,
-          item.productId,
-          item.variantId,
-          delivery.id,
-          quantity
-        );
+        const deliveryItem = DeliveryItem.create({
+          id: id,
+          productId: item.productId,
+          deliveryId: delivery.id,
+          quantity: quantity,
+        });
         delivery.addItem(deliveryItem);
       }
     }

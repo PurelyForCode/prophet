@@ -87,6 +87,24 @@ export class Product extends AggregateRoot {
     );
   }
 
+  getProductCategoryId(): EntityId | null {
+    return this.productCategoryId;
+  }
+  setProductCategoryId(value: EntityId | null) {
+    this.productCategoryId = value;
+  }
+  getAccountId(): EntityId {
+    return this.accountId;
+  }
+  setAccountId(value: EntityId) {
+    this.accountId = value;
+  }
+  getCreatedAt(): Date {
+    return this.createdAt;
+  }
+  setCreatedAt(value: Date) {
+    this.createdAt = value;
+  }
   getName() {
     return this.name;
   }
@@ -117,6 +135,13 @@ export class Product extends AggregateRoot {
   }
   getDeletedAt() {
     return this.deletedAt;
+  }
+  getSetting() {
+    return this.settings;
+  }
+
+  getVariants() {
+    return this.variants;
   }
 
   addVariant(

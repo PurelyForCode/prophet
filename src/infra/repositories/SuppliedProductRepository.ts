@@ -21,21 +21,19 @@ export class SuppliedProductRepository implements ISuppliedProductRepository {
   async update(entity: SuppliedProduct): Promise<void> {
     await this.suppliedProductDAO.update({
       id: entity.id,
-      max_orderable: entity.max.value,
-      min_orderable: entity.min.value,
-      product_id: entity.productId,
-      supplier_id: entity.supplierId,
-      variant_id: entity.varaintId,
+      max_orderable: entity.getMax().value,
+      min_orderable: entity.getMin().value,
+      product_id: entity.getProductId(),
+      supplier_id: entity.getSupplierId(),
     });
   }
   async create(entity: SuppliedProduct): Promise<void> {
     await this.suppliedProductDAO.insert({
       id: entity.id,
-      max_orderable: entity.max.value,
-      min_orderable: entity.min.value,
-      product_id: entity.productId,
-      supplier_id: entity.supplierId,
-      variant_id: entity.varaintId,
+      max_orderable: entity.getMax().value,
+      min_orderable: entity.getMin().value,
+      product_id: entity.getProductId(),
+      supplier_id: entity.getSupplierId(),
     });
   }
 
@@ -65,13 +63,12 @@ export class SuppliedProductRepository implements ISuppliedProductRepository {
     const min = new SuppliedProductMin(row.min);
     const max = new SuppliedProductMax(row.max);
 
-    return SuppliedProduct.create(
-      row.id,
-      row.productId,
-      row.variantId,
-      row.supplierId,
-      min,
-      max
-    );
+    return SuppliedProduct.create({
+      id: row.id,
+      productId: row.productId,
+      supplierId: row.supplierId,
+      min: min,
+      max: max,
+    });
   }
 }

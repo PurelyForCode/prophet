@@ -49,7 +49,7 @@ export class UpdateProductUsecase implements Usecase<any, any> {
 
     let setting = undefined;
     if (input.fields.settings) {
-      const currentSetting = product.settings;
+      const currentSetting = product.getSetting();
       setting = new ProductSetting(
         input.fields.settings.serviceLevel ?? currentSetting.serviceLevel,
         input.fields.settings.safetyStockCalculationMethod ??

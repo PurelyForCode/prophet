@@ -27,16 +27,16 @@ export class SupplierManager {
     }
     const now = new Date();
     const leadTimeValueObject = fields.leadTime;
-    const supplier = Supplier.create(
-      fields.id,
-      fields.accountId,
-      fields.name,
-      leadTimeValueObject,
-      now,
-      now,
-      null,
-      new Map()
-    );
+    const supplier = Supplier.create({
+      id: fields.id,
+      accountId: fields.accountId,
+      name: fields.name,
+      leadTime: leadTimeValueObject,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+      productsSupplied: new Map(),
+    });
     supplier.addTrackedEntity(supplier, EntityAction.created);
     return supplier;
   }
@@ -55,12 +55,12 @@ export class SupplierManager {
     fields: UpdateSupplierFields
   ) {
     if (fields.leadTime) {
-      supplier.leadTime = fields.leadTime;
+      supplier.setLeadTime(fields.leadTime);
     }
     if (fields.name) {
-      supplier.name = fields.name;
+      supplier.setName(fields.name);
     }
-    supplier.updatedAt = updatedAt;
+    supplier.setUpdatedAt(updatedAt);
     supplier.addTrackedEntity(supplier, EntityAction.updated);
     return supplier;
   }

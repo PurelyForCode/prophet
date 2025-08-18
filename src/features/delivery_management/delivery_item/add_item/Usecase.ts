@@ -31,13 +31,12 @@ export class AddItemToDeliveryUsecase {
     for (const item of input.items) {
       const id = this.idGenerator.generate();
       const quantity = new DeliveryItemQuantity(item.quantity);
-      const deliveryItem = DeliveryItem.create(
-        id,
-        item.productId,
-        item.variantId,
-        input.deliveryId,
-        quantity
-      );
+      const deliveryItem = DeliveryItem.create({
+        id: id,
+        productId: item.productId,
+        deliveryId: input.deliveryId,
+        quantity: quantity,
+      });
       delivery.addItem(deliveryItem);
     }
     await this.uow.save(delivery);

@@ -51,17 +51,18 @@ export class ProductRepository implements IProductRepository {
   async update(entity: Product) {
     await this.productDAO.update({
       id: entity.id,
-      account_id: entity.accountId,
-      name: entity.name.value,
-      product_category_id: entity.productCategoryId,
-      safety_stock: entity.safetyStock.value,
-      stock: entity.stock.value,
-      created_at: entity.createdAt,
-      updated_at: entity.updatedAt,
-      deleted_at: entity.deletedAt,
+      account_id: entity.getAccountId(),
+      name: entity.getName().value,
+      product_category_id: entity.getProductCategoryId(),
+      safety_stock: entity.getSafetyStock().value,
+      stock: entity.getStock().value,
+      created_at: entity.getCreatedAt(),
+      updated_at: entity.getUpdatedAt(),
+      product_id: null,
+      deleted_at: entity.getDeletedAt(),
     });
 
-    const productSetting = entity.settings;
+    const productSetting = entity.getSetting();
     await this.settingDAO.update({
       classification: productSetting.classification,
       fill_rate: productSetting.fillRate,
@@ -70,23 +71,23 @@ export class ProductRepository implements IProductRepository {
         productSetting.safetyStockCalculationMethod,
       service_level: productSetting.serviceLevel,
       updated_at: productSetting.updatedAt,
-      variant_id: null,
     });
   }
 
   async create(entity: Product) {
     await this.productDAO.insert({
       id: entity.id,
-      account_id: entity.accountId,
-      name: entity.name.value,
-      product_category_id: entity.productCategoryId,
-      safety_stock: entity.safetyStock.value,
-      stock: entity.stock.value,
-      created_at: entity.createdAt,
-      updated_at: entity.updatedAt,
-      deleted_at: entity.deletedAt,
+      account_id: entity.getAccountId(),
+      name: entity.getName().value,
+      product_category_id: entity.getProductCategoryId(),
+      safety_stock: entity.getSafetyStock().value,
+      stock: entity.getStock().value,
+      created_at: entity.getCreatedAt(),
+      updated_at: entity.getUpdatedAt(),
+      product_id: null,
+      deleted_at: entity.getDeletedAt(),
     });
-    const productSetting = entity.settings;
+    const productSetting = entity.getSetting();
     await this.settingDAO.insert({
       id: idGenerator.generate(),
       classification: productSetting.classification,
@@ -96,29 +97,28 @@ export class ProductRepository implements IProductRepository {
       safety_stock_calculation_method:
         productSetting.safetyStockCalculationMethod,
       updated_at: productSetting.updatedAt,
-      variant_id: null,
     });
   }
 
   mapToEntity(product: ProductDTO, variants: Map<EntityId, Variant>): Product {
-    return Product.create(
-      product.id,
-      product.accountId,
-      product.productCategoryId,
-      new ProductName(product.name),
-      new ProductStock(product.stock),
-      new SafetyStock(product.safetyStock),
-      new ProductSetting(
+    return Product.create({
+      id: product.id,
+      accountId: product.accountId,
+      productCategoryId: product.productCategoryId,
+      name: new ProductName(product.name),
+      stock: new ProductStock(product.stock),
+      safetyStock: new SafetyStock(product.safetyStock),
+      settings: new ProductSetting(
         product.setting.serviceLevel,
         product.setting.safetyStockCalculationMethod,
         product.setting.classification,
         product.setting.fillRate,
         product.setting.updatedAt
       ),
-      product.createdAt,
-      product.updatedAt,
-      product.deletedAt,
-      variants
-    );
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+      deletedAt: product.deletedAt,
+      variants: variants,
+    });
   }
 }

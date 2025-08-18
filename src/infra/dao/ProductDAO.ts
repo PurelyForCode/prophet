@@ -93,7 +93,10 @@ export class ProductDAO {
   async existsByName(name: string) {
     const builder = this.knex("product")
       .select(
-        this.knex.raw("exists (select 1 from product where name = ?)", [name])
+        this.knex.raw(
+          "exists (select 1 from product where name = ? AND where product_id IS NULL)",
+          [name]
+        )
       )
       .first();
     const row = await builder;
@@ -247,7 +250,6 @@ export class ProductDAO {
         sales = await new SaleDAO(this.knex).query({
           archived: archived,
           productId: productId,
-          variantId: null,
         });
       }
     }

@@ -34,24 +34,24 @@ export class SupplierRepository implements ISupplierRepository {
   }
   async update(entity: Supplier): Promise<void> {
     await this.supplierDAO.update({
-      account_id: entity.accountId,
-      created_at: entity.createdAt,
-      deleted_at: entity.deletedAt,
+      account_id: entity.getAccountId(),
+      created_at: entity.getCreatedAt(),
+      deleted_at: entity.getDeletedAt(),
       id: entity.id,
-      lead_time: entity.leadTime.value,
-      name: entity.name.value,
-      updated_at: entity.updatedAt,
+      lead_time: entity.getLeadTime().value,
+      name: entity.getName().value,
+      updated_at: entity.getUpdatedAt(),
     });
   }
   async create(entity: Supplier): Promise<void> {
     await this.supplierDAO.insert({
-      account_id: entity.accountId,
-      created_at: entity.createdAt,
-      deleted_at: entity.deletedAt,
+      account_id: entity.getAccountId(),
+      created_at: entity.getCreatedAt(),
+      deleted_at: entity.getDeletedAt(),
       id: entity.id,
-      lead_time: entity.leadTime.value,
-      name: entity.name.value,
-      updated_at: entity.updatedAt,
+      lead_time: entity.getLeadTime().value,
+      name: entity.getName().value,
+      updated_at: entity.getUpdatedAt(),
     });
   }
 
@@ -72,15 +72,15 @@ export class SupplierRepository implements ISupplierRepository {
   ) {
     const name = new SupplierName(supplierDTO.name);
     const leadTime = new LeadTime(supplierDTO.leadTime);
-    return Supplier.create(
-      supplierDTO.id,
-      supplierDTO.accountId,
-      name,
-      leadTime,
-      supplierDTO.createdAt,
-      supplierDTO.updatedAt,
-      supplierDTO.deletedAt,
-      suppliedProducts
-    );
+    return Supplier.create({
+      id: supplierDTO.id,
+      accountId: supplierDTO.accountId,
+      name: name,
+      leadTime: leadTime,
+      createdAt: supplierDTO.createdAt,
+      updatedAt: supplierDTO.updatedAt,
+      deletedAt: supplierDTO.deletedAt,
+      productsSupplied: suppliedProducts,
+    });
   }
 }

@@ -15,20 +15,20 @@ export class DeliveryManager {
     const now = new Date();
     const scheduledArrivalDate = new Date();
     scheduledArrivalDate.setDate(scheduledArrivalDate.getDate() + 7);
-    const delivery = Delivery.create(
-      params.id,
-      supplier.id,
-      params.accountId,
-      params.status,
-      null,
-      scheduledArrivalDate,
-      now,
-      null,
-      now,
-      now,
-      null,
-      new Map()
-    );
+    const delivery = Delivery.create({
+      id: params.id,
+      supplierId: supplier.id,
+      accountId: params.accountId,
+      status: params.status,
+      cancelledAt: null,
+      scheduledArrivalDate: scheduledArrivalDate,
+      deliveryRequestedAt: now,
+      completedAt: null,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+      items: new Map(),
+    });
     return delivery;
   }
   archiveDelivery(delivery: Delivery) {

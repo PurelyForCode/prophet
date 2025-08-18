@@ -31,48 +31,45 @@ export class SaleRepository implements ISaleRepository {
 
   async update(entity: Sale): Promise<void> {
     await this.saleDAO.update({
-      account_id: entity.accountId,
-      created_at: entity.createdAt,
-      date: entity.date,
-      deleted_at: entity.deletedAt,
+      account_id: entity.getAccountId(),
+      created_at: entity.getCreatedAt(),
+      date: entity.getDate(),
+      deleted_at: entity.getDeletedAt(),
       id: entity.id,
-      product_id: entity.productId,
-      quantity: entity.quantity.value,
-      status: entity.status.value,
-      updated_at: entity.updatedAt,
-      variant_id: entity.variantId,
+      product_id: entity.getProductId(),
+      quantity: entity.getQuantity().value,
+      status: entity.getStatus().value,
+      updated_at: entity.getUpdatedAt(),
     });
   }
 
   async create(entity: Sale): Promise<void> {
     await this.saleDAO.insert({
-      account_id: entity.accountId,
-      created_at: entity.createdAt,
-      date: entity.date,
-      deleted_at: entity.deletedAt,
+      account_id: entity.getAccountId(),
+      created_at: entity.getCreatedAt(),
+      date: entity.getDate(),
+      deleted_at: entity.getDeletedAt(),
       id: entity.id,
-      product_id: entity.productId,
-      quantity: entity.quantity.value,
-      status: entity.status.value,
-      updated_at: entity.updatedAt,
-      variant_id: entity.variantId,
+      product_id: entity.getProductId(),
+      quantity: entity.getQuantity().value,
+      status: entity.getStatus().value,
+      updated_at: entity.getUpdatedAt(),
     });
   }
 
   mapToEntity(sale: SaleDTO): Sale {
     const quantity = new SaleQuantity(sale.quantity);
     const status = new SaleStatus(sale.status as SaleStatusValues);
-    return Sale.create(
-      sale.id,
-      sale.account_id,
-      sale.product_id,
-      sale.variant_id,
-      quantity,
-      status,
-      sale.date,
-      sale.created_at,
-      sale.updated_at,
-      sale.deleted_at
-    );
+    return Sale.create({
+      accountId: sale.account_id,
+      createdAt: sale.created_at,
+      date: sale.date,
+      deletedAt: sale.deleted_at,
+      id: sale.id,
+      productId: sale.product_id,
+      quantity: quantity,
+      status: status,
+      updatedAt: sale.updated_at,
+    });
   }
 }
