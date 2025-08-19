@@ -16,7 +16,6 @@ export type CreateDeliveryInput = {
     | {
         quantity: number;
         productId: EntityId;
-        variantId: EntityId | null;
       }[]
     | undefined;
 };

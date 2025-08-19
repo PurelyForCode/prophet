@@ -27,8 +27,8 @@ app.get(
     const params = c.req.valid("param");
     const saleDAO = new SaleDAO(knexInstance);
     const saleDTOs = await saleDAO.query({
+      archived: false,
       productId: params.productId,
-      variantId: params.variantId,
     });
     return c.json({ data: saleDTOs });
   }
@@ -47,8 +47,8 @@ app.get(
     const params = c.req.valid("param");
     const saleDAO = new SaleDAO(knexInstance);
     const saleDTO = await saleDAO.queryById(params.saleId, {
+      archived: false,
       productId: params.productId,
-      variantId: params.variantId,
     });
     if (saleDTO) {
       return c.json({
@@ -91,7 +91,6 @@ app.post(
         productId: params.productId,
         quantity: body.quantity,
         status: body.status,
-        variantId: params.variantId ?? null,
       });
     });
     return c.json({ message: "Successfully created sale" });
@@ -117,7 +116,6 @@ app.delete(
       await usecase.call({
         saleId: params.saleId,
         productId: params.productId,
-        variantId: params.variantId ?? null,
       });
     });
     return c.json({ message: "Successfully deleted sale" });
@@ -152,7 +150,6 @@ app.patch(
       await usecase.call({
         saleId: params.saleId,
         productId: params.productId,
-        variantId: params.variantId ?? null,
         fields: {
           date: body.date,
           quantity: body.quantity,

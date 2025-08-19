@@ -8,7 +8,6 @@ import { SaleService } from "../../../domain/sales/services/SaleService.js";
 export type ArchiveSaleInput = {
   saleId: EntityId;
   productId: EntityId;
-  variantId: EntityId | null;
 };
 
 export class ArchiveSaleUsecase implements Usecase<ArchiveSaleInput> {

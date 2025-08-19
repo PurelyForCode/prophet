@@ -142,7 +142,7 @@ export class ProductDAO {
     return rows.map((row) => this.mapToDTO(row));
   }
 
-  async queryOne(
+  async queryById(
     id: EntityId,
     include: ProductIncludeParams,
     archived: boolean

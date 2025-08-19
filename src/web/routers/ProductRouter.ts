@@ -36,11 +36,15 @@ app.get(
   async (c) => {
     const params = c.req.valid("param");
     const productDAO = new ProductDAO(knexInstance);
-    const result = await productDAO.queryById(params.productId, {
-      sales: true,
-      variants: { setting: true, sales: true },
-      setting: true,
-    });
+    const result = await productDAO.queryById(
+      params.productId,
+      {
+        sales: true,
+        variants: { setting: true, sales: true },
+        setting: true,
+      },
+      false
+    );
     return c.json(result);
   }
 );

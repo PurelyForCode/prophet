@@ -9,7 +9,6 @@ import { SalesForecastManager } from "../../../domain/sales_forecasting/services
 
 export type GenerateSaleForecastInput = {
   productId: EntityId;
-  variantId: EntityId | null;
   accountId: EntityId;
   forecastStartDate: Date;
   forecastEndDate: Date;
@@ -29,23 +28,15 @@ export class GenerateSaleForecastUsecase {
     if (!product) {
       throw new ProductNotFoundException();
     }
-    let variant = null;
-    if (input.variantId) {
-      const variant = product.getVariants().get(input.variantId);
-      if (!variant) {
-        throw new VariantNotFoundException();
-      }
-    }
     const forecastManager = new SalesForecastManager();
     const id = this.idGenerator.generate();
     const forecast = forecastManager.createForecast({
+      id: id,
       accountId: input.accountId,
       forecastEndDate: input.forecastEndDate,
       forecastStartDate: input.forecastStartDate,
       historicalDaysCount: new HistoricalDaysCount(input.historicalDaysCount),
-      id: id,
       productId: input.productId,
-      varaintId: input.variantId,
     });
 
     await this.uow.save(forecast);

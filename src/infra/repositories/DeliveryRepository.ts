@@ -22,32 +22,32 @@ export class DeliveryRepository implements IDeliveryRepository {
 
   async update(entity: Delivery): Promise<void> {
     await this.deliveryDAO.update({
-      account_id: entity.accountId,
-      cancelled_at: entity.cancelledAt,
-      completed_at: entity.completedAt,
-      created_at: entity.createdAt,
-      deleted_at: entity.deletedAt,
-      delivery_requested_at: entity.deliveryRequestedAt,
+      account_id: entity.getAccountId(),
+      cancelled_at: entity.getCancelledAt(),
+      completed_at: entity.getCompletedAt(),
+      created_at: entity.getCreatedAt(),
+      deleted_at: entity.getDeletedAt(),
+      delivery_requested_at: entity.getDeliveryRequestedAt(),
       id: entity.id,
-      scheduled_arrival_date: entity.scheduledArrivalDate,
-      status: entity.status.value,
-      supplier_id: entity.supplierId,
-      updated_at: entity.updatedAt,
+      scheduled_arrival_date: entity.getScheduledArrivalDate(),
+      status: entity.getStatus().value,
+      supplier_id: entity.getSupplierId(),
+      updated_at: entity.getUpdatedAt(),
     });
   }
   async create(entity: Delivery): Promise<void> {
     await this.deliveryDAO.insert({
-      account_id: entity.accountId,
-      cancelled_at: entity.cancelledAt,
-      completed_at: entity.completedAt,
-      created_at: entity.createdAt,
-      deleted_at: entity.deletedAt,
-      delivery_requested_at: entity.deliveryRequestedAt,
+      account_id: entity.getAccountId(),
+      cancelled_at: entity.getCancelledAt(),
+      completed_at: entity.getCompletedAt(),
+      created_at: entity.getCreatedAt(),
+      deleted_at: entity.getDeletedAt(),
+      delivery_requested_at: entity.getDeliveryRequestedAt(),
       id: entity.id,
-      scheduled_arrival_date: entity.scheduledArrivalDate,
-      status: entity.status.value,
-      supplier_id: entity.supplierId,
-      updated_at: entity.updatedAt,
+      scheduled_arrival_date: entity.getScheduledArrivalDate(),
+      status: entity.getStatus().value,
+      supplier_id: entity.getSupplierId(),
+      updated_at: entity.getUpdatedAt(),
     });
   }
 
@@ -67,19 +67,19 @@ export class DeliveryRepository implements IDeliveryRepository {
     items: Map<EntityId, DeliveryItem>
   ) {
     const status = new DeliveryStatus(delivery.status);
-    return Delivery.create(
-      delivery.id,
-      delivery.supplierId,
-      delivery.accountId,
-      status,
-      delivery.completedAt,
-      delivery.scheduledArrivalDate,
-      delivery.deliveryRequestedAt,
-      delivery.cancelledAt,
-      delivery.createdAt,
-      delivery.updatedAt,
-      delivery.deletedAt,
-      items
-    );
+    return Delivery.create({
+      id: delivery.id,
+      supplierId: delivery.supplierId,
+      accountId: delivery.accountId,
+      status: status,
+      completedAt: delivery.completedAt,
+      scheduledArrivalDate: delivery.scheduledArrivalDate,
+      deliveryRequestedAt: delivery.deliveryRequestedAt,
+      cancelledAt: delivery.cancelledAt,
+      createdAt: delivery.createdAt,
+      updatedAt: delivery.updatedAt,
+      deletedAt: delivery.deletedAt,
+      items: items,
+    });
   }
 }

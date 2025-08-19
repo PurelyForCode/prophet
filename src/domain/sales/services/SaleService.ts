@@ -10,7 +10,6 @@ export class SaleService {
     id: EntityId;
     accountId: EntityId;
     productId: EntityId;
-    variantId: EntityId | null;
     quantity: SaleQuantity;
     status: SaleStatus;
     date: Date;

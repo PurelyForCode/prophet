@@ -12,7 +12,6 @@ import { SaleService } from "../../../domain/sales/services/SaleService.js";
 export type CreateSaleInput = {
   accountId: EntityId;
   productId: EntityId;
-  variantId: EntityId | null;
   quantity: number;
   status: SaleStatusValues;
   date: Date;
@@ -28,18 +27,17 @@ export class CreateSaleUsecase implements Usecase<CreateSaleInput> {
     const now = new Date();
     const quantity = new SaleQuantity(input.quantity);
     const status = new SaleStatus(input.status);
-    const sale = saleService.createSale(
-      this.idGenerator.generate(),
-      input.accountId,
-      input.productId,
-      input.variantId,
-      quantity,
-      status,
-      input.date,
-      now,
-      now,
-      null
-    );
+    const sale = saleService.createSale({
+      id: this.idGenerator.generate(),
+      accountId: input.accountId,
+      productId: input.productId,
+      quantity: quantity,
+      status: status,
+      date: input.date,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+    });
     await this.uow.save(sale);
   }
 }

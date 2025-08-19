@@ -1,12 +1,11 @@
 import { Knex } from "knex";
 import { EntityId } from "../../core/types/EntityId.js";
 
-export type SaleFilterParams =
-  | Partial<{
-      productId: EntityId;
-      archived: boolean;
-    }>
-  | undefined;
+export type SaleFilterParams = Partial<{
+  productId: EntityId;
+  archived: boolean;
+}>;
+
 export type SaleDTO = {
   id: string;
   account_id: string;
@@ -73,13 +72,9 @@ export class SaleDAO {
     }
   }
 
-  async queryOne(
+  async queryById(
     id: EntityId,
-    filters:
-      | Partial<{
-          productId: EntityId;
-        }>
-      | undefined
+    filters: SaleFilterParams | undefined
   ): Promise<SaleQueryDTO | null> {
     const builder = this.knex<SaleDatabaseTable>(`${this.tableName} as s`)
       .select("s.*")
@@ -90,6 +85,13 @@ export class SaleDAO {
       if (filters.productId) {
         builder.where("s.product_id", "=", filters.productId);
       }
+      if (filters.archived) {
+        builder.whereNotNull("s.deleted_at");
+      } else {
+        builder.whereNull("s.deleted_at");
+      }
+    } else {
+      builder.whereNull("s.deleted_at");
     }
     const row = await builder;
     if (row) {
@@ -99,7 +101,7 @@ export class SaleDAO {
     }
   }
 
-  async query(filters: SaleFilterParams): Promise<SaleQueryDTO[]> {
+  async query(filters: SaleFilterParams | undefined): Promise<SaleQueryDTO[]> {
     const builder = this.knex<SaleDatabaseTable>(
       `${this.tableName} as s`
     ).select("s.*");

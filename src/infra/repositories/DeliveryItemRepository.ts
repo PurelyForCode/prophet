@@ -15,18 +15,18 @@ export class DeliveryItemRepository implements IDeliveryItemRepository {
   }
   async update(entity: DeliveryItem): Promise<void> {
     await this.deliveryItemDAO.update({
-      delivery_id: entity.deliveryId,
+      delivery_id: entity.getDeliveryId(),
       id: entity.id,
-      product_id: entity.productId,
-      quantity: entity.quantity.value,
+      product_id: entity.getProductId(),
+      quantity: entity.getQuantity().value,
     });
   }
   async create(entity: DeliveryItem): Promise<void> {
     await this.deliveryItemDAO.insert({
-      delivery_id: entity.deliveryId,
+      delivery_id: entity.getDeliveryId(),
       id: entity.id,
-      product_id: entity.productId,
-      quantity: entity.quantity.value,
+      product_id: entity.getProductId(),
+      quantity: entity.getQuantity().value,
     });
   }
 
@@ -53,13 +53,11 @@ export class DeliveryItemRepository implements IDeliveryItemRepository {
 
   private mapToEntity(item: DeliveryItemDTO): DeliveryItem {
     const quantity = new DeliveryItemQuantity(item.quantity);
-    return DeliveryItem.create(
-      item.id,
-
-      item.productId,
-
-      item.deliveryId,
-      quantity
-    );
+    return DeliveryItem.create({
+      id: item.id,
+      productId: item.productId,
+      deliveryId: item.deliveryId,
+      quantity: quantity,
+    });
   }
 }

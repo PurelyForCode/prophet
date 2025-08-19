@@ -2,15 +2,20 @@ import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js";
 import { Usecase } from "../../../core/interfaces/Usecase.js";
 import { EntityId } from "../../../core/types/EntityId.js";
 import { SaleUpdateableFields } from "../../../domain/sales/entities/sale/Sale.js";
+import { SaleQuantity } from "../../../domain/sales/entities/sale/value_objects/SaleQuantity.js";
+import { SaleStatus } from "../../../domain/sales/entities/sale/value_objects/SaleStatus.js";
 import { InvalidSaleTargetException } from "../../../domain/sales/exceptions/InvalidSaleTargetException.js";
 import { SaleNotFoundException } from "../../../domain/sales/exceptions/SaleNotFoundException.js";
 import { SaleService } from "../../../domain/sales/services/SaleService.js";
 
 type UpdateSaleInput = {
-  fields: SaleUpdateableFields;
+  fields: Partial<{
+    quantity: number;
+    status: string;
+    date: Date;
+  }>;
   saleId: EntityId;
   productId: EntityId;
-  variantId: EntityId | null;
 };
 
 export class UpdateSaleUsecase implements Usecase<UpdateSaleInput> {
@@ -22,18 +27,29 @@ export class UpdateSaleUsecase implements Usecase<UpdateSaleInput> {
       throw new SaleNotFoundException();
     }
 
-    if (input.productId !== sale.productId) {
-      throw new InvalidSaleTargetException();
-    }
-    if (input.variantId !== sale.variantId) {
+    if (input.productId !== sale.getProductId()) {
       throw new InvalidSaleTargetException();
     }
     const saleService = new SaleService();
+    let date = undefined;
+    let quantity = undefined;
+    let status = undefined;
+
+    if (input.fields.date) {
+      date = input.fields.date;
+    }
+    if (input.fields.quantity) {
+      quantity = new SaleQuantity(input.fields.quantity);
+    }
+    if (input.fields.status) {
+      status = new SaleStatus(input.fields.status);
+    }
+
     saleService.updateSale(
       {
-        date: input.fields.date,
-        quantity: input.fields.quantity,
-        status: input.fields.status,
+        date,
+        quantity,
+        status,
       },
       sale
     );

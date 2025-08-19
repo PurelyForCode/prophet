@@ -11,7 +11,6 @@ export type AddItemToDeliveryInput = {
   items: {
     quantity: number;
     productId: EntityId;
-    variantId: EntityId | null;
   }[];
 };
 
