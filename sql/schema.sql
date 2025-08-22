@@ -56,7 +56,7 @@ CREATE TABLE product_category(
     account_id UUID NOT NULL,
     name VARCHAR(100) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     deleted_at TIMESTAMPTZ
 );
 
