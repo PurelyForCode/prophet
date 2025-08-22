@@ -1,4 +1,3 @@
-import { useImperativeHandle } from "hono/jsx";
 import { ResourceIsArchivedException } from "../../../../core/exceptions/ResourceIsArchivedException.js";
 import {
   AggregateRoot,
@@ -7,6 +6,7 @@ import {
 import { EntityCollection } from "../../../../core/types/EntityCollection.js";
 import { EntityId } from "../../../../core/types/EntityId.js";
 import { DuplicateVariantNameException } from "../../exceptions/DuplicateVariantNameException.js";
+import { ProductNotInCategoryException } from "../../exceptions/ProductNotInCategoryException.js";
 import { VariantNotFoundException } from "../../exceptions/VariantNotFoundException.js";
 import { Variant, VariantUpdateableFields } from "../variant/Variant.js";
 import { ProductName } from "./value_objects/ProductName.js";
@@ -242,5 +242,27 @@ export class Product extends AggregateRoot {
     if (this.deletedAt) {
       throw new ResourceIsArchivedException("Product");
     }
+  }
+
+  addToCategory(categoryId: EntityId) {
+    this.setProductCategoryId(categoryId);
+    this.addTrackedEntity(this, EntityAction.updated);
+    this.variants.forEach((variant) => {
+      variant.setProductCategoryId(categoryId);
+      this.addTrackedEntity(variant, EntityAction.updated);
+    });
+  }
+
+  removeInCategory() {
+    if (this.getProductCategoryId() === null) {
+      throw new ProductNotInCategoryException();
+    }
+
+    this.setProductCategoryId(null);
+    this.addTrackedEntity(this, EntityAction.updated);
+    this.variants.forEach((variant) => {
+      variant.setProductCategoryId(null);
+      this.addTrackedEntity(variant, EntityAction.updated);
+    });
   }
 }

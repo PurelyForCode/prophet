@@ -31,6 +31,7 @@ export class CategoryManager {
       updatedAt: now,
     });
     category.addTrackedEntity(category, EntityAction.created);
+    return category;
   }
 
   async deleteCategory(category: Category) {

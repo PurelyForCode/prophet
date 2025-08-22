@@ -11,6 +11,7 @@ import {
 } from "./VariantDAO.js";
 import { ProductSettingQueryDTO } from "./ProductSettingDAO.js";
 import { SaleDAO, SaleQueryDTO } from "./SaleDAO.js";
+import { CategoryDAO } from "./CategoryDAO.js";
 
 export type ProductQueryDTO = {
   id: string;
@@ -119,6 +120,14 @@ export class ProductDAO {
     } else {
       return null;
     }
+  }
+  async findAllByCategoryId(categoryId: EntityId) {
+    const builder = this.knex(`${this.tableName} as p`)
+      .select("p.*")
+      .where("p.product_category_id", "=", categoryId);
+    this.joinSettings(builder);
+    const rows = await builder;
+    return rows.map((row) => this.mapToDTO(row));
   }
 
   async findOneByName(name: string): Promise<ProductDTO | null> {

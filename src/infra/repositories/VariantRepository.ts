@@ -13,7 +13,6 @@ import {
 } from "../../domain/product_management/entities/product/value_objects/ProductSetting.js";
 import { SafetyStock } from "../../domain/product_management/entities/product/value_objects/SafetyStock.js";
 import { ProductStock } from "../../domain/product_management/entities/product/value_objects/ProductStock.js";
-import { Entity } from "../../core/interfaces/Entity.js";
 
 export class VariantRepository implements IVariantRepository {
   private variantDAO: VariantDAO;

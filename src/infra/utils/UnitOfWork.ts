@@ -18,6 +18,8 @@ import { ISuppliedProductRepository } from "../../domain/delivery_management/rep
 import { ISupplierRepository } from "../../domain/delivery_management/repositories/ISupplierRepository.js";
 import { SupplierRepository } from "../repositories/SupplierRepository.js";
 import { SuppliedProductRepository } from "../repositories/SuppliedProductRepository.js";
+import { ICategoryRepository } from "../../domain/product_management/repositories/ICategoryRepository.js";
+import { CategoryRepository } from "../repositories/CategoryRepository.js";
 
 export class UnitOfWork implements IUnitOfWork {
   private trx: Knex.Transaction | null = null;
@@ -25,6 +27,13 @@ export class UnitOfWork implements IUnitOfWork {
     private readonly knex: Knex,
     private readonly repositoryFactory: RepositoryFactory
   ) {}
+  getCategoryRepository(): ICategoryRepository {
+    if (this.trx) {
+      return new CategoryRepository(this.trx);
+    } else {
+      return new CategoryRepository(this.knex);
+    }
+  }
   getSupplierRepository(): ISupplierRepository {
     if (this.trx) {
       return new SupplierRepository(this.trx);

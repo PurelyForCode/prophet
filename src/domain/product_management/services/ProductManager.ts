@@ -1,6 +1,5 @@
 import { EntityAction } from "../../../core/interfaces/AggregateRoot.js";
 import { EntityId } from "../../../core/types/EntityId.js";
-import { Category } from "../entities/category/Category.js";
 import { Product, UpdateProductFields } from "../entities/product/Product.js";
 import { ProductName } from "../entities/product/value_objects/ProductName.js";
 import { ProductSetting } from "../entities/product/value_objects/ProductSetting.js";
@@ -8,7 +7,6 @@ import { ProductStock } from "../entities/product/value_objects/ProductStock.js"
 import { SafetyStock } from "../entities/product/value_objects/SafetyStock.js";
 import { DuplicateProductNameException } from "../exceptions/DuplicateNameException.js";
 import { ProductIsAlreadyArchived } from "../exceptions/ProductIsAlreadyArchived.js";
-import { ICategoryRepository } from "../repositories/ICategoryRepository.js";
 import { IProductRepository } from "../repositories/IProductRepository.js";
 
 export class ProductManager {
@@ -77,5 +75,9 @@ export class ProductManager {
     fields.settings && product.updateSetting(fields.settings);
     product.setUpdatedAt(updatedAt);
     product.addTrackedEntity(product, EntityAction.updated);
+  }
+
+  async removeProductFromCategory(product: Product) {
+    product.removeInCategory();
   }
 }

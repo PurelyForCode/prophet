@@ -22,6 +22,19 @@ export class ProductRepository implements IProductRepository {
     this.settingDAO = new ProductSettingDAO(knex);
   }
 
+  async findAllByCategoryId(
+    categoryId: EntityId
+  ): Promise<Map<EntityId, Product>> {
+    const result = await this.productDAO.findAllByCategoryId(categoryId);
+    const products = new Map();
+    for (const product of result) {
+      const variants = await this.variantRepo.findAllByProductId(product.id);
+      const productEntity = this.mapToEntity(product, variants);
+      products.set(productEntity.id, productEntity);
+    }
+    return products;
+  }
+
   async isProductNameUnique(name: ProductName): Promise<boolean> {
     return !(await this.productDAO.existsByName(name.value));
   }

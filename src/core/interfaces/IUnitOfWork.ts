@@ -5,6 +5,7 @@ import { IDeliveryItemRepository } from "../../domain/delivery_management/reposi
 import { IDeliveryRepository } from "../../domain/delivery_management/repositories/IDeliveryRepository.js";
 import { ISupplierRepository } from "../../domain/delivery_management/repositories/ISupplierRepository.js";
 import { ISuppliedProductRepository } from "../../domain/delivery_management/repositories/ISuppliedProductRepository.js";
+import { ICategoryRepository } from "../../domain/product_management/repositories/ICategoryRepository.js";
 
 export enum IsolationLevel {
   READ_COMMITTED = "READ COMMITTED",
@@ -14,6 +15,7 @@ export enum IsolationLevel {
 
 export interface IUnitOfWork {
   getProductRepository(): IProductRepository;
+  getCategoryRepository(): ICategoryRepository;
   getSaleRepository(): ISaleRepository;
   getDeliveryItemRepository(): IDeliveryItemRepository;
   getDeliveryRepository(): IDeliveryRepository;
