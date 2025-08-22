@@ -1,3 +1,4 @@
+import { useImperativeHandle } from "hono/jsx";
 import { ResourceIsArchivedException } from "../../../../core/exceptions/ResourceIsArchivedException.js";
 import {
   AggregateRoot,
@@ -124,7 +125,8 @@ export class Product extends AggregateRoot {
   }
   setSafetyStock(safetyStock: SafetyStock) {
     this.throwIfArchived();
-    this.safetyStock = safetyStock;
+    if (this.settings.safetyStockCalculationMethod === "manual")
+      this.safetyStock = safetyStock;
   }
   getUpdatedAt() {
     return this.updatedAt;

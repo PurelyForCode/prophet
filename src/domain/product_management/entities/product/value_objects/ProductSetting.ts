@@ -12,8 +12,8 @@ export type ProductClassification = "fast" | "slow";
 
 export class ProductSetting {
   public readonly serviceLevel: number;
-  public readonly safetyStockCalculationMethod: string;
-  public readonly classification: string;
+  public readonly safetyStockCalculationMethod: SafetyStockCalculationMethod;
+  public readonly classification: ProductClassification;
   public readonly fillRate: number;
   public readonly updatedAt: Date;
 
