@@ -1,12 +1,12 @@
 import { DomainEvent } from "../../core/interfaces/DomainEvent.js";
 import {
   DomainEventHandler,
-  IDomainEventBus,
+  IEventBus,
 } from "../../core/interfaces/IDomainEventBus.js";
 import { AggregateRoot } from "../../core/interfaces/AggregateRoot.js";
-import { UnitOfWork } from "./UnitOfWork.js";
+import { UnitOfWork } from "../utils/UnitOfWork.js";
 
-export class DomainEventBus implements IDomainEventBus {
+export class DomainEventBus implements IEventBus {
   private handlers: Map<string, DomainEventHandler<any>[]> = new Map();
 
   register<T>(handler: DomainEventHandler<any>) {
@@ -15,7 +15,7 @@ export class DomainEventBus implements IDomainEventBus {
     this.handlers.set(handler.eventName, handlers);
   }
 
-  private async handle(event: DomainEvent, uow?: UnitOfWork) {
+  private async handle(event: DomainEvent, uow: UnitOfWork) {
     const handlers = this.handlers.get(event.eventName);
     if (!handlers) return;
     for (const handler of handlers) {
@@ -31,5 +31,3 @@ export class DomainEventBus implements IDomainEventBus {
     aggregateRoot.clearDomainEvent();
   }
 }
-
-export const domainEventBus = new DomainEventBus();

@@ -15,7 +15,7 @@ import { fakeId } from "../../fakeId.js";
 import { ArchiveProductUsecase } from "../../features/product_management/product/archive_product/Usecase.js";
 import { UpdateProductUsecase } from "../../features/product_management/product/update_product/Usecase.js";
 import saleRouter from "./SaleRouter.js";
-import { domainEventBus } from "../../infra/utils/DomainEventBus.js";
+import { domainEventBus } from "../../infra/events/EventBusConfiguration.js";
 
 const app = new Hono();
 

@@ -1,4 +1,4 @@
-import { IDomainEventBus } from "../../../../core/interfaces/IDomainEventBus.js";
+import { IEventBus } from "../../../../core/interfaces/IDomainEventBus.js";
 import { IIdGenerator } from "../../../../core/interfaces/IIdGenerator.js";
 import { IUnitOfWork } from "../../../../core/interfaces/IUnitOfWork.js";
 import { EntityId } from "../../../../core/types/EntityId.js";
@@ -16,7 +16,7 @@ export type CreateSupplierInput = {
 export class CreateSupplierUsecase {
   constructor(
     private readonly uow: IUnitOfWork,
-    private readonly eventBus: IDomainEventBus,
+    private readonly eventBus: IEventBus,
     private readonly idGenerator: IIdGenerator
   ) {}
   async call(input: CreateSupplierInput) {

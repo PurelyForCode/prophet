@@ -12,6 +12,10 @@ import { DeliveryItem } from "../../domain/delivery_management/entities/delivery
 import { DeliveryItemRepository } from "../repositories/DeliveryItemRepository.js";
 import { SupplierRepository } from "../repositories/SupplierRepository.js";
 import { Supplier } from "../../domain/delivery_management/entities/supplier/Supplier.js";
+import { CategoryRepository } from "../repositories/CategoryRepository.js";
+import { Category } from "../../domain/product_management/entities/category/Category.js";
+import { SuppliedProduct } from "../../domain/delivery_management/entities/supplied_product/SuppliedProduct.js";
+import { SuppliedProductRepository } from "../repositories/SuppliedProductRepository.js";
 
 type RepositoryConstructor<T> = new (
   knex: Knex | Knex.Transaction
@@ -27,6 +31,8 @@ export class RepositoryFactory {
     this.register(Delivery, DeliveryRepository);
     this.register(DeliveryItem, DeliveryItemRepository);
     this.register(Supplier, SupplierRepository);
+    this.register(SuppliedProduct, SuppliedProductRepository);
+    this.register(Category, CategoryRepository);
   }
 
   private register<T>(entity: Function, repositoryConstructor: Function) {

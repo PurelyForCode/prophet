@@ -1,9 +1,8 @@
-import { IDomainEventBus } from "../../../core/interfaces/IDomainEventBus.js";
+import { IEventBus } from "../../../core/interfaces/IDomainEventBus.js";
 import { IIdGenerator } from "../../../core/interfaces/IIdGenerator.js";
 import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js";
 import { EntityId } from "../../../core/types/EntityId.js";
 import { ProductNotFoundException } from "../../../domain/product_management/exceptions/ProductNotFoundException.js";
-import { VariantNotFoundException } from "../../../domain/product_management/exceptions/VariantNotFoundException.js";
 import { HistoricalDaysCount } from "../../../domain/sales_forecasting/entities/sales_forecast/value_objects/HistoricalDaysCount.js";
 import { SalesForecastManager } from "../../../domain/sales_forecasting/services/SaleForecastManager.js";
 
@@ -18,7 +17,7 @@ export type GenerateSaleForecastInput = {
 export class GenerateSaleForecastUsecase {
   constructor(
     private readonly uow: IUnitOfWork,
-    private readonly eventBus: IDomainEventBus,
+    private readonly eventBus: IEventBus,
     private readonly idGenerator: IIdGenerator
   ) {}
 

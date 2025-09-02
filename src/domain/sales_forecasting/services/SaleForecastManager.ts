@@ -2,6 +2,7 @@ import { EntityAction } from "../../../core/interfaces/AggregateRoot.js";
 import { EntityId } from "../../../core/types/EntityId.js";
 import { SalesForecast } from "../entities/sales_forecast/SalesForecast.js";
 import { HistoricalDaysCount } from "../entities/sales_forecast/value_objects/HistoricalDaysCount.js";
+import { SaleForecastGeneratedDomainEvent } from "../events/SaleForecastGenerated.js";
 
 export class SalesForecastManager {
   deleteForecast(salesForecast: SalesForecast) {
@@ -33,6 +34,9 @@ export class SalesForecastManager {
       deletedAt: null,
     });
     salesForecast.addTrackedEntity(salesForecast, EntityAction.created);
+    salesForecast.addDomainEvent(
+      new SaleForecastGeneratedDomainEvent({ saleForecastId: salesForecast.id })
+    );
     return salesForecast;
   }
 }

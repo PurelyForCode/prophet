@@ -3,7 +3,7 @@ import { CreateCategoryUsecase } from "../../features/product_management/categor
 import { runInTransaction, UnitOfWork } from "../../infra/utils/UnitOfWork.js";
 import { knexInstance } from "../../config/Knex.js";
 import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js";
-import { domainEventBus } from "../../infra/utils/DomainEventBus.js";
+import { domainEventBus } from "../../infra/events/EventBusConfiguration.js";
 import { idGenerator } from "../../infra/utils/IdGenerator.js";
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js";
 import { zValidator } from "@hono/zod-validator";

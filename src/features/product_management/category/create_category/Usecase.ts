@@ -1,4 +1,4 @@
-import { IDomainEventBus } from "../../../../core/interfaces/IDomainEventBus.js";
+import { IEventBus } from "../../../../core/interfaces/IDomainEventBus.js";
 import { IIdGenerator } from "../../../../core/interfaces/IIdGenerator.js";
 import { IUnitOfWork } from "../../../../core/interfaces/IUnitOfWork.js";
 import { Usecase } from "../../../../core/interfaces/Usecase.js";
@@ -13,7 +13,7 @@ export type CreateCategoryInput = {
 export class CreateCategoryUsecase implements Usecase<any, any> {
   constructor(
     private readonly uow: IUnitOfWork,
-    private readonly eventBus: IDomainEventBus,
+    private readonly eventBus: IEventBus,
     private readonly idGenerator: IIdGenerator
   ) {}
   async call(input: CreateCategoryInput) {

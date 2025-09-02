@@ -1,4 +1,4 @@
-import { IDomainEventBus } from "../../../../core/interfaces/IDomainEventBus.js";
+import { IEventBus } from "../../../../core/interfaces/IDomainEventBus.js";
 import { IUnitOfWork } from "../../../../core/interfaces/IUnitOfWork.js";
 import { CategoryNotFoundException } from "../../../../domain/product_management/exceptions/CategoryNotFoundException.js";
 import { ProductNotFoundException } from "../../../../domain/product_management/exceptions/ProductNotFoundException.js";
@@ -12,7 +12,7 @@ type AddProductInCategoryInput = {
 export class AddProductInCategoryUsecase {
   constructor(
     private readonly uow: IUnitOfWork,
-    private readonly eventBus: IDomainEventBus
+    private readonly eventBus: IEventBus
   ) {}
   async call(input: AddProductInCategoryInput) {
     const categoryRepo = this.uow.getCategoryRepository();

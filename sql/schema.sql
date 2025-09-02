@@ -176,4 +176,13 @@ CREATE TABLE sales_forecast_entry(
     date DATE NOT NULL
 );
 
+CREATE TABLE inventory_recommendation(
+    product_id UUID NOT NULL REFERENCES product(id),
+    runs_out_at DATE NOT NULL,
+    optimal_restock_date DATE NOT NULL,
+    recommended_restock_amount INTEGER,
+    created_at DATE NOT NULL,
+    updated_at DATE NOT NULL
+);
+
 INSERT INTO account (id, username, password, email, role) VALUES ('01970607-cdb9-7209-bf1d-f1281b9cc056', 'test', 'password', 'test@gmail.com', 'store manager');

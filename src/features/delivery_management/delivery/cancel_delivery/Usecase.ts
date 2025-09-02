@@ -1,4 +1,4 @@
-import { IDomainEventBus } from "../../../../core/interfaces/IDomainEventBus.js";
+import { IEventBus } from "../../../../core/interfaces/IDomainEventBus.js";
 import { IUnitOfWork } from "../../../../core/interfaces/IUnitOfWork.js";
 import { EntityId } from "../../../../core/types/EntityId.js";
 import { DeliveryNotFoundException } from "../../../../domain/delivery_management/exceptions/DeliveryNotFoundException.js";
@@ -10,7 +10,7 @@ export type CancelDeliveryInput = {
 export class CancelDeliveryUsecase {
   constructor(
     private readonly uow: IUnitOfWork,
-    private readonly eventBus: IDomainEventBus
+    private readonly eventBus: IEventBus
   ) {}
   async call(input: CancelDeliveryInput) {
     const deliveryRepo = this.uow.getDeliveryRepository();

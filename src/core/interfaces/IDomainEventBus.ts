@@ -4,9 +4,9 @@ import { IUnitOfWork } from "./IUnitOfWork.js";
 
 export interface DomainEventHandler<T extends DomainEvent = DomainEvent> {
   eventName: string;
-  handle(event: T, uow?: IUnitOfWork): Promise<void>;
+  handle(event: T, uow: IUnitOfWork): Promise<void>;
 }
 
-export interface IDomainEventBus {
+export interface IEventBus {
   dispatch(aggregateRoot: AggregateRoot, uow: IUnitOfWork): Promise<void>;
 }

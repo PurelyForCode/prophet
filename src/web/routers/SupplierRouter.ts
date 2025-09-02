@@ -4,7 +4,7 @@ import z from "zod";
 import { runInTransaction, UnitOfWork } from "../../infra/utils/UnitOfWork.js";
 import { knexInstance } from "../../config/Knex.js";
 import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js";
-import { DomainEventBus } from "../../infra/utils/DomainEventBus.js";
+import { DomainEventBus } from "../../infra/events/DomainEventBus.js";
 import { CreateSupplierUsecase } from "../../features/delivery_management/supplier/create_supplier/Usecase.js";
 import { idGenerator } from "../../infra/utils/IdGenerator.js";
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js";

@@ -1,5 +1,6 @@
 import { serve } from "@hono/node-server";
 import { app } from "./web/App.js";
+import "dotenv/config";
 
 const server = serve({ port: 3000, fetch: app.fetch }, (info) => {
   console.log("Running");
