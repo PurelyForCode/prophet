@@ -154,7 +154,7 @@ CREATE TABLE delivery_item (
     quantity INTEGER NOT NULL
 );
 
-CREATE TABLE sales_forecast(
+CREATE TABLE forecast(
     id UUID PRIMARY KEY,
     product_id UUID NOT NULL REFERENCES product(id),
     account_id UUID NOT NULL REFERENCES account(id),
@@ -162,14 +162,15 @@ CREATE TABLE sales_forecast(
     data_end_date DATE,
     forecast_start_date DATE NOT NULL,
     forecast_end_date DATE NOT NULL,
+    processed boolean DEFAULT(false) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     deleted_at TIMESTAMPTZ DEFAULT NULL
 );
 
-CREATE TABLE sales_forecast_entry(
+CREATE TABLE forecast_entry(
     id UUID PRIMARY KEY,
-    sales_forecast_id UUID NOT NULL REFERENCES sales_forecast(id),
+    forecast_id UUID NOT NULL REFERENCES forecast(id),
     yhat FLOAT NOT NULL,
     yhat_upper FLOAT NOT NULL,
     yhat_lower FLOAT NOT NULL,

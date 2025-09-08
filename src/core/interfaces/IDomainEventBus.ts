@@ -8,5 +8,10 @@ export interface DomainEventHandler<T extends DomainEvent = DomainEvent> {
 }
 
 export interface IEventBus {
-  dispatch(aggregateRoot: AggregateRoot, uow: IUnitOfWork): Promise<void>;
+  dispatchAggregateEvents(
+    aggregateRoot: AggregateRoot,
+    uow: IUnitOfWork
+  ): Promise<void>;
+
+  handleEvent(event: DomainEvent, uow: IUnitOfWork): Promise<void>;
 }

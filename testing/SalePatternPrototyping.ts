@@ -142,7 +142,6 @@ interface PatternSegment {
 export async function generateSalesData(
   knex: Knex,
   productId: string,
-  variantId: string | undefined,
   patternSequence: PatternSegment[],
   opts?: { hasCancelled?: boolean }
 ) {
@@ -171,7 +170,6 @@ export async function generateSalesData(
         quantity: qty,
         status: hasCancelled && Math.random() < 0.1 ? "cancelled" : "completed",
         updated_at: now,
-        variant_id: variantId,
       });
     }
   }

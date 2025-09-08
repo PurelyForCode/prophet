@@ -29,8 +29,8 @@ export class RemoveProductInCategoryUsecase {
     productManager.removeProductFromCategory(product);
 
     await this.uow.save(product);
-    await this.eventBus.dispatch(product, this.uow);
+    await this.eventBus.dispatchAggregateEvents(product, this.uow);
     await this.uow.save(category);
-    await this.eventBus.dispatch(category, this.uow);
+    await this.eventBus.dispatchAggregateEvents(category, this.uow);
   }
 }

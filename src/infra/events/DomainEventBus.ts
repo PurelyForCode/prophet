@@ -15,7 +15,7 @@ export class DomainEventBus implements IEventBus {
     this.handlers.set(handler.eventName, handlers);
   }
 
-  private async handle(event: DomainEvent, uow: UnitOfWork) {
+  async handleEvent(event: DomainEvent, uow: UnitOfWork) {
     const handlers = this.handlers.get(event.eventName);
     if (!handlers) return;
     for (const handler of handlers) {
@@ -23,10 +23,10 @@ export class DomainEventBus implements IEventBus {
     }
   }
 
-  async dispatch(aggregateRoot: AggregateRoot, uow: UnitOfWork) {
+  async dispatchAggregateEvents(aggregateRoot: AggregateRoot, uow: UnitOfWork) {
     const events = aggregateRoot.getDomainEvent();
     for (const event of events) {
-      await this.handle(event, uow);
+      await this.handleEvent(event, uow);
     }
     aggregateRoot.clearDomainEvent();
   }

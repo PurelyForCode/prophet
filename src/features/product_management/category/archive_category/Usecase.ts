@@ -32,10 +32,10 @@ export class ArchiveCategoryUsecase implements Usecase<any, any> {
     for (const value of products.values()) {
       productManager.archiveProduct(value);
       await this.uow.save(value);
-      await this.eventBus.dispatch(value, this.uow);
+      await this.eventBus.dispatchAggregateEvents(value, this.uow);
     }
 
     await this.uow.save(category);
-    await this.eventBus.dispatch(category, this.uow);
+    await this.eventBus.dispatchAggregateEvents(category, this.uow);
   }
 }

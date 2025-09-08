@@ -27,6 +27,6 @@ export class CreateCategoryUsecase implements Usecase<any, any> {
     });
 
     await this.uow.save(category);
-    await this.eventBus.dispatch(category, this.uow);
+    await this.eventBus.dispatchAggregateEvents(category, this.uow);
   }
 }

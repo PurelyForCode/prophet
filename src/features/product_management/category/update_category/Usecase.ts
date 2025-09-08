@@ -27,6 +27,6 @@ export class UpdateCategoryUsecase implements Usecase<any, any> {
     categoryManager.updateCategory(category, { name: name });
 
     await this.uow.save(category);
-    await this.eventBus.dispatch(category, this.uow);
+    await this.eventBus.dispatchAggregateEvents(category, this.uow);
   }
 }

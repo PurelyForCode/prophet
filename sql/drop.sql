@@ -1,6 +1,6 @@
 -- DROP TABLES (reverse dependency order)
-DROP TABLE IF EXISTS sales_forecast CASCADE;
-DROP TABLE IF EXISTS sales_forecast_entry CASCADE;
+DROP TABLE IF EXISTS forecast CASCADE;
+DROP TABLE IF EXISTS forecast_entry CASCADE;
 DROP TABLE IF EXISTS delivery_item CASCADE;
 DROP TABLE IF EXISTS delivery CASCADE;
 DROP TABLE IF EXISTS product_supplier CASCADE;

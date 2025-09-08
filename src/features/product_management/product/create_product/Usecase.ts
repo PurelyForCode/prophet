@@ -57,7 +57,7 @@ export class CreateProductUsecase implements Usecase<any, any> {
       now: now,
     });
 
-    await this.eventBus.dispatch(product, this.uow);
+    await this.eventBus.dispatchAggregateEvents(product, this.uow);
     await this.uow.save(product);
   }
 }
