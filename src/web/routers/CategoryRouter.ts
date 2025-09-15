@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { CreateCategoryUsecase } from "../../features/product_management/category/create_category/Usecase.js";
+import { CreateCategoryUsecase } from "../../application/product_management/category/create_category/Usecase.js";
 import { runInTransaction, UnitOfWork } from "../../infra/utils/UnitOfWork.js";
 import { knexInstance } from "../../config/Knex.js";
 import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js";
@@ -8,9 +8,9 @@ import { idGenerator } from "../../infra/utils/IdGenerator.js";
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
-import { UpdateCategoryUsecase } from "../../features/product_management/category/update_category/Usecase.js";
-import { ArchiveCategoryUsecase } from "../../features/product_management/category/archive_category/Usecase.js";
-import { AddProductInCategoryUsecase } from "../../features/product_management/category/add_product_in_category/Usecase.js";
+import { UpdateCategoryUsecase } from "../../application/product_management/category/update_category/Usecase.js";
+import { ArchiveCategoryUsecase } from "../../application/product_management/category/archive_category/Usecase.js";
+import { AddProductInCategoryUsecase } from "../../application/product_management/category/add_product_in_category/Usecase.js";
 
 const app = new Hono();
 

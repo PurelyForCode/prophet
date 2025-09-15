@@ -6,7 +6,7 @@ import {
 import { AggregateRoot } from "../../core/interfaces/AggregateRoot.js";
 import { UnitOfWork } from "../utils/UnitOfWork.js";
 
-export class DomainEventBus implements IEventBus {
+export class EventBus implements IEventBus {
   private handlers: Map<string, DomainEventHandler<any>[]> = new Map();
 
   register<T>(handler: DomainEventHandler<any>) {

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { CreateSaleUsecase } from "../../features/sales_management/create_sale/Usecase.js";
+import { CreateSaleUsecase } from "../../application/sales_management/create_sale/Usecase.js";
 import { runInTransaction, UnitOfWork } from "../../infra/utils/UnitOfWork.js";
 import { idGenerator } from "../../infra/utils/IdGenerator.js";
 import { knexInstance } from "../../config/Knex.js";
@@ -8,8 +8,8 @@ import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { fakeId } from "../../fakeId.js";
-import { UpdateSaleUsecase } from "../../features/sales_management/update_sale/Usecase.js";
-import { ArchiveSaleUsecase } from "../../features/sales_management/archive_sale/Usecase.js";
+import { UpdateSaleUsecase } from "../../application/sales_management/update_sale/Usecase.js";
+import { ArchiveSaleUsecase } from "../../application/sales_management/archive_sale/Usecase.js";
 import { SaleDAO } from "../../infra/dao/SaleDAO.js";
 
 const app = new Hono();

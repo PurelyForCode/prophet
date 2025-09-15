@@ -1,19 +1,19 @@
 import { Hono } from "hono";
-import { CreateDeliveryUsecase } from "../../features/delivery_management/delivery/create_delivery/Usecase.js";
+import { CreateDeliveryUsecase } from "../../application/delivery_management/delivery/create_delivery/Usecase.js";
 import { runInTransaction, UnitOfWork } from "../../infra/utils/UnitOfWork.js";
 import { knexInstance } from "../../config/Knex.js";
 import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js";
-import { DomainEventBus } from "../../infra/events/DomainEventBus.js";
+import { EventBus } from "../../infra/events/DomainEventBus.js";
 import { idGenerator } from "../../infra/utils/IdGenerator.js";
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { fakeId } from "../../fakeId.js";
-import { CancelDeliveryUsecase } from "../../features/delivery_management/delivery/cancel_delivery/Usecase.js";
-import { ConfirmDeliveryArrivalUsecase } from "../../features/delivery_management/delivery/confirm_delivery_arrival/Usecase.js";
-import { AddItemToDeliveryUsecase } from "../../features/delivery_management/delivery_item/add_item/Usecase.js";
-import { UpdateItemInDeliveryUsecase } from "../../features/delivery_management/delivery_item/update_item/Usecase.js";
-import { RemoveItemOnDeliveryUsecase } from "../../features/delivery_management/delivery_item/remove_item/Usecase.js";
+import { CancelDeliveryUsecase } from "../../application/delivery_management/delivery/cancel_delivery/Usecase.js";
+import { ConfirmDeliveryArrivalUsecase } from "../../application/delivery_management/delivery/confirm_delivery_arrival/Usecase.js";
+import { AddItemToDeliveryUsecase } from "../../application/delivery_management/delivery_item/add_item/Usecase.js";
+import { UpdateItemInDeliveryUsecase } from "../../application/delivery_management/delivery_item/update_item/Usecase.js";
+import { RemoveItemOnDeliveryUsecase } from "../../application/delivery_management/delivery_item/remove_item/Usecase.js";
 
 const app = new Hono();
 
@@ -37,7 +37,7 @@ app.post(
   ),
   async (c) => {
     const uow = new UnitOfWork(knexInstance, repositoryFactory);
-    const eventBus = new DomainEventBus();
+    const eventBus = new EventBus();
     const usecase = new CreateDeliveryUsecase(uow, eventBus, idGenerator);
     const body = c.req.valid("json");
     await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
@@ -65,7 +65,7 @@ app.post(
   ),
   async (c) => {
     const uow = new UnitOfWork(knexInstance, repositoryFactory);
-    const eventBus = new DomainEventBus();
+    const eventBus = new EventBus();
     const usecase = new ConfirmDeliveryArrivalUsecase(uow, eventBus);
     const params = c.req.valid("param");
     await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
@@ -89,7 +89,7 @@ app.post(
   ),
   async (c) => {
     const uow = new UnitOfWork(knexInstance, repositoryFactory);
-    const eventBus = new DomainEventBus();
+    const eventBus = new EventBus();
     const usecase = new CancelDeliveryUsecase(uow, eventBus);
     const params = c.req.valid("param");
     await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
@@ -125,7 +125,7 @@ app.post(
   ),
   async (c) => {
     const uow = new UnitOfWork(knexInstance, repositoryFactory);
-    const eventBus = new DomainEventBus();
+    const eventBus = new EventBus();
     const usecase = new AddItemToDeliveryUsecase(uow, eventBus, idGenerator);
     const body = c.req.valid("json");
     const params = c.req.valid("param");
@@ -164,7 +164,7 @@ app.patch(
   ),
   async (c) => {
     const uow = new UnitOfWork(knexInstance, repositoryFactory);
-    const eventBus = new DomainEventBus();
+    const eventBus = new EventBus();
     const usecase = new UpdateItemInDeliveryUsecase(uow, eventBus);
     const body = c.req.valid("json");
     const params = c.req.valid("param");
@@ -196,7 +196,7 @@ app.delete(
   ),
   async (c) => {
     const uow = new UnitOfWork(knexInstance, repositoryFactory);
-    const eventBus = new DomainEventBus();
+    const eventBus = new EventBus();
     const usecase = new RemoveItemOnDeliveryUsecase(uow, eventBus);
     const params = c.req.valid("param");
     const body = c.req.valid("json");

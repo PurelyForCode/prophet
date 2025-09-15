@@ -7,8 +7,8 @@ import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import saleRouter from "./SaleRouter.js";
 import { fakeId } from "../../fakeId.js";
-import { CreateVariantUsecase } from "../../features/product_management/variant/create_variant/Usecase.js";
-import { UpdateVariantUsecase } from "../../features/product_management/variant/update_variant/Usecase.js";
+import { CreateVariantUsecase } from "../../application/product_management/variant/create_variant/Usecase.js";
+import { UpdateVariantUsecase } from "../../application/product_management/variant/update_variant/Usecase.js";
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js";
 import { VariantDAO } from "../../infra/dao/VariantDAO.js";
 

@@ -3,7 +3,7 @@ import { runInTransaction, UnitOfWork } from "../../infra/utils/UnitOfWork.js";
 import { knexInstance } from "../../config/Knex.js";
 import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js";
 import { domainEventBus } from "../../infra/events/EventBusConfiguration.js";
-import { GenerateSingleForecastUsecase } from "../../features/forecasting/generate_single_forecast/Usecase.js";
+import { GenerateSingleForecastUsecase } from "../../application/forecasting/generate_single_forecast/Usecase.js";
 import { forecastApi } from "../../infra/services/ForecastAPI.js";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";

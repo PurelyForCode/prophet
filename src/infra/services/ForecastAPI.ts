@@ -2,6 +2,11 @@ import axios, { AxiosInstance } from "axios";
 import { EntityId } from "../../core/types/EntityId.js";
 import { InternalServerError } from "../../core/exceptions/InternalServerError.js";
 import { ApplicationException } from "../../core/exceptions/ApplicationException.js";
+import {
+  GenerateAllForecastInput,
+  GenerateForecastInput,
+  IForecastApi,
+} from "../../application/interfaces/IForecastApi.js";
 
 export class ForecastApiNotAvailable extends ApplicationException {
   constructor() {
@@ -15,15 +20,7 @@ export class ForecastApiDataError extends ApplicationException {
   }
 }
 
-type ForecastBody = {
-  accountId: EntityId;
-  forecastStartDate: Date;
-  forecastEndDate: Date;
-  dataStartDate: Date;
-  dataEndDate: Date;
-};
-
-export class ForecastApi {
+export class ForecastApi implements IForecastApi {
   private readonly axios: AxiosInstance;
   constructor(private readonly baseUrl: string) {
     this.axios = axios.create({
@@ -33,29 +30,15 @@ export class ForecastApi {
     });
   }
 
-  async generateForecast(params: {
-    productId: EntityId;
-    accountId: EntityId;
-    forecastStartDate: Date;
-    forecastEndDate: Date;
-    dataStartDate: Date;
-    dataEndDate: Date;
-  }): Promise<EntityId> {
+  async generateForecast(params: GenerateForecastInput): Promise<EntityId> {
     const endpointUrl = this.baseUrl + "/forecasts" + "/" + params.productId;
-    const body: ForecastBody = {
-      accountId: params.accountId,
-      forecastStartDate: params.forecastStartDate,
-      forecastEndDate: params.forecastEndDate,
-      dataStartDate: params.dataStartDate,
-      dataEndDate: params.dataEndDate,
-    };
     try {
       if (!(await this.isApiAvailable())) {
         throw new ForecastApiNotAvailable();
       }
       const result = await this.axios.post<{ data: EntityId }>(
         endpointUrl,
-        body
+        params
       );
       return result.data.data;
     } catch (err) {
@@ -73,22 +56,9 @@ export class ForecastApi {
     }
   }
 
-  async generateAllForecast(params: {
-    accountId: EntityId;
-    forecastStartDate: Date;
-    forecastEndDate: Date;
-    dataStartDate: Date;
-    dataEndDate: Date;
-  }) {
+  async generateAllForecasts(params: GenerateAllForecastInput) {
     const endpointUrl = this.baseUrl + "/forecasts";
-    const body: ForecastBody = {
-      accountId: params.accountId,
-      forecastStartDate: params.forecastStartDate,
-      forecastEndDate: params.forecastEndDate,
-      dataStartDate: params.dataStartDate,
-      dataEndDate: params.dataEndDate,
-    };
-    await this.axios.post(endpointUrl, body);
+    await this.axios.post(endpointUrl, params);
   }
 
   async isApiAvailable() {

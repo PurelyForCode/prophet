@@ -1,7 +1,4 @@
-import { IEventBus } from "../../../core/interfaces/IDomainEventBus.js";
-import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js";
 import { EntityId } from "../../../core/types/EntityId.js";
-import { SingleForecastGeneratedDomainEvent } from "../../../domain/sales_forecasting/events/SingleForecastGenerated.js";
 import { ForecastApi } from "../../../infra/services/ForecastAPI.js";
 
 export type GenerateSingleForecastInput = {
@@ -14,11 +11,7 @@ export type GenerateSingleForecastInput = {
 };
 
 export class GenerateSingleForecastUsecase {
-  constructor(
-    private readonly uow: IUnitOfWork,
-    private readonly eventBus: IEventBus,
-    private readonly forecastApi: ForecastApi
-  ) {}
+  constructor(private readonly forecastApi: ForecastApi) {}
 
   async call(input: GenerateSingleForecastInput) {
     await this.forecastApi.generateForecast({
@@ -29,9 +22,5 @@ export class GenerateSingleForecastUsecase {
       forecastEndDate: input.forecastEndDate,
       forecastStartDate: input.forecastStartDate,
     });
-    await this.eventBus.handleEvent(
-      new SingleForecastGeneratedDomainEvent({ productId: input.productId }),
-      this.uow
-    );
   }
 }

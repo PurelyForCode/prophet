@@ -4,12 +4,12 @@ import z from "zod";
 import { runInTransaction, UnitOfWork } from "../../infra/utils/UnitOfWork.js";
 import { knexInstance } from "../../config/Knex.js";
 import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js";
-import { DomainEventBus } from "../../infra/events/DomainEventBus.js";
-import { CreateSupplierUsecase } from "../../features/delivery_management/supplier/create_supplier/Usecase.js";
+import { EventBus } from "../../infra/events/DomainEventBus.js";
+import { CreateSupplierUsecase } from "../../application/delivery_management/supplier/create_supplier/Usecase.js";
 import { idGenerator } from "../../infra/utils/IdGenerator.js";
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js";
 import { fakeId } from "../../fakeId.js";
-import { UpdateSupplierUsecase } from "../../features/delivery_management/supplier/update_supplier/Usecase.js";
+import { UpdateSupplierUsecase } from "../../application/delivery_management/supplier/update_supplier/Usecase.js";
 import { SupplierDAO } from "../../infra/dao/SupplierDAO.js";
 
 const app = new Hono();
@@ -33,7 +33,7 @@ app.post(
   ),
   async (c) => {
     const uow = new UnitOfWork(knexInstance, repositoryFactory);
-    const eventBus = new DomainEventBus();
+    const eventBus = new EventBus();
     const usecase = new CreateSupplierUsecase(uow, eventBus, idGenerator);
     const body = c.req.valid("json");
     await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
@@ -69,7 +69,7 @@ app.post(
   ),
   async (c) => {
     const uow = new UnitOfWork(knexInstance, repositoryFactory);
-    const eventBus = new DomainEventBus();
+    const eventBus = new EventBus();
     const usecase = new UpdateSupplierUsecase(uow, eventBus);
     const params = c.req.valid("param");
     const body = c.req.valid("json");

@@ -8,12 +8,12 @@ import { idGenerator } from "../../infra/utils/IdGenerator.js";
 import { productSettingSchema } from "../validation/ProductSettingSchema.js";
 import variantRouter from "./VariantRouter.js";
 import { ProductDAO } from "../../infra/dao/ProductDAO.js";
-import { CreateProductUsecase } from "../../features/product_management/product/create_product/Usecase.js";
+import { CreateProductUsecase } from "../../application/product_management/product/create_product/Usecase.js";
 import { runInTransaction } from "../../infra/utils/UnitOfWork.js";
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js";
 import { fakeId } from "../../fakeId.js";
-import { ArchiveProductUsecase } from "../../features/product_management/product/archive_product/Usecase.js";
-import { UpdateProductUsecase } from "../../features/product_management/product/update_product/Usecase.js";
+import { ArchiveProductUsecase } from "../../application/product_management/product/archive_product/Usecase.js";
+import { UpdateProductUsecase } from "../../application/product_management/product/update_product/Usecase.js";
 import saleRouter from "./SaleRouter.js";
 import { domainEventBus } from "../../infra/events/EventBusConfiguration.js";
 
