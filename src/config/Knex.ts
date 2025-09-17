@@ -3,7 +3,7 @@ import { InternalServerError } from "../core/exceptions/InternalServerError.js";
 
 const host = process.env.DB_HOST;
 const name = process.env.DB_NAME;
-const user = process.env.DB_USER;
+const user = process.env.DB_USERNAME;
 const password = process.env.DB_PASSWORD;
 let port: number;
 try {
