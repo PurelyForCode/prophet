@@ -139,7 +139,7 @@ CREATE TABLE delivery (
     account_id UUID NOT NULL REFERENCES account(id),
     status delivery_status NOT NULL DEFAULT 'delivering',
     completed_at TIMESTAMPTZ,
-    delivery_requested_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    requested_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     cancelled_at TIMESTAMPTZ,
     scheduled_arrival_date TIMESTAMP,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
