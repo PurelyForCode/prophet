@@ -1,84 +1,79 @@
-import { EntityAction } from "../../../core/interfaces/AggregateRoot.js";
-import { EntityId } from "../../../core/types/EntityId.js";
-import { Product } from "../entities/product/Product.js";
-import { ProductName } from "../entities/product/value_objects/ProductName.js";
-import { ProductSetting } from "../entities/product/value_objects/ProductSetting.js";
-import { ProductStock } from "../entities/product/value_objects/ProductStock.js";
-import { SafetyStock } from "../entities/product/value_objects/SafetyStock.js";
-import { ProductGroup, UpdateProductGroupFields } from "../entities/product_group/ProductGroup.js";
-import { DuplicateProductNameException } from "../exceptions/DuplicateNameException.js";
-import { IProductRepository } from "../repositories/IProductRepository.js";
+import { EntityAction } from "../../../core/interfaces/AggregateRoot.js"
+import { EntityId } from "../../../core/types/EntityId.js"
+import { ProductName } from "../entities/product/value_objects/ProductName.js"
+import { ProductSetting } from "../entities/product/value_objects/ProductSetting.js"
+import { ProductStock } from "../entities/product/value_objects/ProductStock.js"
+import {
+	ProductGroup,
+	UpdateProductGroupFields,
+} from "../entities/product_group/ProductGroup.js"
+import { DuplicateProductNameException } from "../exceptions/DuplicateNameException.js"
+import { DuplicateProductGroupNameException } from "../exceptions/DuplicateProductGroupNameException.js"
+import { IProductGroupRepository } from "../repositories/IProductGroupRepository.js"
 
-class ProductGroupManager {
+export class ProductGroupManager {
 	async createProductGroup(
-		productRepo: IProductRepository,
+		groupRepo: IProductGroupRepository,
 		input: {
-			productGroupId: EntityId;
-			productId: EntityId;
-			accountId: EntityId;
-			productCategoryId: EntityId | null;
-			productGroupName: ProductName;
-			settings: ProductSetting | undefined;
-			now: Date;
-		}
+			productGroupId: EntityId
+			productId: EntityId
+			accountId: EntityId
+			productCategoryId: EntityId | null
+			productGroupName: ProductName
+			settings: ProductSetting | undefined
+			now: Date
+		},
 	) {
-		const isNameUnique = await productRepo.isProductNameUnique(input.productGroupName);
-		if (!isNameUnique) {
-			throw new DuplicateProductNameException();
-		}
-		const productGroup = ProductGroup.create(
-			{
-				id: input.productGroupId,
-				categoryId: input.productCategoryId,
-				accountId: input.accountId,
-				createdAt: input.now,
-				deletedAt: null,
-				name: input.productGroupName,
-				updatedAt: input.now,
-				products: new Map()
-			}
+		const isNameUnique = await groupRepo.isNameUnique(
+			input.productGroupName,
 		)
-		productGroup.addVariant(
+		if (!isNameUnique) {
+			throw new DuplicateProductNameException()
+		}
+		const group = ProductGroup.create({
+			id: input.productGroupId,
+			categoryId: input.productCategoryId,
+			accountId: input.accountId,
+			createdAt: input.now,
+			deletedAt: null,
+			name: input.productGroupName,
+			updatedAt: input.now,
+			products: new Map(),
+		})
+		group.addTrackedEntity(group, EntityAction.created)
+		group.addVariant(
 			input.productId,
 			input.accountId,
 			ProductName.base(),
 			new ProductStock(0),
-			ProductSetting.defaultConfiguration(new Date())
+			ProductSetting.defaultConfiguration(new Date()),
 		)
-		productGroup.addTrackedEntity(productGroup, EntityAction.created)
-		return productGroup
-
+		return group
 	}
 
-	archiveProductGroup(productGroup: ProductGroup) {
-		productGroup.archive()
+	archiveProductGroup(group: ProductGroup) {
+		group.archive()
+		return group
 	}
 
-	deleteProductGroup(productGroup: ProductGroup) {
-		productGroup.delete();
+	deleteProductGroup(group: ProductGroup) {
+		group.delete()
+		return group
 	}
 
 	async updateProductGroup(
-		productRepo: IProductRepository,
-		product: Product,
-		updatedAt: Date,
-		fields: UpdateProductGroupFields
+		groupRepo: IProductGroupRepository,
+		fields: UpdateProductGroupFields,
+		group: ProductGroup,
 	) {
-		if (product.getDeletedAt()) {
-			throw new ProductIsAlreadyArchived();
-		}
 		if (fields.name) {
-			const isNameUnique = await productRepo.isProductNameUnique(fields.name);
-			if (!isNameUnique) {
-				throw new DuplicateProductNameException();
+			if (!(await groupRepo.isNameUnique(fields.name))) {
+				throw new DuplicateProductGroupNameException()
+			} else {
+				group.name = fields.name
 			}
-			product.setName(fields.name);
 		}
-		fields.stock && product.setStock(fields.stock);
-		fields.safetyStock && product.setSafetyStock(fields.safetyStock);
-		fields.settings && product.updateSetting(fields.settings);
-		product.setUpdatedAt(updatedAt);
-		product.addTrackedEntity(product, EntityAction.updated);
+		group.addTrackedEntity(group, EntityAction.updated)
+		return group
 	}
 }
-

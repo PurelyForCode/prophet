@@ -1,19 +1,22 @@
-import { Hono } from "hono";
-import { CreateSaleUsecase } from "../../application/sales_management/create_sale/Usecase.js";
-import { runInTransaction, UnitOfWork } from "../../infra/utils/UnitOfWork.js";
-import { idGenerator } from "../../infra/utils/IdGenerator.js";
-import { knexInstance } from "../../config/Knex.js";
-import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js";
-import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js";
-import { zValidator } from "@hono/zod-validator";
-import z from "zod";
-import { fakeId } from "../../fakeId.js";
-import { UpdateSaleUsecase } from "../../application/sales_management/update_sale/Usecase.js";
-import { ArchiveSaleUsecase } from "../../application/sales_management/archive_sale/Usecase.js";
-import { SaleQueryDao, SaleSortFields } from "../../infra/db/query_dao/SaleQueryDao.js";
-import { parseSortQueryString } from "../utils/parseSortQueryString.js";
+import { Hono } from "hono"
+import { CreateSaleUsecase } from "../../application/sales_management/create_sale/Usecase.js"
+import { runInTransaction, UnitOfWork } from "../../infra/utils/UnitOfWork.js"
+import { idGenerator } from "../../infra/utils/IdGenerator.js"
+import { knexInstance } from "../../config/Knex.js"
+import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js"
+import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js"
+import { zValidator } from "@hono/zod-validator"
+import z from "zod"
+import { fakeId } from "../../fakeId.js"
+import { UpdateSaleUsecase } from "../../application/sales_management/update_sale/Usecase.js"
+import { ArchiveSaleUsecase } from "../../application/sales_management/archive_sale/Usecase.js"
+import {
+	SaleQueryDao,
+	SaleSortableField,
+} from "../../infra/db/query_dao/SaleQueryDao.js"
+import { parseSortQueryString } from "../utils/parseSortQueryString.js"
 
-const app = new Hono();
+const app = new Hono()
 
 app.get(
 	"/",
@@ -22,39 +25,45 @@ app.get(
 		z.object({
 			productId: z.uuidv7(),
 			variantId: z.uuidv7().optional(),
-		})
+		}),
 	),
-	zValidator("query", z.object({
-		offset: z.coerce.number().int().positive(),
-		limit: z.coerce.number().int().positive(),
-		archived: z.coerce.boolean(),
-		productId: z.uuidv7(),
-		sort: z.string().min(1),
-	}))
-	,
+	zValidator(
+		"query",
+		z.object({
+			offset: z.coerce.number().int().positive(),
+			limit: z.coerce.number().int().positive(),
+			archived: z.coerce.boolean(),
+			productId: z.uuidv7(),
+			sort: z.string().min(1),
+		}),
+	),
 	async (c) => {
-		const params = c.req.valid("param");
+		const params = c.req.valid("param")
 		const query = c.req.valid("query")
 		let sort = undefined
 		if (query.sort) {
-			sort = parseSortQueryString<SaleSortFields>(query.sort, ["quantity", "date", "status"])
+			sort = parseSortQueryString<SaleSortableField>(query.sort, [
+				"quantity",
+				"date",
+				"status",
+			])
 		}
 
-		const saleQueryDto = new SaleQueryDao(knexInstance);
+		const saleQueryDto = new SaleQueryDao(knexInstance)
 		const sales = await saleQueryDto.query(
 			{
 				offset: query.offset,
-				limit: query.limit
+				limit: query.limit,
 			},
 			{
 				archived: query.archived,
-				productId: query.productId
+				productId: query.productId,
 			},
-			sort
-		);
-		return c.json({ data: sales });
-	}
-);
+			sort,
+		)
+		return c.json({ data: sales })
+	},
+)
 app.get(
 	"/:saleId",
 	zValidator(
@@ -62,22 +71,27 @@ app.get(
 		z.object({
 			saleId: z.uuidv7(),
 			productId: z.uuidv7(),
-		})
+		}),
 	),
-	zValidator("query", z.object({
-		archived: z.coerce.boolean(),
-		productId: z.uuidv7(),
-	}))
-	,
+	zValidator(
+		"query",
+		z.object({
+			archived: z.coerce.boolean(),
+			productId: z.uuidv7(),
+		}),
+	),
 	async (c) => {
-		const params = c.req.valid("param");
+		const params = c.req.valid("param")
 		const query = c.req.valid("query")
 
-		const saleQueryDto = new SaleQueryDao(knexInstance);
-		const sales = await saleQueryDto.queryById(params.saleId, { archived: query.archived, productId: query.productId });
-		return c.json({ data: sales });
-	}
-);
+		const saleQueryDto = new SaleQueryDao(knexInstance)
+		const sales = await saleQueryDto.queryById(params.saleId, {
+			archived: query.archived,
+			productId: query.productId,
+		})
+		return c.json({ data: sales })
+	},
+)
 
 app.post(
 	"/",
@@ -87,20 +101,20 @@ app.post(
 			date: z.coerce.date(),
 			quantity: z.number().int().min(1),
 			status: z.enum(["completed", "in progress", "cancelled"]),
-		})
+		}),
 	),
 	zValidator(
 		"param",
 		z.object({
 			productId: z.uuidv7(),
 			variantId: z.uuidv7().optional(),
-		})
+		}),
 	),
 	async (c) => {
-		const params = c.req.valid("param");
-		const body = c.req.valid("json");
-		const uow = new UnitOfWork(knexInstance, repositoryFactory);
-		const usecase = new CreateSaleUsecase(uow, idGenerator);
+		const params = c.req.valid("param")
+		const body = c.req.valid("json")
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new CreateSaleUsecase(uow, idGenerator)
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				accountId: fakeId,
@@ -108,11 +122,11 @@ app.post(
 				productId: params.productId,
 				quantity: body.quantity,
 				status: body.status,
-			});
-		});
-		return c.json({ message: "Successfully created sale" });
-	}
-);
+			})
+		})
+		return c.json({ message: "Successfully created sale" })
+	},
+)
 app.delete(
 	"/:saleId",
 
@@ -122,22 +136,22 @@ app.delete(
 			saleId: z.uuidv7(),
 			productId: z.uuidv7(),
 			variantId: z.uuidv7().optional(),
-		})
+		}),
 	),
 
 	async (c) => {
-		const params = c.req.valid("param");
-		const uow = new UnitOfWork(knexInstance, repositoryFactory);
-		const usecase = new ArchiveSaleUsecase(uow);
+		const params = c.req.valid("param")
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new ArchiveSaleUsecase(uow)
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				saleId: params.saleId,
 				productId: params.productId,
-			});
-		});
-		return c.json({ message: "Successfully deleted sale" });
-	}
-);
+			})
+		})
+		return c.json({ message: "Successfully deleted sale" })
+	},
+)
 app.patch(
 	"/:saleId",
 	zValidator(
@@ -148,7 +162,7 @@ app.patch(
 				quantity: z.number().int().min(1),
 				status: z.enum(["completed", "in progress", "cancelled"]),
 			})
-			.partial()
+			.partial(),
 	),
 	zValidator(
 		"param",
@@ -156,13 +170,13 @@ app.patch(
 			saleId: z.uuidv7(),
 			productId: z.uuidv7(),
 			variantId: z.uuidv7().optional(),
-		})
+		}),
 	),
 	async (c) => {
-		const params = c.req.valid("param");
-		const body = c.req.valid("json");
-		const uow = new UnitOfWork(knexInstance, repositoryFactory);
-		const usecase = new UpdateSaleUsecase(uow);
+		const params = c.req.valid("param")
+		const body = c.req.valid("json")
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new UpdateSaleUsecase(uow)
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				saleId: params.saleId,
@@ -172,10 +186,10 @@ app.patch(
 					quantity: body.quantity,
 					status: body.status,
 				},
-			});
-		});
-		return c.json({ message: "Successfully updated sale" });
-	}
-);
+			})
+		})
+		return c.json({ message: "Successfully updated sale" })
+	},
+)
 
-export default app;
+export default app

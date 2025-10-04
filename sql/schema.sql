@@ -60,11 +60,20 @@ CREATE TABLE product_category(
     deleted_at TIMESTAMPTZ
 );
 
+CREATE TABLE product_group(
+    id UUID PRIMARY KEY,
+    account_id UUID REFERENCES account(id)  ON DELETE SET NULL ON UPDATE CASCADE,
+    product_category_id UUID REFERENCES product_category(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    deleted_at TIMESTAMPTZ DEFAULT NULL
+);
+
 CREATE TABLE product(
     id UUID PRIMARY KEY,
     account_id UUID NOT NULL REFERENCES account(id) ON DELETE NO ACTION ON UPDATE CASCADE,
-    product_id UUID REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    product_category_id UUID REFERENCES product_category(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    group_id UUID NOT NULL REFERENCES product_group(id) ON DELETE CASCADE ON UPDATE CASCADE,
     name VARCHAR(100) NOT NULL,
     stock INTEGER NOT NULL DEFAULT(0),
     safety_stock INTEGER NOT NULL,

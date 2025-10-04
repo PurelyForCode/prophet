@@ -1,129 +1,144 @@
-import { Knex } from "knex";
-import { EntityId } from "../../../core/types/EntityId.js";
-import { Pagination } from "../types/queries/Pagination.js";
-import { QuerySort } from "../types/queries/QuerySort.js";
-import { applySort } from "../utils/applySort.js";
+import { Knex } from "knex"
+import { EntityId } from "../../../core/types/EntityId.js"
+import { Pagination } from "../types/queries/Pagination.js"
 
-export type DeliveryQueryFilters = Partial<
-	{
-		status: string,
-		archived: boolean
+export type DeliveryQueryFilters =
+	| Partial<{
+			status: string
+			archived: boolean
+	  }>
+	| undefined
+
+export type ItemQueryDto = {
+	id: EntityId
+	quantity: number
+	product: {
+		id: EntityId
+		name: string
+		stock: number
 	}
-> | undefined
-
-export type DeliverySortFields = "scheduledArrivalDate"
-
-export type DeliveryQuerySort = QuerySort<DeliverySortFields> | undefined
-
+}
 export type DeliveryQueryDto = {
-	id: EntityId;
-	accountId: EntityId;
-	status: string;
-	completedAt: Date | null;
-	deliveryRequestedAt: Date;
-	scheduledArrivalDate: Date;
-	cancelledAt: Date | null;
-	createdAt: Date;
-	updatedAt: Date;
-	deletedAt: Date | null;
+	id: EntityId
+	accountId: EntityId
+	status: string
+	completedAt: Date | null
+	requestedAt: Date
+	scheduledArrivalDate: Date
+	cancelledAt: Date | null
+	createdAt: Date
+	updatedAt: Date
+	deletedAt: Date | null
 	supplier: {
-		id: EntityId,
-		name: string,
+		id: EntityId
+		name: string
 		leadTime: number
 	}
-	items: {
-		id: EntityId
-		quantity: number,
-		product: {
-			id: EntityId,
-			name: string,
-			stock: number,
-		}
-	}[]
-};
+	items: ItemQueryDto[]
+}
 
-export type DeliveryQueryRow = {
-	delivery_id: EntityId
-	delivery_supplier_id: EntityId
-	delivery_account_id: EntityId
-	delivery_status: string
-	delivery_completed_at: Date | null
-	delivery_requested_at: Date
-	delivery_scheduled_arrival_date: Date
-	delivery_cancelled_at: Date | null
-	delivery_created_at: Date
-	delivery_updated_at: Date
-	delivery_deleted_at: Date | null
-
-	delivery_item_id: EntityId
-	delivery_item_quantity: number
-
-	product_id: EntityId
-	product_name: string
-	product_stock: number
+export type DeliveryRow = {
+	id: EntityId
+	account_id: EntityId
+	status: string
+	completed_at: Date | null
+	requested_at: Date
+	scheduled_arrival_date: Date
+	cancelled_at: Date | null
+	created_at: Date
+	updated_at: Date
+	deleted_at: Date | null
 
 	supplier_id: EntityId
 	supplier_name: string
 	supplier_lead_time: number
 }
 
+export type ItemRow = {
+	product_id: EntityId
+	product_name: string
+	product_stock: number
+	item_id: EntityId
+	item_quantity: number
+}
+
+export type CompleteDeliveryRow = {
+	id: EntityId
+	account_id: EntityId
+	status: string
+	completed_at: Date | null
+	requested_at: Date
+	scheduled_arrival_date: Date
+	cancelled_at: Date | null
+	created_at: Date
+	updated_at: Date
+	deleted_at: Date | null
+
+	supplier_id: EntityId
+	supplier_name: string
+	supplier_lead_time: number
+
+	product_id: EntityId
+	product_name: string
+	product_stock: number
+	item_id: EntityId
+	item_quantity: number
+}
+
+export type DeliverySortableFields = "scheduledArrivalDate"
+
 export class DeliveryQueryDao {
+	constructor(private readonly knex: Knex) {}
+	private tableName = "delivery"
 
-	constructor(private readonly knex: Knex) { }
-	private tableName = "delivery";
+	private readonly deliverySortFieldMap: Record<
+		DeliverySortableFields,
+		string
+	> = {
+		scheduledArrivalDate: "d.scheduled_arrival_date",
+	}
 
-	private readonly deliverySortFieldMap: Record<DeliverySortFields, string> = {
-		scheduledArrivalDate: "delivery.scheduled_arrival_date",
-	};
-
-	async query(pagination: Pagination, filters: DeliveryQueryFilters, sort: DeliveryQuerySort): Promise<DeliveryQueryDto[]> {
-		const builder = this.knex<DeliveryQueryRow>(this.tableName)
+	async query(
+		pagination: Pagination,
+		filters: DeliveryQueryFilters,
+		sort: DeliveryQuerySort,
+	): Promise<DeliveryQueryDto[]> {
+		const builder = this.knex<DeliveryRow>(`${this.tableName} as d`)
 			.select(
-				"delivery.id as delivery_id",
-				"delivery.supplier_id as delivery_supplier_id",
-				"delivery.account_id as delivery_account_id",
-				"delivery.status as delivery_status",
-				"delivery.completed_at as delivery_completed_at",
-				"delivery.requested_at as delivery_requested_at",
-				"delivery.scheduled_arrival_date as delivery_scheduled_arrival_date",
-				"delivery.cancelled_at as delivery_cancelled_at",
-				"delivery.created_at as delivery_created_at",
-				"delivery.updated_at as delivery_updated_at",
-				"delivery.deleted_at as delivery_deleted_at",
-				"supplier.id as supplier_id",
-				"supplier.name as supplier_name",
-				"supplier.lead_time as supplier_lead_time",
-				"delivery_item.id as delivery_item_id",
-				"delivery_item.delivery_id",
-				"delivery_item.quantity",
-				"product.id as product_id",
-				"product.name as product_name",
-				"product.stock as product_stock"
+				"d.id",
+				"d.account_id",
+				"d.status",
+				"d.completed_at",
+				"d.requested_at",
+				"d.scheduled_arrival_date",
+				"d.cancelled_at",
+				"d.created_at",
+				"d.updated_at",
+				"d.deleted_at",
+				"s.id as supplier_id",
+				"s.name as supplier_name",
+				"s.lead_time as supplier_lead_time",
 			)
-			.join(
-				"delivery_item",
-				`${this.tableName}.id`,
-				"delivery_item.delivery_id"
-			).join(
-				"product",
-				"delivery_item.product_id",
-				"product.id",
-			).join(
-				"supplier",
-				"delivery.supplier_id",
-				"supplier.id"
-			)
+			.join("supplier as s", "d.supplier_id", "s.id")
+
+		/*"delivery_item.id as delivery_item_id",
+			"delivery_item.delivery_id",
+			"delivery_item.quantity",
+			"product.id as product_id",
+			"product.name as product_name",
+			"product.stock as product_stock"*/
 
 		if (filters) {
 			if (filters.archived) {
-				builder.whereNotNull("delivery.deleted_at")
+				builder.whereNotNull("d.deleted_at")
 			} else {
-				builder.whereNull("delivery.deleted_at")
+				builder.whereNull("d.deleted_at")
 			}
 			if (filters.status) {
-				builder.where("delivery.status", "=", filters.status)
+				builder.where("d.status", "=", filters.status)
 			}
 		}
+
 		if (pagination) {
 			if (pagination.limit) {
 				builder.limit(pagination.limit)
@@ -133,49 +148,57 @@ export class DeliveryQueryDao {
 			}
 		}
 
-		applySort(builder, sort, this.deliverySortFieldMap)
-
-		const rows: DeliveryQueryRow[] = await builder
-		return this.groupWithItems(rows)
+		const rows: DeliveryRow[] = await builder
+		let deliveries: DeliveryQueryDto[] = []
+		for (const row of rows) {
+			const items = await this.knex<ItemRow>("delivery_item as i")
+				.select(
+					"p.id as product_id",
+					"p.name as product_name",
+					"p.stock as product_stock",
+					"i.id as item_id",
+					"i.quantity as item_quantity",
+				)
+				.join("product as p", "p.id", "i.product_id")
+				.where("i.delivery_id", "=", row.id)
+			deliveries.push(this.mapToQueryDto(row, items))
+		}
+		return deliveries
 	}
 
 	async queryById(id: EntityId, archived: boolean | undefined) {
-		const builder = this.knex<DeliveryQueryRow>(this.tableName)
+		const builder = this.knex<CompleteDeliveryRow>(this.tableName)
 			.select(
-				"delivery.id as delivery_id",
-				"delivery.supplier_id as delivery_supplier_id",
-				"delivery.account_id as delivery_account_id",
-				"delivery.status as delivery_status",
-				"delivery.completed_at as delivery_completed_at",
-				"delivery.requested_at as delivery_requested_at",
-				"delivery.scheduled_arrival_date as delivery_scheduled_arrival_date",
-				"delivery.cancelled_at as delivery_cancelled_at",
-				"delivery.created_at as delivery_created_at",
-				"delivery.updated_at as delivery_updated_at",
-				"delivery.deleted_at as delivery_deleted_at",
+				"delivery.id",
+				"delivery.supplier_id",
+				"delivery.account_id",
+				"delivery.status",
+				"delivery.completed_at",
+				"delivery.requested_at",
+				"delivery.scheduled_arrival_date",
+				"delivery.cancelled_at",
+				"delivery.created_at",
+				"delivery.updated_at",
+				"delivery.deleted_at",
+
 				"supplier.id as supplier_id",
 				"supplier.name as supplier_name",
 				"supplier.lead_time as supplier_lead_time",
-				"delivery_item.id as delivery_item_id",
-				"delivery_item.delivery_id",
-				"delivery_item.quantity",
+
+				"delivery_item.id as item_id",
+				"delivery_item.quantity as item_quantity",
+
 				"product.id as product_id",
 				"product.name as product_name",
-				"product.stock as product_stock"
+				"product.stock as product_stock",
 			)
 			.join(
 				"delivery_item",
 				`${this.tableName}.id`,
-				"delivery_item.delivery_id"
-			).join(
-				"product",
-				"delivery_item.product_id",
-				"product.id",
-			).join(
-				"supplier",
-				"delivery.supplier_id",
-				"supplier.id"
+				"delivery_item.delivery_id",
 			)
+			.join("product", "delivery_item.product_id", "product.id")
+			.join("supplier", "delivery.supplier_id", "supplier.id")
 			.where("delivery.id", "=", id)
 
 		if (archived) {
@@ -191,74 +214,81 @@ export class DeliveryQueryDao {
 		return this.groupWithItems(rows)
 	}
 
-	groupWithItems(rows: DeliveryQueryRow[]) {
-		const deliveryMap: Map<EntityId, DeliveryQueryDto> = new Map()
+	groupWithItems(rows: CompleteDeliveryRow[]): DeliveryQueryDto[] {
+		const deliveriesMap = new Map<EntityId, DeliveryQueryDto>()
+
 		for (const row of rows) {
-			if (!deliveryMap.has(row.delivery_id)) {
-				deliveryMap.set(row.delivery_id, {
-					id: row.delivery_id,
-					accountId: row.delivery_account_id,
-					status: row.delivery_status,
-					cancelledAt: row.delivery_cancelled_at,
-					completedAt: row.delivery_completed_at,
-					deliveryRequestedAt: row.delivery_requested_at,
-					scheduledArrivalDate: row.delivery_scheduled_arrival_date,
-					createdAt: row.delivery_created_at,
-					updatedAt: row.delivery_updated_at,
-					deletedAt: row.delivery_deleted_at,
+			let delivery = deliveriesMap.get(row.id)
+
+			if (!delivery) {
+				delivery = {
+					id: row.id,
+					accountId: row.account_id,
+					status: row.status,
+					completedAt: row.completed_at,
+					requestedAt: row.requested_at,
+					scheduledArrivalDate: row.scheduled_arrival_date,
+					cancelledAt: row.cancelled_at,
+					createdAt: row.created_at,
+					updatedAt: row.updated_at,
+					deletedAt: row.deleted_at,
 					supplier: {
 						id: row.supplier_id,
+						name: row.supplier_name,
 						leadTime: row.supplier_lead_time,
-						name: row.supplier_name
 					},
-					items: []
-				})
+					items: [],
+				}
+
+				deliveriesMap.set(row.id, delivery)
 			}
 
-			const delivery = deliveryMap.get(row.delivery_id)
-			delivery!.items.push(
-				{
-					id: row.delivery_item_id,
-					quantity: row.delivery_item_quantity,
+			if (row.item_id) {
+				delivery.items.push({
+					id: row.item_id,
+					quantity: row.item_quantity,
 					product: {
 						id: row.product_id,
 						name: row.product_name,
-						stock: row.product_stock
+						stock: row.product_stock,
 					},
-				}
-			)
+				})
+			}
 		}
-		return Array.from(deliveryMap.values())
+
+		return Array.from(deliveriesMap.values())
 	}
 
-	mapToQueryDto(row: DeliveryQueryRow) {
-		return {
-			id: row.delivery_id,
-			accountId: row.delivery_account_id,
-			status: row.delivery_status,
-			cancelledAt: row.delivery_cancelled_at,
-			completedAt: row.delivery_completed_at,
-			deliveryRequestedAt: row.delivery_requested_at,
-			scheduledArrivalDate: row.delivery_scheduled_arrival_date,
-			createdAt: row.delivery_created_at,
-			updatedAt: row.delivery_updated_at,
-			deletedAt: row.delivery_deleted_at,
-			supplier: {
-				id: row.supplier_id,
-				leadTime: row.supplier_lead_time,
-				name: row.supplier_name
-			},
-			items: [{
-				id: row.delivery_item_id,
-				quantity: row.delivery_item_quantity,
+	mapToQueryDto(row: DeliveryRow, items: ItemRow[]): DeliveryQueryDto {
+		let formattedItems: ItemQueryDto[] = []
+		for (const item of items) {
+			formattedItems.push({
+				id: item.item_id,
 				product: {
-					id: row.product_id,
-					name: row.product_name,
-					stock: row.product_stock
+					id: item.product_id,
+					name: item.product_name,
+					stock: item.product_stock,
 				},
-			}],
+				quantity: item.item_quantity,
+			})
+		}
+		return {
+			accountId: row.account_id,
+			cancelledAt: row.cancelled_at,
+			completedAt: row.completed_at,
+			createdAt: row.created_at,
+			deletedAt: row.deleted_at,
+			requestedAt: row.requested_at,
+			id: row.id,
+			scheduledArrivalDate: row.scheduled_arrival_date,
+			status: row.status,
+			updatedAt: row.updated_at,
+			supplier: {
+				id: row.id,
+				leadTime: row.supplier_lead_time,
+				name: row.supplier_name,
+			},
+			items: formattedItems,
 		}
 	}
 }
-
-
