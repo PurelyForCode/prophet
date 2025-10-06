@@ -71,22 +71,10 @@ app.get(
 			deliveryId: z.uuidv7(),
 		}),
 	),
-	zValidator(
-		"query",
-		z
-			.object({
-				archived: booleanStringSchema,
-			})
-			.partial(),
-	),
 	async (c) => {
 		const deliveryQueryDao = new DeliveryQueryDao(knexInstance)
 		const params = c.req.valid("param")
-		const query = c.req.valid("query")
-		const delivery = await deliveryQueryDao.queryById(
-			params.deliveryId,
-			query.archived,
-		)
+		const delivery = await deliveryQueryDao.queryById(params.deliveryId)
 		if (!delivery) {
 			throw new DeliveryNotFoundException()
 		}
@@ -258,29 +246,23 @@ app.patch(
 )
 
 app.delete(
-	"/:deliveryId/items",
-	zValidator(
-		"json",
-		z.object({
-			itemIds: z.array(z.uuidv7()),
-		}),
-	),
+	"/:deliveryId/items/:itemId",
 	zValidator(
 		"param",
 		z.object({
 			deliveryId: z.uuidv7(),
+			itemId: z.uuidv7(),
 		}),
 	),
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
 		const eventBus = new EventBus()
-		const usecase = new RemoveItemOnDeliveryUsecase(uow, eventBus)
+		const usecase = new RemoveItemOnDeliveryUsecase(uow)
 		const params = c.req.valid("param")
-		const body = c.req.valid("json")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				deliveryId: params.deliveryId,
-				itemIds: body.itemIds,
+				itemId: params.itemId,
 			})
 		})
 		return c.json({

@@ -16,7 +16,6 @@ import {
 } from "../../infra/db/query_dao/SupplierQueryDao.js"
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
 import { sortStringSchema } from "../validation/SortStringSchema.js"
-import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 import { z } from "zod"
 
 const app = new Hono()
@@ -68,7 +67,6 @@ app.get(
 		"query",
 		z
 			.object({
-				archived: booleanStringSchema,
 				include: includeStringSchema(
 					new Set<SupplierIncludeFields>(["products"]),
 				),
@@ -81,7 +79,6 @@ app.get(
 		const params = c.req.valid("param")
 		const result = await supplierQueryDao.queryById(
 			params.supplierId,
-			query.archived,
 			query.include,
 		)
 		return c.json({

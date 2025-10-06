@@ -23,6 +23,8 @@ import { sortStringSchema } from "../validation/SortStringSchema.js"
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
 import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 import { ProductNotFoundException } from "../../domain/product_management/exceptions/ProductNotFoundException.js"
+import { ProductGroupQueryDao } from "../../infra/db/query_dao/ProductGroupQueryDao.js"
+import { ProductGroupNotFoundException } from "../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
 
 const app = new Hono()
 
@@ -51,11 +53,17 @@ app.get(
 			groupId: z.uuidv7(),
 		}),
 	),
-
 	async (c) => {
-		const productQueryDao = new ProductQueryDao(knexInstance)
 		const params = c.req.valid("param")
 		const query = c.req.valid("query")
+
+		const productQueryDao = new ProductQueryDao(knexInstance)
+		const groupQueryDao = new ProductGroupQueryDao(knexInstance)
+		const groupExists = await groupQueryDao.exists(params.groupId)
+		if (!groupExists) {
+			throw new ProductGroupNotFoundException()
+		}
+
 		const result = await productQueryDao.query(
 			{
 				limit: query.limit,
@@ -89,18 +97,22 @@ app.get(
 				include: includeStringSchema(
 					new Set<ProductIncludeField>(["sales", "settings"]),
 				),
-				archived: booleanStringSchema,
 			})
 			.partial(),
 	),
 	async (c) => {
-		const productQueryDao = new ProductQueryDao(knexInstance)
 		const params = c.req.valid("param")
 		const query = c.req.valid("query")
+
+		const productQueryDao = new ProductQueryDao(knexInstance)
+		const groupQueryDao = new ProductGroupQueryDao(knexInstance)
+		const groupExists = await groupQueryDao.exists(params.groupId)
+		if (!groupExists) {
+			throw new ProductGroupNotFoundException()
+		}
 		const result = await productQueryDao.queryOneFromGroupIdById(
 			params.productId,
 			params.groupId,
-			query.archived,
 			query.include,
 		)
 		if (!result) {

@@ -9,6 +9,7 @@ import {
 } from "./ProductQueryDao.js"
 import { defaultPagination, Pagination } from "../types/queries/Pagination.js"
 import { Sort, sortQuery } from "../utils/Sort.js"
+import { BaseQueryDao } from "./BaseQueryDao.js"
 
 export type ProductGroupQueryDto = {
 	id: EntityId
@@ -40,24 +41,17 @@ export type ProductGroupQueryFilters =
 
 export type ProductGroupSortableFields = "name" | "createdAt"
 
-export class ProductGroupQueryDao {
-	private tableName = "product_group"
+export class ProductGroupQueryDao extends BaseQueryDao {
+	constructor(knex: Knex) {
+		super(knex, "product_group")
+	}
+
 	private readonly groupSortFieldMap: Record<
 		ProductGroupSortableFields,
 		string
 	> = {
 		name: "product_group.name",
 		createdAt: "product_group.created_at",
-	}
-
-	constructor(private readonly knex: Knex) {}
-
-	async exists(id: EntityId): Promise<boolean> {
-		const row = await this.knex(this.tableName)
-			.select("*")
-			.where("id", "=", id)
-			.first()
-		return !!row
 	}
 
 	async query(
@@ -109,7 +103,6 @@ export class ProductGroupQueryDao {
 				this.groupSortFieldMap,
 			)
 		}
-		console.log(builder.toQuery())
 		const rows = await builder
 		let productInclude: ProductQueryInclude = {}
 		if (include) {
@@ -122,19 +115,11 @@ export class ProductGroupQueryDao {
 		}
 		let groups: ProductGroupQueryDto[] = []
 		for (const row of rows) {
+			const isArchived = row.deleted_at !== null
 			const productQueryDao = new ProductQueryDao(this.knex)
-			let archived = undefined
-			if (filters) {
-				if (filters.archived) {
-					archived = true
-				} else {
-					archived = false
-				}
-			}
-
 			const products = await productQueryDao.query(
 				undefined,
-				{ groupId: row.id, archived },
+				{ groupId: row.id, archived: isArchived },
 				productInclude,
 				undefined,
 			)
@@ -145,18 +130,12 @@ export class ProductGroupQueryDao {
 
 	async queryById(
 		id: EntityId,
-		archived: boolean | undefined,
 		include: ProductGroupQueryInclude,
 	): Promise<ProductGroupQueryDto | null> {
 		const builder = this.knex<ProductGroupDatabaseTable>(this.tableName)
 			.select("*")
 			.where("id", "=", id)
 			.first()
-		if (archived) {
-			builder.whereNotNull("deleted_at")
-		} else {
-			builder.whereNull("deleted_at")
-		}
 		const row = await builder
 		if (!row) {
 			return null
@@ -172,9 +151,10 @@ export class ProductGroupQueryDao {
 				productInclude.settings = true
 			}
 		}
+		const isArchived = row.deleted_at !== null
 		products = await productQueryDao.query(
 			undefined,
-			{ groupId: row.id },
+			{ groupId: row.id, archived: isArchived },
 			productInclude,
 			undefined,
 		)
@@ -184,7 +164,6 @@ export class ProductGroupQueryDao {
 
 	async queryByName(
 		name: ProductName,
-		archived: boolean | undefined,
 		include: ProductGroupQueryInclude,
 	): Promise<ProductGroupQueryDto | null> {
 		const builder = this.knex<ProductGroupDatabaseTable>(this.tableName)
@@ -192,11 +171,6 @@ export class ProductGroupQueryDao {
 			.where("name", "=", name.value)
 			.first()
 
-		if (archived) {
-			builder.whereNotNull("deleted_at")
-		} else {
-			builder.whereNull("deleted_at")
-		}
 		const row = await builder
 		if (!row) {
 			return null
@@ -212,9 +186,10 @@ export class ProductGroupQueryDao {
 				productInclude.settings = true
 			}
 		}
+		const isArchived = row.deleted_at !== null
 		products = await productQueryDao.query(
 			undefined,
-			{ groupId: row.id },
+			{ groupId: row.id, archived: isArchived },
 			productInclude,
 			undefined,
 		)

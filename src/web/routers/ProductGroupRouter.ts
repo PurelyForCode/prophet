@@ -21,6 +21,8 @@ import { fakeId } from "../../fakeId.js"
 import { ArchiveProductGroupUsecase } from "../../application/product_management/product_group/archive_product_group/usecase.js"
 import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 import productRouter from "./ProductRouter.js"
+import { CategoryQueryDao } from "../../infra/db/query_dao/CategoryQueryDao.js"
+import { CategoryNotFoundException } from "../../domain/product_management/exceptions/CategoryNotFoundException.js"
 
 const app = new Hono()
 
@@ -50,6 +52,13 @@ app.get(
 	async (c) => {
 		const groupQueryDao = new ProductGroupQueryDao(knexInstance)
 		const query = c.req.valid("query")
+		if (query.categoryId) {
+			const categoryQueryDao = new CategoryQueryDao(knexInstance)
+			const exists = await categoryQueryDao.exists(query.categoryId)
+			if (!exists) {
+				throw new CategoryNotFoundException()
+			}
+		}
 		const groups = await groupQueryDao.query(
 			{ limit: query.limit, offset: query.offset },
 			{
@@ -76,7 +85,6 @@ app.get(
 						"productSales",
 					]),
 				),
-				archived: booleanStringSchema,
 			})
 			.partial(),
 	),
@@ -92,7 +100,6 @@ app.get(
 		const params = c.req.valid("param")
 		const group = await groupQueryDao.queryById(
 			params.groupId,
-			query.archived,
 			query.include,
 		)
 		if (!group) {

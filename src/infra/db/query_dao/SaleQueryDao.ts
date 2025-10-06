@@ -3,6 +3,7 @@ import { EntityId } from "../../../core/types/EntityId.js"
 import { SaleDatabaseTable } from "../types/tables/SaleDatabaseTable.js"
 import { defaultPagination, Pagination } from "../types/queries/Pagination.js"
 import { Sort, sortQuery } from "../utils/Sort.js"
+import { BaseQueryDao } from "./BaseQueryDao.js"
 
 export type SaleQueryFilter = Partial<{
 	productId: EntityId
@@ -23,16 +24,16 @@ export type SaleQueryDto = {
 	deletedAt: Date | null
 }
 
-export class SaleQueryDao {
-	private tableName = "sale"
+export class SaleQueryDao extends BaseQueryDao {
+	constructor(knex: Knex) {
+		super(knex, "sale")
+	}
 
 	private readonly saleSortFieldMap: Record<SaleSortableField, string> = {
 		date: "s.date",
 		quantity: "s.quantity",
 		status: "s.status",
 	}
-
-	constructor(private readonly knex: Knex) {}
 
 	async query(
 		pagination: Pagination,
@@ -89,17 +90,13 @@ export class SaleQueryDao {
 			.select("s.*")
 			.where("s.id", "=", id)
 			.first()
-		if (filters && filters.archived) {
-			builder.whereNotNull("s.deleted_at")
-		} else {
-			builder.whereNull("s.deleted_at")
-		}
 
 		if (filters) {
 			if (filters.productId) {
 				builder.where("s.product_id", "=", filters.productId)
 			}
 		}
+
 		const row = await builder
 		if (row) {
 			return this.mapToQueryDTO(row)

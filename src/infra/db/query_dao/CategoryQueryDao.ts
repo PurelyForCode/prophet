@@ -7,6 +7,7 @@ import {
 	ProductGroupQueryDto,
 } from "./ProductGroupQueryDao.js"
 import { Sort, sortQuery } from "../utils/Sort.js"
+import { BaseQueryDao } from "./BaseQueryDao.js"
 
 export type ProductGroupQueryInclude =
 	| Partial<{
@@ -38,16 +39,17 @@ export type CategoryQueryDto = {
 
 export type CategorySortableFields = "name"
 
-export class CategoryQueryDao {
-	private tableName = "product_category"
+export class CategoryQueryDao extends BaseQueryDao {
+	constructor(knex: Knex) {
+		super(knex, "product_category")
+	}
+
 	private readonly categorySortFieldMap: Record<
 		CategorySortableFields,
 		string
 	> = {
 		name: "c.name",
 	}
-
-	constructor(private readonly knex: Knex) {}
 
 	async query(
 		pagination: Pagination,
@@ -82,6 +84,7 @@ export class CategoryQueryDao {
 				builder.where("c.name", "%", filters.name)
 			}
 		}
+
 		sortQuery(builder, sort, this.categorySortFieldMap)
 
 		const rows = await builder
@@ -104,31 +107,23 @@ export class CategoryQueryDao {
 		return categories
 	}
 
-	async queryById(
-		id: EntityId,
-		archived: boolean | undefined,
-		include: CategoryQueryInclude,
-	) {
+	async queryById(id: EntityId, include: CategoryQueryInclude) {
 		const builder = this.knex<CategoryDatabaseTable>(this.tableName)
 			.select("*")
 			.where("id", "=", id)
 			.first()
-		if (archived === true) {
-			builder.whereNotNull("deleted_at")
-		} else {
-			builder.whereNull("deleted_at")
-		}
 		const row = await builder
 		if (!row) {
 			return null
 		}
 		let groups: ProductGroupQueryDto[] = []
 		if (include) {
+			const isArchived = row.deleted_at !== null
 			if (include.groups) {
 				const groupQueryDao = new ProductGroupQueryDao(this.knex)
 				groups = await groupQueryDao.query(
 					undefined,
-					{ categoryId: row.id },
+					{ categoryId: row.id, archived: isArchived },
 					undefined,
 					[],
 				)

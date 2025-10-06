@@ -3,6 +3,7 @@ import { EntityId } from "../../../core/types/EntityId.js"
 import { SupplierDatabaseTable } from "../types/tables/SupplierDatabaseTable.js"
 import { defaultPagination, Pagination } from "../types/queries/Pagination.js"
 import { Sort, sortQuery } from "../utils/Sort.js"
+import { BaseQueryDao } from "./BaseQueryDao.js"
 
 export type SuppliedProductJoinedTable = {
 	product_name: string
@@ -39,14 +40,18 @@ export type SupplierQueryInclude =
 export type SupplierQueryFilter =
 	| Partial<{
 			name: string
+			productId: EntityId
 			archived: boolean
 	  }>
 	| undefined
 
 export type SupplierSortableFields = "name" | "leadTime"
 
-export class SupplierQueryDao {
-	private tableName = "supplier"
+export class SupplierQueryDao extends BaseQueryDao {
+	constructor(knex: Knex) {
+		super(knex, "supplier")
+	}
+
 	private readonly supplierSortFieldMap: Record<
 		SupplierSortableFields,
 		string
@@ -54,8 +59,6 @@ export class SupplierQueryDao {
 		name: "s.name",
 		leadTime: "s.lead_time",
 	}
-
-	constructor(private readonly knex: Knex) {}
 
 	async query(
 		pagination: Pagination,
@@ -101,8 +104,6 @@ export class SupplierQueryDao {
 		} else {
 			sortQuery(builder, ["name"], this.supplierSortFieldMap)
 		}
-		console.log(builder.toQuery())
-
 		const rows = await builder
 		let suppliers: SupplierQueryDto[] = []
 		for (const row of rows) {
@@ -127,11 +128,7 @@ export class SupplierQueryDao {
 		return suppliers
 	}
 
-	async queryById(
-		id: EntityId,
-		archived: boolean | undefined,
-		include: SupplierQueryInclude,
-	) {
+	async queryById(id: EntityId, include: SupplierQueryInclude) {
 		const builder = this.knex<
 			SupplierDatabaseTable & SuppliedProductJoinedTable
 		>(`${this.tableName} as s`)
@@ -145,11 +142,6 @@ export class SupplierQueryDao {
 				"s.deleted_at",
 			)
 			.where("s.id", "=", id)
-		if (archived) {
-			builder.whereNotNull("s.deleted_at")
-		} else {
-			builder.whereNull("s.deleted_at")
-		}
 		if (include) {
 			if (include.products) {
 				builder.join("product_supplier as ps", "ps.supplier_id", "s.id")

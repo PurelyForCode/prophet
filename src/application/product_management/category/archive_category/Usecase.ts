@@ -1,11 +1,8 @@
 import { IEventBus } from "../../../../core/interfaces/IDomainEventBus.js"
-import { IIdGenerator } from "../../../../core/interfaces/IIdGenerator.js"
 import { IUnitOfWork } from "../../../../core/interfaces/IUnitOfWork.js"
 import { Usecase } from "../../../../core/interfaces/Usecase.js"
 import { CategoryManager } from "../../../../domain/product_management/services/CategoryManager.js"
-import { CategoryName } from "../../../../domain/product_management/entities/category/value_objects/CategoryName.js"
 import { CategoryNotFoundException } from "../../../../domain/product_management/exceptions/CategoryNotFoundException.js"
-import { ProductManager } from "../../../../domain/product_management/services/ProductManager.js"
 
 export type ArchiveCategoryInput = {
 	categoryId: string

@@ -22,7 +22,6 @@ import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 import { CategoryNotFoundException } from "../../domain/product_management/exceptions/CategoryNotFoundException.js"
 import { fakeId } from "../../fakeId.js"
 import { RemoveProductInCategoryUsecase } from "../../application/product_management/category/remove_product/Usecase.js"
-import { ProductGroupQueryDao } from "../../infra/db/query_dao/ProductGroupQueryDao.js"
 
 const app = new Hono()
 
@@ -73,7 +72,6 @@ app.get(
 				include: includeStringSchema(
 					new Set<CategoryIncludeField>(["groups"]),
 				),
-				archived: booleanStringSchema,
 			})
 			.partial(),
 	),
@@ -89,7 +87,6 @@ app.get(
 		const query = c.req.valid("query")
 		const result = await queryDao.queryById(
 			params.categoryId,
-			query.archived,
 			query.include,
 		)
 		if (!result) {

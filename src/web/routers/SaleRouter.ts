@@ -56,7 +56,6 @@ app.get(
 		if (!groupExists) {
 			throw new ProductGroupNotFoundException()
 		}
-
 		const productExists = await productQueryDao.exists(params.productId)
 		if (!productExists) {
 			throw new ProductNotFoundException()
@@ -89,15 +88,8 @@ app.get(
 			groupId: z.uuidv7(),
 		}),
 	),
-	zValidator(
-		"query",
-		z.object({
-			archived: booleanStringSchema,
-		}),
-	),
 	async (c) => {
 		const params = c.req.valid("param")
-		const query = c.req.valid("query")
 		const groupQueryDao = new ProductGroupQueryDao(knexInstance)
 		const productQueryDao = new ProductQueryDao(knexInstance)
 
@@ -105,7 +97,6 @@ app.get(
 		if (!groupExists) {
 			throw new ProductGroupNotFoundException()
 		}
-
 		const productExists = await productQueryDao.exists(params.productId)
 		if (!productExists) {
 			throw new ProductNotFoundException()
@@ -113,7 +104,6 @@ app.get(
 
 		const saleQueryDto = new SaleQueryDao(knexInstance)
 		const sales = await saleQueryDto.queryById(params.saleId, {
-			archived: query.archived,
 			productId: params.productId,
 		})
 		if (!sales) {

@@ -8,6 +8,7 @@ import { ProductDatabaseTable } from "../types/tables/ProductDatabaseTable.js"
 import { defaultPagination, Pagination } from "../types/queries/Pagination.js"
 import { SaleQueryDao, SaleQueryDto } from "./SaleQueryDao.js"
 import { Sort, sortQuery } from "../utils/Sort.js"
+import { BaseQueryDao } from "./BaseQueryDao.js"
 
 export type ProductQueryDto = {
 	id: string
@@ -44,24 +45,17 @@ export type ProductQueryFilters =
 export type ProductTable = ProductDatabaseTable &
 	JoinedProductSettingTableColumns
 
-export class ProductQueryDao {
-	private tableName = "product"
+export class ProductQueryDao extends BaseQueryDao {
+	constructor(knex: Knex) {
+		super(knex, "product")
+	}
+
 	private readonly productSortFieldMap: Record<
 		ProductSortableFields,
 		string
 	> = {
 		name: "p.name",
 		stock: "p.stock",
-	}
-
-	constructor(private readonly knex: Knex) {}
-
-	async exists(id: EntityId): Promise<boolean> {
-		const row = await this.knex(this.tableName)
-			.select("*")
-			.where("id", "=", id)
-			.first()
-		return !!row
 	}
 
 	async query(
@@ -111,24 +105,22 @@ export class ProductQueryDao {
 		} else {
 			sortQuery(builder, ["name"], this.productSortFieldMap)
 		}
-		const rows = await builder
+		const rows = (await builder) as (ProductDatabaseTable &
+			JoinedProductSettingTableColumns)[]
 		let products: ProductQueryDto[] = []
 		for (const row of rows) {
+			const isArchived = row.deleted_at !== null
 			let sales: SaleQueryDto[] | undefined = undefined
 			let setting: JoinedProductSettingTableColumns | undefined =
 				undefined
 			if (include) {
 				if (include.sales) {
 					const saleQueryDto = new SaleQueryDao(this.knex)
-					let archived: boolean | undefined = undefined
-					if (filters && filters.archived) {
-						archived = filters.archived
-					}
 					sales = await saleQueryDto.query(
 						undefined,
 						{
 							productId: row.id,
-							archived: archived,
+							archived: isArchived,
 						},
 						["-date"],
 					)
@@ -149,11 +141,7 @@ export class ProductQueryDao {
 		return products
 	}
 
-	async queryById(
-		id: EntityId,
-		archived: boolean | undefined,
-		include: ProductQueryInclude,
-	) {
+	async queryById(id: EntityId, include: ProductQueryInclude) {
 		const builder = this.knex<
 			ProductDatabaseTable & JoinedProductSettingTableColumns
 		>(this.tableName)
@@ -164,11 +152,6 @@ export class ProductQueryDao {
 		if (include && include.settings) {
 			this.joinSettings(builder)
 		}
-		if (archived === true) {
-			builder.whereNotNull("deleted_at")
-		} else {
-			builder.whereNull("deleted_at")
-		}
 
 		const row = await builder
 		if (!row) {
@@ -178,14 +161,14 @@ export class ProductQueryDao {
 		let setting: JoinedProductSettingTableColumns | undefined = undefined
 
 		if (include) {
+			const isArchived = row.deleted_at !== null
 			if (include.sales) {
 				const saleQueryDto = new SaleQueryDao(this.knex)
-				let archived: boolean | undefined = undefined
 				sales = await saleQueryDto.query(
 					undefined,
 					{
 						productId: row.id,
-						archived: archived,
+						archived: isArchived,
 					},
 					undefined,
 				)
@@ -207,7 +190,6 @@ export class ProductQueryDao {
 	async queryOneFromGroupIdById(
 		id: EntityId,
 		groupId: EntityId,
-		archived: boolean | undefined,
 		include: ProductQueryInclude,
 	) {
 		const builder = this.knex<
@@ -222,26 +204,22 @@ export class ProductQueryDao {
 			this.joinSettings(builder)
 		}
 
-		if (archived === true) {
-			builder.whereNotNull("p.deleted_at")
-		} else {
-			builder.whereNull("p.deleted_at")
-		}
-		const row = await builder
+		const row = (await builder) as ProductDatabaseTable &
+			JoinedProductSettingTableColumns
 		if (!row) {
 			return null
 		}
 		let sales: SaleQueryDto[] | undefined = undefined
 		let setting: JoinedProductSettingTableColumns | undefined = undefined
 		if (include) {
+			const isArchived = row.deleted_at !== null
 			if (include.sales) {
 				const saleQueryDto = new SaleQueryDao(this.knex)
-				let archived: boolean | undefined = undefined
 				sales = await saleQueryDto.query(
 					undefined,
 					{
 						productId: row.id,
-						archived: archived,
+						archived: isArchived,
 					},
 					undefined,
 				)

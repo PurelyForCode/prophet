@@ -2,6 +2,7 @@ import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
 import { defaultPagination, Pagination } from "../types/queries/Pagination.js"
 import { Sort, sortQuery } from "../utils/Sort.js"
+import { BaseQueryDao } from "./BaseQueryDao.js"
 
 export type DeliveryQueryFilters =
 	| Partial<{
@@ -88,9 +89,10 @@ export type CompleteDeliveryRow = {
 
 export type DeliverySortableFields = "scheduledArrivalDate"
 
-export class DeliveryQueryDao {
-	constructor(private readonly knex: Knex) {}
-	private tableName = "delivery"
+export class DeliveryQueryDao extends BaseQueryDao {
+	constructor(knex: Knex) {
+		super(knex, "delivery")
+	}
 
 	private readonly deliverySortFieldMap: Record<
 		DeliverySortableFields,
@@ -172,7 +174,7 @@ export class DeliveryQueryDao {
 		return deliveries
 	}
 
-	async queryById(id: EntityId, archived: boolean | undefined) {
+	async queryById(id: EntityId) {
 		const builder = this.knex<CompleteDeliveryRow>(this.tableName)
 			.select(
 				"delivery.id",
@@ -207,16 +209,11 @@ export class DeliveryQueryDao {
 			.join("supplier", "delivery.supplier_id", "supplier.id")
 			.where("delivery.id", "=", id)
 
-		if (archived) {
-			builder.whereNotNull("delivery.deleted_at")
-		} else {
-			builder.whereNull("delivery.deleted_at")
-		}
-
 		const rows = await builder
 		if (!rows) {
 			return null
 		}
+
 		return this.groupWithItems(rows)
 	}
 
