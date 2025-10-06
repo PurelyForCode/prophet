@@ -1,6 +1,5 @@
 import { Knex } from "knex"
 import { ProductSettingDatabaseTable } from "../types/tables/ProductSettingDatabaseTable.js"
-import { EntityId } from "../../../core/types/EntityId.js"
 
 export type ProductSettingQueryDto = {
 	classification: string

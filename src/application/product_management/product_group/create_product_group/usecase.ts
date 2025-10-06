@@ -51,7 +51,6 @@ export class CreateProductGroupUsecase
 				settings: setting,
 			},
 		)
-		console.log(productGroup.getTrackedEntities())
 		await this.uow.save(productGroup)
 	}
 }

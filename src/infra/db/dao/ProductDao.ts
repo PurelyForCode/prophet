@@ -124,6 +124,13 @@ export class ProductDao {
 			)
 	}
 
+	async exists(id: EntityId): Promise<boolean> {
+		const result = await this.knex(this.tableName)
+			.where("id", "=", id)
+			.first()
+		return !!result
+	}
+
 	mapToDTO(row: ProductTable & JoinedProductSettingTableColumns): ProductDto {
 		return {
 			id: row.id,

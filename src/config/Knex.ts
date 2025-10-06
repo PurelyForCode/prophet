@@ -1,23 +1,24 @@
-import knexBuilder from "knex";
+import knexBuilder from "knex"
 import "dotenv/config"
-import { InternalServerError } from "../core/exceptions/InternalServerError.js";
+import { InternalServerError } from "../core/exceptions/InternalServerError.js"
+import { types } from "pg"
 
-const host = process.env.DB_HOST;
-const name = process.env.DB_NAME;
-const user = process.env.DB_USERNAME;
-const password = process.env.DB_PASSWORD;
-let port: number;
+const host = process.env.DB_HOST
+const name = process.env.DB_NAME
+const user = process.env.DB_USERNAME
+const password = process.env.DB_PASSWORD
+let port: number
 try {
-	const stringPort = process.env.DB_PORT;
+	const stringPort = process.env.DB_PORT
 	if (stringPort === undefined) {
-		console.log("Database environment variables are not defined");
-		throw new InternalServerError();
+		console.log("Database environment variables are not defined")
+		throw new InternalServerError()
 	}
-	port = parseInt(stringPort);
+	port = parseInt(stringPort)
 } catch (error) {
-	console.log(error);
-	console.log("DB_PORT should be a positive integer");
-	throw new InternalServerError();
+	console.log(error)
+	console.log("DB_PORT should be a positive integer")
+	throw new InternalServerError()
 }
 
 if (
@@ -26,8 +27,8 @@ if (
 	user === undefined ||
 	password === undefined
 ) {
-	console.log("Database environment variables are not defined");
-	throw new InternalServerError();
+	console.log("Database environment variables are not defined")
+	throw new InternalServerError()
 }
 
 export const knexInstance = knexBuilder({
@@ -43,4 +44,4 @@ export const knexInstance = knexBuilder({
 			max: 10,
 		},
 	},
-});
+})

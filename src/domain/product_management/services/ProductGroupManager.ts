@@ -67,11 +67,10 @@ export class ProductGroupManager {
 		group: ProductGroup,
 	) {
 		if (fields.name) {
-			if (!(await groupRepo.isNameUnique(fields.name))) {
+			if (!(await groupRepo.isNameUnique(fields.name, false))) {
 				throw new DuplicateProductGroupNameException()
-			} else {
-				group.name = fields.name
 			}
+			group.name = fields.name
 		}
 		group.addTrackedEntity(group, EntityAction.updated)
 		return group

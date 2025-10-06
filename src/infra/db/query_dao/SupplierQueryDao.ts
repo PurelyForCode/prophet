@@ -1,7 +1,8 @@
 import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
 import { SupplierDatabaseTable } from "../types/tables/SupplierDatabaseTable.js"
-import { QuerySort } from "../types/queries/QuerySort.js"
+import { defaultPagination, Pagination } from "../types/queries/Pagination.js"
+import { Sort, sortQuery } from "../utils/Sort.js"
 
 export type SuppliedProductJoinedTable = {
 	product_name: string
@@ -28,6 +29,7 @@ export type SupplierQueryDto = {
 	products: SuppliedProductQueryDto[] | undefined
 }
 
+export type SupplierIncludeFields = "products"
 export type SupplierQueryInclude =
 	| Partial<{
 			products: boolean
@@ -37,27 +39,28 @@ export type SupplierQueryInclude =
 export type SupplierQueryFilter =
 	| Partial<{
 			name: string
-			productId: EntityId
+			archived: boolean
 	  }>
 	| undefined
 
-export type SupplierSortFields = "name" | "leadTime"
-export type SupplierQuerySort = QuerySort<SupplierSortFields> | undefined
+export type SupplierSortableFields = "name" | "leadTime"
 
 export class SupplierQueryDao {
 	private tableName = "supplier"
-	private readonly supplierSortFieldMap: Record<SupplierSortFields, string> =
-		{
-			name: "s.name",
-			leadTime: "s.lead_time",
-		}
+	private readonly supplierSortFieldMap: Record<
+		SupplierSortableFields,
+		string
+	> = {
+		name: "s.name",
+		leadTime: "s.lead_time",
+	}
 
 	constructor(private readonly knex: Knex) {}
 
 	async query(
 		pagination: Pagination,
 		filter: SupplierQueryFilter,
-		sort: SupplierQuerySort,
+		sort: Sort<SupplierSortableFields>,
 		include: SupplierQueryInclude,
 	) {
 		const builder = this.knex<
@@ -75,8 +78,10 @@ export class SupplierQueryDao {
 			if (filter.name) {
 				builder.where("s.name", "%", filter.name)
 			}
-			if (filter.productId) {
-				builder.where("s.product_id", "=", filter.productId)
+			if (filter.archived) {
+				builder.whereNotNull("s.deleted_at")
+			} else {
+				builder.whereNull("s.deleted_at")
 			}
 		}
 		if (pagination) {
@@ -86,7 +91,17 @@ export class SupplierQueryDao {
 			if (pagination.offset) {
 				builder.offset(pagination.offset)
 			}
+		} else {
+			builder.limit(defaultPagination.limit)
+			builder.offset(defaultPagination.limit)
 		}
+
+		if (sort) {
+			sortQuery(builder, sort, this.supplierSortFieldMap)
+		} else {
+			sortQuery(builder, ["name"], this.supplierSortFieldMap)
+		}
+		console.log(builder.toQuery())
 
 		const rows = await builder
 		let suppliers: SupplierQueryDto[] = []
@@ -112,7 +127,11 @@ export class SupplierQueryDao {
 		return suppliers
 	}
 
-	async queryById(id: EntityId, include: SupplierQueryInclude) {
+	async queryById(
+		id: EntityId,
+		archived: boolean | undefined,
+		include: SupplierQueryInclude,
+	) {
 		const builder = this.knex<
 			SupplierDatabaseTable & SuppliedProductJoinedTable
 		>(`${this.tableName} as s`)
@@ -126,6 +145,11 @@ export class SupplierQueryDao {
 				"s.deleted_at",
 			)
 			.where("s.id", "=", id)
+		if (archived) {
+			builder.whereNotNull("s.deleted_at")
+		} else {
+			builder.whereNull("s.deleted_at")
+		}
 		if (include) {
 			if (include.products) {
 				builder.join("product_supplier as ps", "ps.supplier_id", "s.id")

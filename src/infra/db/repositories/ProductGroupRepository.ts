@@ -18,10 +18,15 @@ export class ProductGroupRepository implements IProductGroupRepository {
 		this.productGroupDao = new ProductGroupDao(knex)
 		this.productDao = new ProductDao(knex)
 	}
+
+	async exists(id: EntityId): Promise<boolean> {
+		return await this.productGroupDao.exists(id)
+	}
+
 	async create(entity: ProductGroup): Promise<void> {
-		console.log("1st")
 		await this.productGroupDao.insert({
 			created_at: entity.createdAt,
+			account_id: entity.accountId,
 			deleted_at: entity.deletedAt,
 			id: entity.id,
 			name: entity.name.value,
@@ -32,6 +37,7 @@ export class ProductGroupRepository implements IProductGroupRepository {
 	async update(entity: ProductGroup): Promise<void> {
 		await this.productGroupDao.update({
 			created_at: entity.createdAt,
+			account_id: entity.accountId,
 			deleted_at: entity.deletedAt,
 			id: entity.id,
 			name: entity.name.value,
@@ -42,6 +48,7 @@ export class ProductGroupRepository implements IProductGroupRepository {
 	async delete(entity: ProductGroup): Promise<void> {
 		await this.productGroupDao.delete({
 			created_at: entity.createdAt,
+			account_id: entity.accountId,
 			deleted_at: entity.deletedAt,
 			id: entity.id,
 			name: entity.name.value,
@@ -58,6 +65,22 @@ export class ProductGroupRepository implements IProductGroupRepository {
 		const productGroup = this.mapToEntity(productGroupDto, products)
 		return productGroup
 	}
+	async findByCategoryId(
+		categoryId: EntityId,
+	): Promise<Map<EntityId, ProductGroup>> {
+		const productGroupDto =
+			await this.productGroupDao.findByCategoryId(categoryId)
+		if (!productGroupDto) {
+			return new Map()
+		}
+		let groups = new Map<EntityId, ProductGroup>()
+		for (const group of productGroupDto.values()) {
+			const products = await this.productDao.findAllByGroupId(group.id)
+			const productGroup = this.mapToEntity(group, products)
+			groups.set(productGroup.id, productGroup)
+		}
+		return groups
+	}
 
 	async findByName(name: ProductName): Promise<ProductGroup | null> {
 		const productGroupDto = await this.productGroupDao.findByName(name)
@@ -70,8 +93,11 @@ export class ProductGroupRepository implements IProductGroupRepository {
 		const productGroup = this.mapToEntity(productGroupDto, products)
 		return productGroup
 	}
-	async isNameUnique(name: ProductName): Promise<boolean> {
-		return await this.productGroupDao.isNameUnique(name)
+	async isNameUnique(
+		name: ProductName,
+		archived: boolean | undefined,
+	): Promise<boolean> {
+		return await this.productGroupDao.isNameUnique(name, archived)
 	}
 
 	private mapToEntity(
@@ -86,7 +112,6 @@ export class ProductGroupRepository implements IProductGroupRepository {
 				createdAt: product.createdAt,
 				deletedAt: product.deletedAt,
 				name: new ProductName(product.name),
-				productCategoryId: product.productCategoryId,
 				productGroupId: product.groupId,
 				safetyStock: new SafetyStock(product.safetyStock),
 				settings: new ProductSetting(
@@ -105,6 +130,7 @@ export class ProductGroupRepository implements IProductGroupRepository {
 		return ProductGroup.create({
 			id: group.id,
 			categoryId: group.productCategoryId,
+			accountId: group.accountId,
 			createdAt: group.createdAt,
 			deletedAt: group.deletedAt,
 			name: new ProductName(group.name),

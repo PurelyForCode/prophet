@@ -5,7 +5,7 @@ export type Pagination =
 			limit: number
 	  }>
 
-export const defaultPagination: Pagination = {
+export const defaultPagination = {
 	offset: 0,
 	limit: 50,
 }

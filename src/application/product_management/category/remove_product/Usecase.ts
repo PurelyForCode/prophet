@@ -1,36 +1,38 @@
-import { IEventBus } from "../../../../core/interfaces/IDomainEventBus.js";
-import { IUnitOfWork } from "../../../../core/interfaces/IUnitOfWork.js";
-import { CategoryNotFoundException } from "../../../../domain/product_management/exceptions/CategoryNotFoundException.js";
-import { ProductNotFoundException } from "../../../../domain/product_management/exceptions/ProductNotFoundException.js";
-import { ProductManager } from "../../../../domain/product_management/services/ProductManager.js";
+import { IEventBus } from "../../../../core/interfaces/IDomainEventBus.js"
+import { IUnitOfWork } from "../../../../core/interfaces/IUnitOfWork.js"
+import { CategoryNotFoundException } from "../../../../domain/product_management/exceptions/CategoryNotFoundException.js"
+import { ProductGroupNotFoundException } from "../../../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
+import { ProductNotInCategoryException } from "../../../../domain/product_management/exceptions/ProductNotInCategoryException.js"
 
 type RemoveProductInCategoryInput = {
-  categoryId: string;
-  productId: string;
-};
+	categoryId: string
+	groupId: string
+}
 
 export class RemoveProductInCategoryUsecase {
-  constructor(
-    private readonly uow: IUnitOfWork,
-    private readonly eventBus: IEventBus
-  ) {}
-  async call(input: RemoveProductInCategoryInput) {
-    const categoryRepo = this.uow.getCategoryRepository();
-    const productRepo = this.uow.getProductRepository();
-    const category = await categoryRepo.findById(input.categoryId);
-    if (!category) {
-      throw new CategoryNotFoundException();
-    }
-    const product = await productRepo.findById(input.productId);
-    if (!product) {
-      throw new ProductNotFoundException();
-    }
-    const productManager = new ProductManager();
-    productManager.removeProductFromCategory(product);
+	constructor(
+		private readonly uow: IUnitOfWork,
+		private readonly eventBus: IEventBus,
+	) {}
+	async call(input: RemoveProductInCategoryInput) {
+		const categoryRepo = this.uow.getCategoryRepository()
+		const groupRepo = this.uow.getProductGroupRepository()
 
-    await this.uow.save(product);
-    await this.eventBus.dispatchAggregateEvents(product, this.uow);
-    await this.uow.save(category);
-    await this.eventBus.dispatchAggregateEvents(category, this.uow);
-  }
+		const category = await categoryRepo.findById(input.categoryId)
+		if (!category) {
+			throw new CategoryNotFoundException()
+		}
+		const group = await groupRepo.findById(input.groupId)
+		if (!group) {
+			throw new ProductGroupNotFoundException()
+		}
+		if (group.categoryId !== category.id) {
+			throw new ProductNotInCategoryException()
+		}
+
+		group.leaveCategory()
+
+		await this.uow.save(group)
+		await this.eventBus.dispatchAggregateEvents(group, this.uow)
+	}
 }

@@ -1,36 +1,35 @@
-import { Knex } from "knex";
-import { EntityId } from "../../../core/types/EntityId.js";
-import { Supplier } from "../../../domain/delivery_management/entities/supplier/Supplier.js";
-import { ISupplierRepository } from "../../../domain/delivery_management/repositories/ISupplierRepository.js";
-import { SupplierDAO, SupplierDTO } from "../dao/SupplierDao.js";
-import { EntityCollection } from "../../../core/types/EntityCollection.js";
-import { SupplierName } from "../../../domain/delivery_management/entities/supplier/value_objects/SupplierName.js";
-import { SuppliedProduct } from "../../../domain/delivery_management/entities/supplied_product/SuppliedProduct.js";
-import { SuppliedProductRepository } from "./SuppliedProductRepository.js";
-import { LeadTime } from "../../../domain/delivery_management/entities/supplier/value_objects/LeadTime.js";
+import { Knex } from "knex"
+import { EntityId } from "../../../core/types/EntityId.js"
+import { Supplier } from "../../../domain/delivery_management/entities/supplier/Supplier.js"
+import { ISupplierRepository } from "../../../domain/delivery_management/repositories/ISupplierRepository.js"
+import { SupplierDAO, SupplierDTO } from "../dao/SupplierDao.js"
+import { EntityCollection } from "../../../core/types/EntityCollection.js"
+import { SupplierName } from "../../../domain/delivery_management/entities/supplier/value_objects/SupplierName.js"
+import { SuppliedProduct } from "../../../domain/delivery_management/entities/supplied_product/SuppliedProduct.js"
+import { SuppliedProductRepository } from "./SuppliedProductRepository.js"
+import { LeadTime } from "../../../domain/delivery_management/entities/supplier/value_objects/LeadTime.js"
 
 export class SupplierRepository implements ISupplierRepository {
-	private supplierDAO: SupplierDAO;
-	private suppliedProductRepo: SuppliedProductRepository;
+	private supplierDAO: SupplierDAO
+	private suppliedProductRepo: SuppliedProductRepository
 
 	constructor(knex: Knex) {
-		this.suppliedProductRepo = new SuppliedProductRepository(knex);
-		this.supplierDAO = new SupplierDAO(knex);
+		this.suppliedProductRepo = new SuppliedProductRepository(knex)
+		this.supplierDAO = new SupplierDAO(knex)
 	}
 
 	async findByName(name: SupplierName): Promise<Supplier | null> {
-		const supplierDTO = await this.supplierDAO.findByName(name.value);
+		const supplierDTO = await this.supplierDAO.findByName(name.value)
 		if (!supplierDTO) {
-			return null;
+			return null
 		}
-		const suppliedProducts = await this.suppliedProductRepo.findAllBySupplierId(
-			supplierDTO.id
-		);
-		return this.mapToEntity(supplierDTO, suppliedProducts);
+		const suppliedProducts =
+			await this.suppliedProductRepo.findAllBySupplierId(supplierDTO.id)
+		return this.mapToEntity(supplierDTO, suppliedProducts)
 	}
 
 	async delete(entity: Supplier): Promise<void> {
-		await this.supplierDAO.delete(entity.id);
+		await this.supplierDAO.delete(entity.id)
 	}
 	async update(entity: Supplier): Promise<void> {
 		await this.supplierDAO.update({
@@ -41,7 +40,7 @@ export class SupplierRepository implements ISupplierRepository {
 			lead_time: entity.getLeadTime().value,
 			name: entity.getName().value,
 			updated_at: entity.getUpdatedAt(),
-		});
+		})
 	}
 	async create(entity: Supplier): Promise<void> {
 		await this.supplierDAO.insert({
@@ -52,26 +51,25 @@ export class SupplierRepository implements ISupplierRepository {
 			lead_time: entity.getLeadTime().value,
 			name: entity.getName().value,
 			updated_at: entity.getUpdatedAt(),
-		});
+		})
 	}
 
 	async findById(id: EntityId): Promise<Supplier | null> {
-		const supplierDTO = await this.supplierDAO.findById(id);
+		const supplierDTO = await this.supplierDAO.findById(id)
 		if (!supplierDTO) {
-			return null;
+			return null
 		}
-		const suppliedProducts = await this.suppliedProductRepo.findAllBySupplierId(
-			supplierDTO.id
-		);
-		return this.mapToEntity(supplierDTO, suppliedProducts);
+		const suppliedProducts =
+			await this.suppliedProductRepo.findAllBySupplierId(supplierDTO.id)
+		return this.mapToEntity(supplierDTO, suppliedProducts)
 	}
 
 	private mapToEntity(
 		supplierDTO: SupplierDTO,
-		suppliedProducts: EntityCollection<SuppliedProduct>
+		suppliedProducts: EntityCollection<SuppliedProduct>,
 	) {
-		const name = new SupplierName(supplierDTO.name);
-		const leadTime = new LeadTime(supplierDTO.leadTime);
+		const name = new SupplierName(supplierDTO.name)
+		const leadTime = new LeadTime(supplierDTO.leadTime)
 		return Supplier.create({
 			id: supplierDTO.id,
 			accountId: supplierDTO.accountId,
@@ -81,6 +79,6 @@ export class SupplierRepository implements ISupplierRepository {
 			updatedAt: supplierDTO.updatedAt,
 			deletedAt: supplierDTO.deletedAt,
 			productsSupplied: suppliedProducts,
-		});
+		})
 	}
 }

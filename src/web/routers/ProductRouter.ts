@@ -21,6 +21,8 @@ import {
 } from "../../infra/db/query_dao/ProductQueryDao.js"
 import { sortStringSchema } from "../validation/SortStringSchema.js"
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
+import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
+import { ProductNotFoundException } from "../../domain/product_management/exceptions/ProductNotFoundException.js"
 
 const app = new Hono()
 
@@ -30,9 +32,9 @@ app.get(
 		"query",
 		z
 			.object({
-				limit: z.coerce.number().int(),
-				offset: z.coerce.number().int(),
-				archived: z.coerce.boolean(),
+				limit: z.coerce.number().int().positive(),
+				offset: z.coerce.number().int().nonnegative(),
+				archived: booleanStringSchema,
 				name: z.string().min(1).max(100),
 				include: includeStringSchema(
 					new Set<ProductIncludeField>(["sales", "settings"]),
@@ -52,7 +54,6 @@ app.get(
 
 	async (c) => {
 		const productQueryDao = new ProductQueryDao(knexInstance)
-
 		const params = c.req.valid("param")
 		const query = c.req.valid("query")
 		const result = await productQueryDao.query(
@@ -88,6 +89,7 @@ app.get(
 				include: includeStringSchema(
 					new Set<ProductIncludeField>(["sales", "settings"]),
 				),
+				archived: booleanStringSchema,
 			})
 			.partial(),
 	),
@@ -98,8 +100,12 @@ app.get(
 		const result = await productQueryDao.queryOneFromGroupIdById(
 			params.productId,
 			params.groupId,
+			query.archived,
 			query.include,
 		)
+		if (!result) {
+			throw new ProductNotFoundException()
+		}
 		return c.json(result)
 	},
 )
@@ -110,12 +116,18 @@ app.post(
 		"json",
 		z.object({
 			name: z.string().max(100).min(2),
-			productCategoryId: z.uuidv7().nullish(),
 			settings: productSettingSchema.nullish(),
+		}),
+	),
+	zValidator(
+		"param",
+		z.object({
+			groupId: z.uuidv7(),
 		}),
 	),
 	async (c) => {
 		const body = c.req.valid("json")
+		const params = c.req.valid("param")
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
 		const usecase = new CreateProductUsecase(
 			uow,
@@ -126,8 +138,8 @@ app.post(
 			await usecase.call({
 				accountId: fakeId,
 				name: body.name,
-				productCategoryId: body.productCategoryId ?? null,
 				settings: body.settings ?? undefined,
+				groupId: params.groupId,
 			})
 		})
 		c.status(201)
@@ -141,12 +153,6 @@ app.delete(
 		"param",
 		z.object({
 			productId: z.uuidv7(),
-		}),
-	),
-
-	zValidator(
-		"param",
-		z.object({
 			groupId: z.uuidv7(),
 		}),
 	),
@@ -155,7 +161,10 @@ app.delete(
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
 		const usecase = new ArchiveProductUsecase(uow)
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
-			await usecase.call({ productId: params.productId })
+			await usecase.call({
+				groupId: params.groupId,
+				productId: params.productId,
+			})
 		})
 		return c.json({ message: "Successfully archived product" })
 	},
@@ -187,16 +196,30 @@ app.patch(
 		const usecase = new UpdateProductUsecase(uow)
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
+				groupId: params.groupId,
 				productId: params.productId,
 				fields: {
 					name: body.name,
 					safetyStock: body.safetyStock,
+					settings: body.settings,
 					stock: body.stock,
-					settings,
 				},
 			})
 		})
 		return c.json({ message: "Successfully updated product" })
+	},
+)
+
+app.post(
+	"/:productId/unarchive",
+	zValidator(
+		"json",
+		z.object({
+			newName: z.string().max(100).min(1).nullish(),
+		}),
+	),
+	(c) => {
+		return c.json({})
 	},
 )
 

@@ -1,22 +1,22 @@
-import { Knex } from "knex";
-import { EntityId } from "../../../core/types/EntityId.js";
-import { SuppliedProduct } from "../../../domain/delivery_management/entities/supplied_product/SuppliedProduct.js";
-import { ISuppliedProductRepository } from "../../../domain/delivery_management/repositories/ISuppliedProductRepository.js";
+import { Knex } from "knex"
+import { EntityId } from "../../../core/types/EntityId.js"
+import { SuppliedProduct } from "../../../domain/delivery_management/entities/supplied_product/SuppliedProduct.js"
+import { ISuppliedProductRepository } from "../../../domain/delivery_management/repositories/ISuppliedProductRepository.js"
 import {
 	SuppliedProductDAO,
 	SuppliedProductDTO,
-} from "../dao/SuppliedProductDao.js";
-import { EntityCollection } from "../../../core/types/EntityCollection.js";
-import { SuppliedProductMin } from "../../../domain/delivery_management/entities/supplied_product/value_objects/SuppliedProductMin.js";
-import { SuppliedProductMax } from "../../../domain/delivery_management/entities/supplied_product/value_objects/SuppliedProductMax.js";
+} from "../dao/SuppliedProductDao.js"
+import { EntityCollection } from "../../../core/types/EntityCollection.js"
+import { SuppliedProductMin } from "../../../domain/delivery_management/entities/supplied_product/value_objects/SuppliedProductMin.js"
+import { SuppliedProductMax } from "../../../domain/delivery_management/entities/supplied_product/value_objects/SuppliedProductMax.js"
 
 export class SuppliedProductRepository implements ISuppliedProductRepository {
-	private suppliedProductDAO: SuppliedProductDAO;
+	private suppliedProductDAO: SuppliedProductDAO
 	constructor(knex: Knex) {
-		this.suppliedProductDAO = new SuppliedProductDAO(knex);
+		this.suppliedProductDAO = new SuppliedProductDAO(knex)
 	}
 	async delete(entity: SuppliedProduct): Promise<void> {
-		this.suppliedProductDAO.delete(entity.id);
+		this.suppliedProductDAO.delete(entity.id)
 	}
 	async update(entity: SuppliedProduct): Promise<void> {
 		await this.suppliedProductDAO.update({
@@ -25,7 +25,7 @@ export class SuppliedProductRepository implements ISuppliedProductRepository {
 			min_orderable: entity.getMin().value,
 			product_id: entity.getProductId(),
 			supplier_id: entity.getSupplierId(),
-		});
+		})
 	}
 	async create(entity: SuppliedProduct): Promise<void> {
 		await this.suppliedProductDAO.insert({
@@ -34,34 +34,34 @@ export class SuppliedProductRepository implements ISuppliedProductRepository {
 			min_orderable: entity.getMin().value,
 			product_id: entity.getProductId(),
 			supplier_id: entity.getSupplierId(),
-		});
+		})
 	}
 
 	async findById(id: EntityId): Promise<SuppliedProduct | null> {
-		const dto = await this.suppliedProductDAO.findById(id);
+		const dto = await this.suppliedProductDAO.findById(id)
 		if (!dto) {
-			return null;
+			return null
 		} else {
-			return this.mapToEntity(dto);
+			return this.mapToEntity(dto)
 		}
 	}
 
 	async findAllBySupplierId(
-		supplierId: EntityId
+		supplierId: EntityId,
 	): Promise<EntityCollection<SuppliedProduct>> {
 		const suppliedProductDTOs =
-			await this.suppliedProductDAO.findAllBySupplierId(supplierId);
-		const suppliedProducts = new Map();
+			await this.suppliedProductDAO.findAllBySupplierId(supplierId)
+		const suppliedProducts = new Map()
 		for (const row of suppliedProductDTOs) {
-			const suppliedProduct = this.mapToEntity(row);
-			suppliedProducts.set(suppliedProduct.id, suppliedProduct);
+			const suppliedProduct = this.mapToEntity(row)
+			suppliedProducts.set(suppliedProduct.id, suppliedProduct)
 		}
-		return suppliedProducts;
+		return suppliedProducts
 	}
 
 	private mapToEntity(row: SuppliedProductDTO): SuppliedProduct {
-		const min = new SuppliedProductMin(row.min);
-		const max = new SuppliedProductMax(row.max);
+		const min = new SuppliedProductMin(row.min)
+		const max = new SuppliedProductMax(row.max)
 
 		return SuppliedProduct.create({
 			id: row.id,
@@ -69,6 +69,6 @@ export class SuppliedProductRepository implements ISuppliedProductRepository {
 			supplierId: row.supplierId,
 			min: min,
 			max: max,
-		});
+		})
 	}
 }

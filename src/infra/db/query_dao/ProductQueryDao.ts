@@ -7,9 +7,7 @@ import { EntityId } from "../../../core/types/EntityId.js"
 import { ProductDatabaseTable } from "../types/tables/ProductDatabaseTable.js"
 import { defaultPagination, Pagination } from "../types/queries/Pagination.js"
 import { SaleQueryDao, SaleQueryDto } from "./SaleQueryDao.js"
-import { QuerySort } from "../types/queries/QuerySort.js"
 import { Sort, sortQuery } from "../utils/Sort.js"
-import { group } from "node:console"
 
 export type ProductQueryDto = {
 	id: string
@@ -26,9 +24,8 @@ export type ProductQueryDto = {
 }
 
 export type ProductSortableFields = "name" | "stock"
-
-export type ProductQuerySort = QuerySort<ProductSortableFields> | undefined
 export type ProductIncludeField = "sales" | "settings"
+
 export type ProductQueryInclude =
 	| Partial<{
 			sales: boolean
@@ -59,6 +56,14 @@ export class ProductQueryDao {
 
 	constructor(private readonly knex: Knex) {}
 
+	async exists(id: EntityId): Promise<boolean> {
+		const row = await this.knex(this.tableName)
+			.select("*")
+			.where("id", "=", id)
+			.first()
+		return !!row
+	}
+
 	async query(
 		pagination: Pagination,
 		filters: ProductQueryFilters,
@@ -76,9 +81,12 @@ export class ProductQueryDao {
 			if (pagination.offset) {
 				builder.offset(pagination.offset)
 			}
+		} else {
+			builder.limit(defaultPagination.limit)
+			builder.offset(defaultPagination.offset)
 		}
 
-		if (filters && filters.archived === true) {
+		if (filters && filters.archived) {
 			builder.whereNotNull("p.deleted_at")
 		} else {
 			builder.whereNull("p.deleted_at")
@@ -97,12 +105,12 @@ export class ProductQueryDao {
 		if (include && include.settings) {
 			this.joinSettings(builder)
 		}
+
 		if (sort) {
 			sortQuery(builder, sort, this.productSortFieldMap)
 		} else {
 			sortQuery(builder, ["name"], this.productSortFieldMap)
 		}
-
 		const rows = await builder
 		let products: ProductQueryDto[] = []
 		for (const row of rows) {
@@ -141,7 +149,11 @@ export class ProductQueryDao {
 		return products
 	}
 
-	async queryById(id: EntityId, include: ProductQueryInclude) {
+	async queryById(
+		id: EntityId,
+		archived: boolean | undefined,
+		include: ProductQueryInclude,
+	) {
 		const builder = this.knex<
 			ProductDatabaseTable & JoinedProductSettingTableColumns
 		>(this.tableName)
@@ -151,6 +163,11 @@ export class ProductQueryDao {
 
 		if (include && include.settings) {
 			this.joinSettings(builder)
+		}
+		if (archived === true) {
+			builder.whereNotNull("deleted_at")
+		} else {
+			builder.whereNull("deleted_at")
 		}
 
 		const row = await builder
@@ -165,7 +182,7 @@ export class ProductQueryDao {
 				const saleQueryDto = new SaleQueryDao(this.knex)
 				let archived: boolean | undefined = undefined
 				sales = await saleQueryDto.query(
-					defaultPagination,
+					undefined,
 					{
 						productId: row.id,
 						archived: archived,
@@ -190,20 +207,26 @@ export class ProductQueryDao {
 	async queryOneFromGroupIdById(
 		id: EntityId,
 		groupId: EntityId,
+		archived: boolean | undefined,
 		include: ProductQueryInclude,
 	) {
 		const builder = this.knex<
 			ProductDatabaseTable & JoinedProductSettingTableColumns
-		>(this.tableName)
-			.select("*")
-			.where("id", "=", id)
-			.where("group_id", "=", groupId)
+		>(`${this.tableName} as p`)
+			.select("p.*")
+			.where("p.id", "=", id)
+			.where("p.group_id", "=", groupId)
 			.first()
 
 		if (include && include.settings) {
 			this.joinSettings(builder)
 		}
 
+		if (archived === true) {
+			builder.whereNotNull("p.deleted_at")
+		} else {
+			builder.whereNull("p.deleted_at")
+		}
 		const row = await builder
 		if (!row) {
 			return null
@@ -215,7 +238,7 @@ export class ProductQueryDao {
 				const saleQueryDto = new SaleQueryDao(this.knex)
 				let archived: boolean | undefined = undefined
 				sales = await saleQueryDto.query(
-					{ limit: 50, offset: 0 },
+					undefined,
 					{
 						productId: row.id,
 						archived: archived,

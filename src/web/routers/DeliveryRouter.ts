@@ -16,10 +16,12 @@ import { UpdateItemInDeliveryUsecase } from "../../application/delivery_manageme
 import { RemoveItemOnDeliveryUsecase } from "../../application/delivery_management/delivery_item/remove_item/Usecase.js"
 import {
 	DeliveryQueryDao,
-	DeliveryQuerySort,
 	DeliverySortableFields,
 } from "../../infra/db/query_dao/DeliveryQueryDao.js"
-import { parseSortQueryString } from "../utils/parseSortQueryString.js"
+import { sortStringSchema } from "../validation/SortStringSchema.js"
+import { DeliveryStatusValue } from "../../domain/delivery_management/entities/delivery/value_objects/DeliveryStatus.js"
+import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
+import { DeliveryNotFoundException } from "../../domain/delivery_management/exceptions/DeliveryNotFoundException.js"
 
 const app = new Hono()
 
@@ -29,24 +31,23 @@ app.get(
 		"query",
 		z
 			.object({
-				offset: z.coerce.number().positive(),
+				offset: z.coerce.number().nonnegative(),
 				limit: z.coerce.number().positive(),
-				archived: z.coerce.boolean(),
-				status: z.enum([""]),
-				sort: z.string(),
+				archived: booleanStringSchema,
+				status: z.enum<DeliveryStatusValue[]>([
+					"completed",
+					"cancelled",
+					"delivering",
+				]),
+				sort: sortStringSchema(
+					new Set<DeliverySortableFields>(["scheduledArrivalDate"]),
+				),
 			})
 			.partial(),
 	),
 	async (c) => {
 		const deliveryQueryDao = new DeliveryQueryDao(knexInstance)
 		const query = c.req.valid("query")
-		let sort = undefined
-		if (query.sort) {
-			sort = parseSortQueryString<DeliverySortableFields>(query.sort, [
-				"scheduledArrivalDate",
-			])
-		}
-
 		const delivery = await deliveryQueryDao.query(
 			{
 				limit: query.limit,
@@ -56,7 +57,7 @@ app.get(
 				archived: query.archived,
 				status: query.status,
 			},
-			sort,
+			query.sort,
 		)
 		return c.json({ data: delivery })
 	},
@@ -64,7 +65,6 @@ app.get(
 
 app.get(
 	"/:deliveryId",
-
 	zValidator(
 		"param",
 		z.object({
@@ -75,7 +75,7 @@ app.get(
 		"query",
 		z
 			.object({
-				archived: z.coerce.boolean(),
+				archived: booleanStringSchema,
 			})
 			.partial(),
 	),
@@ -83,14 +83,17 @@ app.get(
 		const deliveryQueryDao = new DeliveryQueryDao(knexInstance)
 		const params = c.req.valid("param")
 		const query = c.req.valid("query")
-
 		const delivery = await deliveryQueryDao.queryById(
 			params.deliveryId,
 			query.archived,
 		)
+		if (!delivery) {
+			throw new DeliveryNotFoundException()
+		}
 		return c.json({ data: delivery })
 	},
 )
+
 app.post(
 	"/",
 	zValidator(

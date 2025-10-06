@@ -1,6 +1,7 @@
 import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
-import { Pagination } from "../types/queries/Pagination.js"
+import { defaultPagination, Pagination } from "../types/queries/Pagination.js"
+import { Sort, sortQuery } from "../utils/Sort.js"
 
 export type DeliveryQueryFilters =
 	| Partial<{
@@ -101,7 +102,7 @@ export class DeliveryQueryDao {
 	async query(
 		pagination: Pagination,
 		filters: DeliveryQueryFilters,
-		sort: DeliveryQuerySort,
+		sort: Sort<DeliverySortableFields>,
 	): Promise<DeliveryQueryDto[]> {
 		const builder = this.knex<DeliveryRow>(`${this.tableName} as d`)
 			.select(
@@ -121,13 +122,6 @@ export class DeliveryQueryDao {
 			)
 			.join("supplier as s", "d.supplier_id", "s.id")
 
-		/*"delivery_item.id as delivery_item_id",
-			"delivery_item.delivery_id",
-			"delivery_item.quantity",
-			"product.id as product_id",
-			"product.name as product_name",
-			"product.stock as product_stock"*/
-
 		if (filters) {
 			if (filters.archived) {
 				builder.whereNotNull("d.deleted_at")
@@ -146,6 +140,18 @@ export class DeliveryQueryDao {
 			if (pagination.offset) {
 				builder.offset(pagination.offset)
 			}
+		} else {
+			builder.limit(defaultPagination.limit)
+			builder.limit(defaultPagination.offset)
+		}
+		if (sort) {
+			sortQuery(builder, sort, this.deliverySortFieldMap)
+		} else {
+			sortQuery(
+				builder,
+				["-scheduledArrivalDate"],
+				this.deliverySortFieldMap,
+			)
 		}
 
 		const rows: DeliveryRow[] = await builder

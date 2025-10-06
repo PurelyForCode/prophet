@@ -1,7 +1,7 @@
 import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
 import { SaleDatabaseTable } from "../types/tables/SaleDatabaseTable.js"
-import { Pagination } from "../types/queries/Pagination.js"
+import { defaultPagination, Pagination } from "../types/queries/Pagination.js"
 import { Sort, sortQuery } from "../utils/Sort.js"
 
 export type SaleQueryFilter = Partial<{
@@ -62,7 +62,11 @@ export class SaleQueryDao {
 			if (pagination.offset) {
 				builder.offset(pagination.offset)
 			}
+		} else {
+			builder.limit(defaultPagination.limit)
+			builder.offset(defaultPagination.offset)
 		}
+
 		if (sort) {
 			sortQuery(builder, sort, this.saleSortFieldMap)
 		} else {

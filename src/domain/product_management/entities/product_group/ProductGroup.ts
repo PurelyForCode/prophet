@@ -15,6 +15,8 @@ import { ProductName } from "../product/value_objects/ProductName.js"
 import { ProductSetting } from "../product/value_objects/ProductSetting.js"
 import { ProductStock } from "../product/value_objects/ProductStock.js"
 import { SafetyStock } from "../product/value_objects/SafetyStock.js"
+import { DuplicateProductNameException } from "../../exceptions/DuplicateNameException.js"
+import { ResourceIsNotArchivedException } from "../../../../core/exceptions/ResourceIsNotArchivedException.js"
 
 export type UpdateProductGroupFields = Partial<{
 	name: ProductName
@@ -147,11 +149,18 @@ export class ProductGroup extends AggregateRoot {
 		if (!product) {
 			throw new ProductNotFoundException()
 		}
-
 		if (product.deletedAt) {
 			throw new ResourceIsArchivedException("Product")
 		}
-		fields.name && (product.name = fields.name)
+
+		if (fields.name) {
+			for (const product of this.products.values()) {
+				if (product.name === fields.name) {
+					throw new DuplicateProductNameException()
+				}
+			}
+			product.name = fields.name
+		}
 		fields.stock && (product.stock = fields.stock)
 		fields.safetyStock && (product.safetyStock = fields.safetyStock)
 		fields.settings && (product.settings = fields.settings)
@@ -181,11 +190,11 @@ export class ProductGroup extends AggregateRoot {
 
 	archive() {
 		const products = this.products.values()
-		const now = new Date()
 		products.forEach((product) => {
 			this.archiveVariant(product.id)
 			this.addTrackedEntity(product, EntityAction.updated)
 		})
+		this.deletedAt = new Date()
 		this.addTrackedEntity(this, EntityAction.updated)
 	}
 
@@ -207,6 +216,26 @@ export class ProductGroup extends AggregateRoot {
 		}
 		this.categoryId = null
 		this.addTrackedEntity(this, EntityAction.updated)
+	}
+
+	unarchive() {
+		this.deletedAt = null
+		this.products.forEach((product) => {
+			this.unarchiveVariant(product.id)
+			this.addTrackedEntity(product, EntityAction.updated)
+		})
+		this.addTrackedEntity(this, EntityAction.updated)
+	}
+
+	unarchiveVariant(productId: EntityId) {
+		const product = this.products.get(productId)
+		if (!product) {
+			throw new ProductNotFoundException()
+		}
+		if (product.deletedAt === null) {
+			throw new ResourceIsNotArchivedException("product")
+		}
+		product.deletedAt = null
 	}
 
 	private throwIfArchived() {

@@ -2,16 +2,11 @@ import { IUnitOfWork } from "../../../../core/interfaces/IUnitOfWork.js"
 import { Usecase } from "../../../../core/interfaces/Usecase.js"
 import { EntityId } from "../../../../core/types/EntityId.js"
 import { ProductName } from "../../../../domain/product_management/entities/product/value_objects/ProductName.js"
-import {
-	ProductClassification,
-	ProductSetting,
-	SafetyStockCalculationMethod,
-} from "../../../../domain/product_management/entities/product/value_objects/ProductSetting.js"
+import { ProductSetting } from "../../../../domain/product_management/entities/product/value_objects/ProductSetting.js"
 import { ProductStock } from "../../../../domain/product_management/entities/product/value_objects/ProductStock.js"
 import { SafetyStock } from "../../../../domain/product_management/entities/product/value_objects/SafetyStock.js"
 import { ProductGroupNotFoundException } from "../../../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
 import { ProductNotFoundException } from "../../../../domain/product_management/exceptions/ProductNotFoundException.js"
-import { ProductManager } from "../../../../domain/product_management/services/ProductManager.js"
 
 export type UpdateProductInput = {
 	groupId: EntityId

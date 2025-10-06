@@ -11,17 +11,21 @@ import { ProductDao, ProductDto } from "../dao/ProductDao.js"
 import { ProductSettingDAO } from "../dao/ProductSettingDao.js"
 
 export class ProductRepository implements IProductRepository {
-	private productDAO: ProductDao
+	private productDao: ProductDao
 	private settingDAO: ProductSettingDAO
-	constructor(knex: Knex.Transaction | Knex) {
-		this.productDAO = new ProductDao(knex)
+	constructor(knex: Knex) {
+		this.productDao = new ProductDao(knex)
 		this.settingDAO = new ProductSettingDAO(knex)
+	}
+
+	async exists(id: EntityId): Promise<boolean> {
+		return await this.productDao.exists(id)
 	}
 
 	async findAllByCategoryId(
 		categoryId: EntityId,
 	): Promise<Map<EntityId, Product>> {
-		const result = await this.productDAO.findAllByCategoryId(categoryId)
+		const result = await this.productDao.findAllByCategoryId(categoryId)
 		const products = new Map()
 		for (const product of result) {
 			const productEntity = this.mapToEntity(product)
@@ -31,11 +35,11 @@ export class ProductRepository implements IProductRepository {
 	}
 
 	async isProductNameUnique(name: ProductName): Promise<boolean> {
-		return !(await this.productDAO.existsByName(name.value))
+		return !(await this.productDao.existsByName(name.value))
 	}
 
 	async findById(id: EntityId): Promise<Product | null> {
-		const product = await this.productDAO.findOneById(id)
+		const product = await this.productDao.findOneById(id)
 		if (!product) {
 			return null
 		}
@@ -43,7 +47,7 @@ export class ProductRepository implements IProductRepository {
 	}
 
 	async findByName(name: ProductName): Promise<Product | null> {
-		const product = await this.productDAO.findOneByName(name.value)
+		const product = await this.productDao.findOneByName(name.value)
 		if (!product) {
 			return null
 		}
@@ -51,11 +55,11 @@ export class ProductRepository implements IProductRepository {
 	}
 
 	async delete(entity: Product) {
-		await this.productDAO.delete(entity.id)
+		await this.productDao.delete(entity.id)
 	}
 
 	async update(entity: Product) {
-		await this.productDAO.update({
+		await this.productDao.update({
 			id: entity.id,
 			account_id: entity.accountId,
 			name: entity.name.value,
@@ -80,8 +84,7 @@ export class ProductRepository implements IProductRepository {
 	}
 
 	async create(entity: Product) {
-		console.log("2nd")
-		await this.productDAO.insert({
+		await this.productDao.insert({
 			id: entity.id,
 			account_id: entity.accountId,
 			name: entity.name.value,

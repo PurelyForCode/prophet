@@ -1,14 +1,26 @@
 import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
 import { CategoryDatabaseTable } from "../types/tables/CategoryDatabaseTable.js"
-import { Pagination } from "../types/queries/Pagination.js"
+import { defaultPagination, Pagination } from "../types/queries/Pagination.js"
 import {
 	ProductGroupQueryDao,
 	ProductGroupQueryDto,
 } from "./ProductGroupQueryDao.js"
 import { Sort, sortQuery } from "../utils/Sort.js"
 
-export type CategoryInclude = Array<"groups"> | undefined
+export type ProductGroupQueryInclude =
+	| Partial<{
+			productSales: boolean
+			productSettings: boolean
+	  }>
+	| undefined
+
+export type CategoryIncludeField = "groups"
+export type CategoryQueryInclude =
+	| Partial<{
+			groups: boolean
+	  }>
+	| undefined
 
 export type CategoryFilters =
 	| Partial<{ name: string; archived: boolean }>
@@ -24,7 +36,7 @@ export type CategoryQueryDto = {
 	productGroups: undefined | ProductGroupQueryDto[]
 }
 
-type CategorySortableFields = "name"
+export type CategorySortableFields = "name"
 
 export class CategoryQueryDao {
 	private tableName = "product_category"
@@ -40,7 +52,7 @@ export class CategoryQueryDao {
 	async query(
 		pagination: Pagination,
 		filters: CategoryFilters,
-		include: CategoryInclude,
+		include: CategoryQueryInclude,
 		sort: Sort<CategorySortableFields>,
 	) {
 		const builder = this.knex<CategoryDatabaseTable>(
@@ -54,6 +66,9 @@ export class CategoryQueryDao {
 			if (pagination.offset) {
 				builder.limit(pagination.offset)
 			}
+		} else {
+			builder.limit(defaultPagination.limit)
+			builder.offset(defaultPagination.offset)
 		}
 
 		if (filters && filters.archived === true) {
@@ -74,18 +89,14 @@ export class CategoryQueryDao {
 		for (const row of rows) {
 			let groups: ProductGroupQueryDto[] | undefined = undefined
 			if (include) {
-				for (const field of include) {
-					if (field === "groups") {
-						const groupQueryDao = new ProductGroupQueryDao(
-							this.knex,
-						)
-						groups = await groupQueryDao.query(
-							undefined,
-							{ categoryId: row.id },
-							undefined,
-							[],
-						)
-					}
+				if (include.groups) {
+					const groupQueryDao = new ProductGroupQueryDao(this.knex)
+					groups = await groupQueryDao.query(
+						undefined,
+						{ categoryId: row.id },
+						undefined,
+						[],
+					)
 				}
 			}
 			categories.push(this.mapToQueryDto(row, groups))
@@ -96,7 +107,7 @@ export class CategoryQueryDao {
 	async queryById(
 		id: EntityId,
 		archived: boolean | undefined,
-		include: CategoryInclude,
+		include: CategoryQueryInclude,
 	) {
 		const builder = this.knex<CategoryDatabaseTable>(this.tableName)
 			.select("*")
@@ -113,16 +124,14 @@ export class CategoryQueryDao {
 		}
 		let groups: ProductGroupQueryDto[] = []
 		if (include) {
-			for (const field of include) {
-				if (field === "groups") {
-					const groupQueryDao = new ProductGroupQueryDao(this.knex)
-					groups = await groupQueryDao.query(
-						undefined,
-						{ categoryId: row.id },
-						undefined,
-						[],
-					)
-				}
+			if (include.groups) {
+				const groupQueryDao = new ProductGroupQueryDao(this.knex)
+				groups = await groupQueryDao.query(
+					undefined,
+					{ categoryId: row.id },
+					undefined,
+					[],
+				)
 			}
 		}
 		return this.mapToQueryDto(row, groups)

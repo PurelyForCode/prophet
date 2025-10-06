@@ -11,17 +11,16 @@ import { sortStringSchema } from "../validation/SortStringSchema.js"
 import {
 	ProductGroupIncludeFields,
 	ProductGroupQueryDao,
-	ProductGroupQueryInclude,
 	ProductGroupSortableFields,
 } from "../../infra/db/query_dao/ProductGroupQueryDao.js"
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
-import { Sort } from "../../infra/db/utils/Sort.js"
 import { ProductGroupNotFoundException } from "../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
 import { CreateProductGroupUsecase } from "../../application/product_management/product_group/create_product_group/usecase.js"
 import { idGenerator } from "../../infra/utils/IdGenerator.js"
 import { fakeId } from "../../fakeId.js"
 import { ArchiveProductGroupUsecase } from "../../application/product_management/product_group/archive_product_group/usecase.js"
-import { ProductSortableFields } from "../../infra/db/query_dao/ProductQueryDao.js"
+import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
+import productRouter from "./ProductRouter.js"
 
 const app = new Hono()
 
@@ -41,9 +40,9 @@ app.get(
 					]),
 				),
 				limit: z.coerce.number().int().positive(),
-				offset: z.coerce.number().int().positive(),
+				offset: z.coerce.number().int().nonnegative(),
 				name: z.string().min(1).max(100),
-				archived: z.coerce.boolean(),
+				archived: booleanStringSchema,
 				categoryId: z.uuidv7(),
 			})
 			.partial(),
@@ -77,6 +76,7 @@ app.get(
 						"productSales",
 					]),
 				),
+				archived: booleanStringSchema,
 			})
 			.partial(),
 	),
@@ -86,13 +86,13 @@ app.get(
 			groupId: z.uuidv7(),
 		}),
 	),
-
 	async (c) => {
 		const groupQueryDao = new ProductGroupQueryDao(knexInstance)
 		const query = c.req.valid("query")
 		const params = c.req.valid("param")
 		const group = await groupQueryDao.queryById(
 			params.groupId,
+			query.archived,
 			query.include,
 		)
 		if (!group) {
@@ -109,19 +109,19 @@ app.post(
 		z.object({
 			categoryId: z.uuidv7().nullish(),
 			name: z.string().min(1).max(100),
-			settings: productSettingSchema.nullish(),
+			productSettings: productSettingSchema.nullish(),
 		}),
 	),
-	(c) => {
+	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
 		const usecase = new CreateProductGroupUsecase(uow, idGenerator)
 		const body = c.req.valid("json")
-		runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				accountId: fakeId,
 				categoryId: body.categoryId ?? null,
 				name: body.name,
-				setting: body.settings ?? null,
+				setting: body.productSettings ?? null,
 			})
 		})
 		c.status(201)
@@ -134,11 +134,11 @@ app.post(
 app.delete(
 	"/:groupId",
 	zValidator("param", z.object({ groupId: z.uuidv7() })),
-	(c) => {
+	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
 		const usecase = new ArchiveProductGroupUsecase(uow)
 		const params = c.req.valid("param")
-		runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				id: params.groupId,
 			})
@@ -153,13 +153,20 @@ app.delete(
 app.patch(
 	"/:groupId",
 	zValidator("param", z.object({ groupId: z.uuidv7() })),
-	zValidator("json", z.object({}).partial()),
-	(c) => {
+	zValidator(
+		"json",
+		z
+			.object({
+				name: z.string().min(1).max(100),
+			})
+			.partial(),
+	),
+	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
 		const usecase = new UpdateProductGroupUsecase(uow)
 		const body = c.req.valid("json")
 		const params = c.req.valid("param")
-		runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				id: params.groupId,
 				fields: {
@@ -172,5 +179,7 @@ app.patch(
 		})
 	},
 )
+
+app.route("/:groupId/products", productRouter)
 
 export default app

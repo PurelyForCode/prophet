@@ -11,8 +11,18 @@ import z from "zod"
 import { UpdateCategoryUsecase } from "../../application/product_management/category/update_category/Usecase.js"
 import { ArchiveCategoryUsecase } from "../../application/product_management/category/archive_category/Usecase.js"
 import { AddProductInCategoryUsecase } from "../../application/product_management/category/add_product_in_category/Usecase.js"
-import { CategoryQueryDao } from "../../infra/db/query_dao/CategoryQueryDao.js"
+import {
+	CategoryIncludeField,
+	CategoryQueryDao,
+	CategorySortableFields,
+} from "../../infra/db/query_dao/CategoryQueryDao.js"
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
+import { sortStringSchema } from "../validation/SortStringSchema.js"
+import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
+import { CategoryNotFoundException } from "../../domain/product_management/exceptions/CategoryNotFoundException.js"
+import { fakeId } from "../../fakeId.js"
+import { RemoveProductInCategoryUsecase } from "../../application/product_management/category/remove_product/Usecase.js"
+import { ProductGroupQueryDao } from "../../infra/db/query_dao/ProductGroupQueryDao.js"
 
 const app = new Hono()
 
@@ -22,21 +32,22 @@ app.get(
 		"query",
 		z
 			.object({
-				offset: z.coerce.number().positive(),
+				offset: z.coerce.number().nonnegative(),
 				limit: z.coerce.number().positive(),
-				archived: z.coerce.boolean(),
+				archived: booleanStringSchema,
 				name: z.string().max(100).min(1),
-				include: includeStringSchema(new Set("products")),
+				include: includeStringSchema(
+					new Set<CategoryIncludeField>(["groups"]),
+				),
+				sort: sortStringSchema(
+					new Set<CategorySortableFields>(["name"]),
+				),
 			})
 			.partial(),
 	),
 	async (c) => {
 		const queryDao = new CategoryQueryDao(knexInstance)
 		const query = c.req.valid("query")
-		let include = undefined
-		if (query.include) {
-			query.include
-		}
 		const result = await queryDao.query(
 			{
 				limit: query.limit,
@@ -46,7 +57,8 @@ app.get(
 				archived: query.archived,
 				name: query.name,
 			},
-			include,
+			query.include,
+			query.sort,
 		)
 		return c.json({ data: result })
 	},
@@ -58,8 +70,10 @@ app.get(
 		"query",
 		z
 			.object({
-				include: z.string().min(1),
-				archived: z.coerce.boolean(),
+				include: includeStringSchema(
+					new Set<CategoryIncludeField>(["groups"]),
+				),
+				archived: booleanStringSchema,
 			})
 			.partial(),
 	),
@@ -72,17 +86,15 @@ app.get(
 	async (c) => {
 		const queryDao = new CategoryQueryDao(knexInstance)
 		const params = c.req.valid("param")
-
 		const query = c.req.valid("query")
-		let include = undefined
-		if (query.include) {
-			include = parseIncludeQueryString(query.include, ["products"])
-		}
 		const result = await queryDao.queryById(
 			params.categoryId,
 			query.archived,
-			include,
+			query.include,
 		)
+		if (!result) {
+			throw new CategoryNotFoundException()
+		}
 		return c.json({ data: result })
 	},
 )
@@ -93,7 +105,6 @@ app.post(
 		"json",
 		z.object({
 			name: z.string().max(100).min(2),
-			accountId: z.uuidv7(),
 		}),
 	),
 	async (c) => {
@@ -105,7 +116,7 @@ app.post(
 		)
 		const body = c.req.valid("json")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
-			await usecase.call({ accountId: body.accountId, name: body.name })
+			await usecase.call({ accountId: fakeId, name: body.name })
 		})
 		return c.json({ message: "Successfully created category" })
 	},
@@ -143,12 +154,6 @@ app.patch(
 app.delete(
 	"/:categoryId",
 	zValidator(
-		"json",
-		z.object({
-			name: z.string().max(100).min(2),
-		}),
-	),
-	zValidator(
 		"param",
 		z.object({
 			categoryId: z.uuidv7(),
@@ -157,7 +162,6 @@ app.delete(
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
 		const usecase = new ArchiveCategoryUsecase(uow, domainEventBus)
-		const body = c.req.valid("json")
 		const params = c.req.valid("param")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({ categoryId: params.categoryId })
@@ -167,11 +171,11 @@ app.delete(
 )
 
 app.post(
-	"/:categoryId/products",
+	"/:categoryId/groups",
 	zValidator(
 		"json",
 		z.object({
-			productId: z.uuidv7(),
+			groupId: z.uuidv7(),
 		}),
 	),
 	zValidator(
@@ -188,33 +192,34 @@ app.post(
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				categoryId: params.categoryId,
-				productId: body.productId,
+				groupId: body.groupId,
 			})
 		})
 		return c.json({ message: "Successfully added product to category" })
 	},
 )
 
-app.post(
-	"/:categoryId/products/:productId",
+app.delete(
+	"/:categoryId/groups/:groupId",
 	zValidator(
 		"param",
 		z.object({
 			categoryId: z.uuidv7(),
-			productId: z.uuidv7(),
+			groupId: z.uuidv7(),
 		}),
 	),
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const usecase = new AddProductInCategoryUsecase(uow, domainEventBus)
+		const usecase = new RemoveProductInCategoryUsecase(uow, domainEventBus)
 		const params = c.req.valid("param")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				categoryId: params.categoryId,
-				productId: params.productId,
+				groupId: params.groupId,
 			})
 		})
 		return c.json({ message: "Successfully removed product to category" })
 	},
 )
+
 export default app

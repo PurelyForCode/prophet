@@ -97,7 +97,7 @@ export class UnitOfWork implements IUnitOfWork {
 		if (this.trx) {
 			throw new Error("Transaction already started")
 		}
-		const trx = await this.knex.transaction()
+		const trx = await this.knex.transaction(null)
 		this.trx = trx
 	}
 
@@ -141,6 +141,7 @@ export class UnitOfWork implements IUnitOfWork {
 		aggregateRoot.clearTrackedEntities()
 	}
 }
+
 export async function runInTransaction<T>(
 	uow: IUnitOfWork,
 	isolationLevel: IsolationLevel,

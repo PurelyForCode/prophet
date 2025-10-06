@@ -14,7 +14,13 @@ import {
 	SaleQueryDao,
 	SaleSortableField,
 } from "../../infra/db/query_dao/SaleQueryDao.js"
-import { parseSortQueryString } from "../utils/parseSortQueryString.js"
+import { sortStringSchema } from "../validation/SortStringSchema.js"
+import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
+import { SaleNotFoundException } from "../../domain/sales/exceptions/SaleNotFoundException.js"
+import { ProductGroupQueryDao } from "../../infra/db/query_dao/ProductGroupQueryDao.js"
+import { ProductQueryDao } from "../../infra/db/query_dao/ProductQueryDao.js"
+import { ProductGroupNotFoundException } from "../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
+import { ProductNotFoundException } from "../../domain/product_management/exceptions/ProductNotFoundException.js"
 
 const app = new Hono()
 
@@ -24,29 +30,36 @@ app.get(
 		"param",
 		z.object({
 			productId: z.uuidv7(),
-			variantId: z.uuidv7().optional(),
+			groupId: z.uuidv7(),
 		}),
 	),
 	zValidator(
 		"query",
-		z.object({
-			offset: z.coerce.number().int().positive(),
-			limit: z.coerce.number().int().positive(),
-			archived: z.coerce.boolean(),
-			productId: z.uuidv7(),
-			sort: z.string().min(1),
-		}),
+		z
+			.object({
+				offset: z.coerce.number().int().nonnegative(),
+				limit: z.coerce.number().int().positive(),
+				archived: booleanStringSchema,
+				sort: sortStringSchema(
+					new Set<SaleSortableField>(["quantity", "status", "date"]),
+				),
+			})
+			.partial(),
 	),
 	async (c) => {
-		const params = c.req.valid("param")
 		const query = c.req.valid("query")
-		let sort = undefined
-		if (query.sort) {
-			sort = parseSortQueryString<SaleSortableField>(query.sort, [
-				"quantity",
-				"date",
-				"status",
-			])
+		const params = c.req.valid("param")
+		const groupQueryDao = new ProductGroupQueryDao(knexInstance)
+		const productQueryDao = new ProductQueryDao(knexInstance)
+
+		const groupExists = await groupQueryDao.exists(params.groupId)
+		if (!groupExists) {
+			throw new ProductGroupNotFoundException()
+		}
+
+		const productExists = await productQueryDao.exists(params.productId)
+		if (!productExists) {
+			throw new ProductNotFoundException()
 		}
 
 		const saleQueryDto = new SaleQueryDao(knexInstance)
@@ -57,13 +70,15 @@ app.get(
 			},
 			{
 				archived: query.archived,
-				productId: query.productId,
+				productId: params.productId,
 			},
-			sort,
+			query.sort,
 		)
+
 		return c.json({ data: sales })
 	},
 )
+
 app.get(
 	"/:saleId",
 	zValidator(
@@ -71,24 +86,39 @@ app.get(
 		z.object({
 			saleId: z.uuidv7(),
 			productId: z.uuidv7(),
+			groupId: z.uuidv7(),
 		}),
 	),
 	zValidator(
 		"query",
 		z.object({
-			archived: z.coerce.boolean(),
-			productId: z.uuidv7(),
+			archived: booleanStringSchema,
 		}),
 	),
 	async (c) => {
 		const params = c.req.valid("param")
 		const query = c.req.valid("query")
+		const groupQueryDao = new ProductGroupQueryDao(knexInstance)
+		const productQueryDao = new ProductQueryDao(knexInstance)
+
+		const groupExists = await groupQueryDao.exists(params.groupId)
+		if (!groupExists) {
+			throw new ProductGroupNotFoundException()
+		}
+
+		const productExists = await productQueryDao.exists(params.productId)
+		if (!productExists) {
+			throw new ProductNotFoundException()
+		}
 
 		const saleQueryDto = new SaleQueryDao(knexInstance)
 		const sales = await saleQueryDto.queryById(params.saleId, {
 			archived: query.archived,
-			productId: query.productId,
+			productId: params.productId,
 		})
+		if (!sales) {
+			throw new SaleNotFoundException()
+		}
 		return c.json({ data: sales })
 	},
 )
@@ -107,7 +137,7 @@ app.post(
 		"param",
 		z.object({
 			productId: z.uuidv7(),
-			variantId: z.uuidv7().optional(),
+			groupId: z.uuidv7(),
 		}),
 	),
 	async (c) => {
@@ -118,6 +148,7 @@ app.post(
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				accountId: fakeId,
+				groupId: params.groupId,
 				date: body.date,
 				productId: params.productId,
 				quantity: body.quantity,
@@ -129,13 +160,12 @@ app.post(
 )
 app.delete(
 	"/:saleId",
-
 	zValidator(
 		"param",
 		z.object({
 			saleId: z.uuidv7(),
 			productId: z.uuidv7(),
-			variantId: z.uuidv7().optional(),
+			groupId: z.uuidv7(),
 		}),
 	),
 
@@ -147,6 +177,7 @@ app.delete(
 			await usecase.call({
 				saleId: params.saleId,
 				productId: params.productId,
+				groupId: params.groupId,
 			})
 		})
 		return c.json({ message: "Successfully deleted sale" })
@@ -169,7 +200,7 @@ app.patch(
 		z.object({
 			saleId: z.uuidv7(),
 			productId: z.uuidv7(),
-			variantId: z.uuidv7().optional(),
+			groupId: z.uuidv7(),
 		}),
 	),
 	async (c) => {
@@ -181,6 +212,7 @@ app.patch(
 			await usecase.call({
 				saleId: params.saleId,
 				productId: params.productId,
+				groupId: params.groupId,
 				fields: {
 					date: body.date,
 					quantity: body.quantity,

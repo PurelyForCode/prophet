@@ -1,31 +1,31 @@
-import { Knex } from "knex";
-import { EntityId } from "../../../core/types/EntityId.js";
-import { Sale } from "../../../domain/sales/entities/sale/Sale.js";
-import { ISaleRepository } from "../../../domain/sales/repositories/ISaleRepository.js";
-import { SaleDAO, SaleDto } from "../dao/SaleDAO.js";
-import { SaleQuantity } from "../../../domain/sales/entities/sale/value_objects/SaleQuantity.js";
+import { Knex } from "knex"
+import { EntityId } from "../../../core/types/EntityId.js"
+import { Sale } from "../../../domain/sales/entities/sale/Sale.js"
+import { ISaleRepository } from "../../../domain/sales/repositories/ISaleRepository.js"
+import { SaleDAO, SaleDto } from "../dao/SaleDAO.js"
+import { SaleQuantity } from "../../../domain/sales/entities/sale/value_objects/SaleQuantity.js"
 import {
 	SaleStatus,
 	SaleStatusValues,
-} from "../../../domain/sales/entities/sale/value_objects/SaleStatus.js";
+} from "../../../domain/sales/entities/sale/value_objects/SaleStatus.js"
 
 export class SaleRepository implements ISaleRepository {
-	private readonly saleDAO: SaleDAO;
-	constructor(private readonly knex: Knex) {
-		this.saleDAO = new SaleDAO(knex);
+	private readonly saleDAO: SaleDAO
+	constructor(knex: Knex) {
+		this.saleDAO = new SaleDAO(knex)
 	}
 
 	async findById(id: EntityId): Promise<Sale | null> {
-		const saleDTO = await this.saleDAO.findById(id);
+		const saleDTO = await this.saleDAO.findById(id)
 		if (saleDTO) {
-			return this.mapToEntity(saleDTO);
+			return this.mapToEntity(saleDTO)
 		} else {
-			return null;
+			return null
 		}
 	}
 
 	async delete(entity: Sale): Promise<void> {
-		await this.saleDAO.delete(entity.id);
+		await this.saleDAO.delete(entity.id)
 	}
 
 	async update(entity: Sale): Promise<void> {
@@ -39,7 +39,7 @@ export class SaleRepository implements ISaleRepository {
 			quantity: entity.getQuantity().value,
 			status: entity.getStatus().value,
 			updated_at: entity.getUpdatedAt(),
-		});
+		})
 	}
 
 	async create(entity: Sale): Promise<void> {
@@ -53,12 +53,12 @@ export class SaleRepository implements ISaleRepository {
 			quantity: entity.getQuantity().value,
 			status: entity.getStatus().value,
 			updated_at: entity.getUpdatedAt(),
-		});
+		})
 	}
 
 	mapToEntity(sale: SaleDto): Sale {
-		const quantity = new SaleQuantity(sale.quantity);
-		const status = new SaleStatus(sale.status as SaleStatusValues);
+		const quantity = new SaleQuantity(sale.quantity)
+		const status = new SaleStatus(sale.status as SaleStatusValues)
 		return Sale.create({
 			accountId: sale.account_id,
 			createdAt: sale.created_at,
@@ -69,6 +69,6 @@ export class SaleRepository implements ISaleRepository {
 			quantity: quantity,
 			status: status,
 			updatedAt: sale.updated_at,
-		});
+		})
 	}
 }
