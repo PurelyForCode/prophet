@@ -4,6 +4,7 @@ import { ProductName } from "./value_objects/ProductName.js"
 import { ProductSetting } from "./value_objects/ProductSetting.js"
 import { ProductStock } from "./value_objects/ProductStock.js"
 import { SafetyStock } from "./value_objects/SafetyStock.js"
+import { SaleCount } from "./value_objects/SaleCount.js"
 
 export type UpdateProductFields = Partial<{
 	safetyStock: SafetyStock
@@ -14,6 +15,12 @@ export type UpdateProductFields = Partial<{
 }>
 
 export class Product extends Entity {
+	public get saleCount(): SaleCount {
+		return this._saleCount
+	}
+	public set saleCount(value: SaleCount) {
+		this._saleCount = value
+	}
 	public get deletedAt(): Date | null {
 		return this._deletedAt
 	}
@@ -76,6 +83,7 @@ export class Product extends Entity {
 		private _name: ProductName,
 		private _stock: ProductStock,
 		private _safetyStock: SafetyStock,
+		private _saleCount: SaleCount,
 		private _settings: ProductSetting,
 		private _createdAt: Date,
 		private _updatedAt: Date,
@@ -87,6 +95,7 @@ export class Product extends Entity {
 		this._name = _name
 		this._stock = _stock
 		this._safetyStock = _safetyStock
+		this._saleCount = _saleCount
 		this._settings = _settings
 		this._createdAt = _createdAt
 		this._updatedAt = _updatedAt
@@ -100,6 +109,7 @@ export class Product extends Entity {
 		name: ProductName
 		stock: ProductStock
 		safetyStock: SafetyStock
+		saleCount: SaleCount
 		settings: ProductSetting
 		createdAt: Date
 		updatedAt: Date
@@ -112,6 +122,7 @@ export class Product extends Entity {
 			params.name,
 			params.stock,
 			params.safetyStock,
+			params.saleCount,
 			params.settings,
 			params.createdAt,
 			params.updatedAt,

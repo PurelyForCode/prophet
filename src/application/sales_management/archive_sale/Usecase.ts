@@ -1,3 +1,4 @@
+import { IEventBus } from "../../../core/interfaces/IDomainEventBus.js"
 import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js"
 import { Usecase } from "../../../core/interfaces/Usecase.js"
 import { EntityId } from "../../../core/types/EntityId.js"
@@ -15,7 +16,10 @@ export type ArchiveSaleInput = {
 }
 
 export class ArchiveSaleUsecase implements Usecase<ArchiveSaleInput> {
-	constructor(private readonly uow: IUnitOfWork) {}
+	constructor(
+		private readonly uow: IUnitOfWork,
+		private readonly eventBus: IEventBus,
+	) {}
 	async call(input: ArchiveSaleInput): Promise<void> {
 		const groupRepo = this.uow.getProductGroupRepository()
 		const productRepo = this.uow.getProductRepository()
@@ -41,6 +45,8 @@ export class ArchiveSaleUsecase implements Usecase<ArchiveSaleInput> {
 		}
 		const saleService = new SaleService()
 		saleService.archiveSale(sale)
+
 		await this.uow.save(sale)
+		await this.eventBus.dispatchAggregateEvents(sale, this.uow)
 	}
 }

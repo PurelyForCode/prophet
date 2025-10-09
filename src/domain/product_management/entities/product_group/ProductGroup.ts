@@ -17,6 +17,7 @@ import { ProductStock } from "../product/value_objects/ProductStock.js"
 import { SafetyStock } from "../product/value_objects/SafetyStock.js"
 import { DuplicateProductNameException } from "../../exceptions/DuplicateNameException.js"
 import { ResourceIsNotArchivedException } from "../../../../core/exceptions/ResourceIsNotArchivedException.js"
+import { SaleCount } from "../product/value_objects/SaleCount.js"
 
 export type UpdateProductGroupFields = Partial<{
 	name: ProductName
@@ -123,6 +124,7 @@ export class ProductGroup extends AggregateRoot {
 			name: name,
 			stock: stock,
 			safetyStock: new SafetyStock(0),
+			saleCount: new SaleCount(0),
 			createdAt: now,
 			deletedAt: null,
 			updatedAt: now,

@@ -1,6 +1,7 @@
 export type ProductDatabaseTable = {
 	id: string
 	account_id: string
+	sale_count: number
 	group_id: string
 	name: string
 	stock: number

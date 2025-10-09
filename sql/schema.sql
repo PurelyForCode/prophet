@@ -77,6 +77,7 @@ CREATE TABLE product(
     name VARCHAR(100) NOT NULL,
     stock INTEGER NOT NULL DEFAULT(0),
     safety_stock INTEGER NOT NULL,
+	sale_count INTEGER NOT NULL DEFAULT(0),
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     deleted_at TIMESTAMPTZ DEFAULT NULL
@@ -167,8 +168,7 @@ CREATE TABLE forecast(
     id UUID PRIMARY KEY,
     product_id UUID NOT NULL REFERENCES product(id),
     account_id UUID NOT NULL REFERENCES account(id),
-    data_start_date DATE,
-    data_end_date DATE,
+    data_depth INT NOT NULL DEFAULT(100),
     forecast_start_date DATE NOT NULL,
     forecast_end_date DATE NOT NULL,
     processed boolean DEFAULT(false) NOT NULL,
@@ -195,6 +195,9 @@ CREATE TABLE inventory_recommendation(
     updated_at DATE NOT NULL
 );
 
+CREATE TABLE prophet_model_setting(
+	id UUID PRIMARY KEY
+);
 
 CREATE TABLE prophet_model (
 	id UUID PRIMARY KEY,

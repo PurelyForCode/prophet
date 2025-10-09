@@ -1,3 +1,4 @@
+import { IEventBus } from "../../../core/interfaces/IDomainEventBus.js"
 import { IIdGenerator } from "../../../core/interfaces/IIdGenerator.js"
 import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js"
 import { Usecase } from "../../../core/interfaces/Usecase.js"
@@ -25,6 +26,7 @@ export class CreateSaleUsecase implements Usecase<CreateSaleInput> {
 	constructor(
 		private readonly uow: IUnitOfWork,
 		private readonly idGenerator: IIdGenerator,
+		private readonly eventBus: IEventBus,
 	) {}
 	async call(input: CreateSaleInput) {
 		const groupRepo = this.uow.getProductGroupRepository()
@@ -56,5 +58,6 @@ export class CreateSaleUsecase implements Usecase<CreateSaleInput> {
 			deletedAt: null,
 		})
 		await this.uow.save(sale)
+		await this.eventBus.dispatchAggregateEvents(sale, this.uow)
 	}
 }

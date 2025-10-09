@@ -11,6 +11,7 @@ export type ProductDto = {
 	groupId: string
 	accountId: string
 	name: string
+	saleCount: number
 	stock: number
 	safetyStock: number
 	createdAt: Date
@@ -135,6 +136,7 @@ export class ProductDao {
 		return {
 			id: row.id,
 			accountId: row.account_id,
+			saleCount: row.sale_count,
 			groupId: row.group_id,
 			name: row.name,
 			safetyStock: row.safety_stock,

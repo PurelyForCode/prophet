@@ -3,6 +3,8 @@ import { EntityId } from "../../../core/types/EntityId.js"
 import { Sale, SaleUpdateableFields } from "../entities/sale/Sale.js"
 import { SaleQuantity } from "../entities/sale/value_objects/SaleQuantity.js"
 import { SaleStatus } from "../entities/sale/value_objects/SaleStatus.js"
+import { SaleArchivedEvent } from "../events/SaleArchivedEvent.js"
+import { SaleCreatedEvent } from "../events/SaleCreatedEvent.js"
 
 export class SaleService {
 	createSale(params: {
@@ -18,6 +20,7 @@ export class SaleService {
 	}) {
 		const sale = Sale.create(params)
 		sale.addTrackedEntity(sale, EntityAction.created)
+		sale.addDomainEvent(new SaleCreatedEvent(sale.getProductId(), sale.id))
 		return sale
 	}
 
@@ -37,6 +40,7 @@ export class SaleService {
 	}
 
 	deleteSale(sale: Sale) {
+		sale.archive()
 		sale.delete()
 	}
 

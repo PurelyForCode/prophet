@@ -9,6 +9,7 @@ import { SafetyStock } from "../../../domain/product_management/entities/product
 import { idGenerator } from "../../utils/IdGenerator.js"
 import { ProductDao, ProductDto } from "../dao/ProductDao.js"
 import { ProductSettingDAO } from "../dao/ProductSettingDao.js"
+import { SaleCount } from "../../../domain/product_management/entities/product/value_objects/SaleCount.js"
 
 export class ProductRepository implements IProductRepository {
 	private productDao: ProductDao
@@ -62,6 +63,7 @@ export class ProductRepository implements IProductRepository {
 		await this.productDao.update({
 			id: entity.id,
 			account_id: entity.accountId,
+			sale_count: entity.saleCount.value,
 			name: entity.name.value,
 			safety_stock: entity.safetyStock.value,
 			stock: entity.stock.value,
@@ -88,6 +90,7 @@ export class ProductRepository implements IProductRepository {
 			id: entity.id,
 			account_id: entity.accountId,
 			name: entity.name.value,
+			sale_count: entity.saleCount.value,
 			safety_stock: entity.safetyStock.value,
 			stock: entity.stock.value,
 			created_at: entity.createdAt,
@@ -113,6 +116,7 @@ export class ProductRepository implements IProductRepository {
 			id: product.id,
 			accountId: product.accountId,
 			productGroupId: product.groupId,
+			saleCount: new SaleCount(product.saleCount),
 			name: new ProductName(product.name),
 			stock: new ProductStock(product.stock),
 			safetyStock: new SafetyStock(product.safetyStock),

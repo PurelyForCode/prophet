@@ -9,6 +9,7 @@ import { Product } from "../../../domain/product_management/entities/product/Pro
 import { SafetyStock } from "../../../domain/product_management/entities/product/value_objects/SafetyStock.js"
 import { ProductSetting } from "../../../domain/product_management/entities/product/value_objects/ProductSetting.js"
 import { ProductStock } from "../../../domain/product_management/entities/product/value_objects/ProductStock.js"
+import { SaleCount } from "../../../domain/product_management/entities/product/value_objects/SaleCount.js"
 
 export class ProductGroupRepository implements IProductGroupRepository {
 	private productGroupDao: ProductGroupDao
@@ -112,6 +113,7 @@ export class ProductGroupRepository implements IProductGroupRepository {
 				createdAt: product.createdAt,
 				deletedAt: product.deletedAt,
 				name: new ProductName(product.name),
+				saleCount: new SaleCount(product.saleCount),
 				productGroupId: product.groupId,
 				safetyStock: new SafetyStock(product.safetyStock),
 				settings: new ProductSetting(

@@ -1,7 +1,14 @@
-import { Knex } from "knex"
 import { fakeId } from "../src/fakeId.js"
 import { idGenerator } from "../src/infra/utils/IdGenerator.js"
-import { SaleDatabaseTable } from "../src/infra/db/types/tables/SaleDatabaseTable.js"
+import { runInTransaction, UnitOfWork } from "../src/infra/utils/UnitOfWork.js"
+import { knexInstance } from "../src/config/Knex.js"
+import { repositoryFactory } from "../src/infra/utils/RepositoryFactory.js"
+import {
+	CreateSaleInput,
+	CreateSaleUsecase,
+} from "../src/application/sales_management/create_sale/Usecase.js"
+import { domainEventBus } from "../src/infra/events/EventBusConfiguration.js"
+import { IsolationLevel } from "../src/core/interfaces/IUnitOfWork.js"
 interface Pattern {
 	generate(day: number, totalDays: number): number
 }
@@ -127,17 +134,15 @@ interface PatternSegment<P extends Pattern = Pattern> {
 }
 
 export async function generateSalesData(
-	knex: Knex,
+	groupId: string,
 	productId: string,
 	patternSequence: PatternSegment[],
-	opts?: { hasCancelled?: boolean },
 ) {
 	const now = new Date()
-	const sales: SaleDatabaseTable[] = []
-	const hasCancelled = opts?.hasCancelled ?? false
-
 	let dayCounter = 0
 	const totalDays = patternSequence.reduce((a, c) => a + c.days, 0)
+
+	const inputs: CreateSaleInput[] = []
 
 	for (const { days, pattern } of patternSequence) {
 		for (let i = 0; i < days; i++) {
@@ -148,27 +153,22 @@ export async function generateSalesData(
 			date.setDate(now.getDate() - (totalDays - dayCounter))
 			date.setHours(0, 0, 0, 0)
 
-			sales.push({
-				account_id: fakeId,
-				created_at: now,
+			inputs.push({
+				accountId: fakeId,
 				date,
-				deleted_at: null,
-				id: idGenerator.generate(),
-				product_id: productId,
+				groupId,
+				productId,
 				quantity: qty,
-				status:
-					hasCancelled && Math.random() < 0.1
-						? "cancelled"
-						: "completed",
-				updated_at: now,
+				status: "completed",
 			})
 		}
 	}
 
-	const BATCH_SIZE = 1000
-	for (let i = 0; i < sales.length; i += BATCH_SIZE) {
-		await knex<SaleDatabaseTable>("sale").insert(
-			sales.slice(i, i + BATCH_SIZE),
-		)
+	for (const input of inputs) {
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new CreateSaleUsecase(uow, idGenerator, domainEventBus)
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+			await usecase.call(input)
+		})
 	}
 }

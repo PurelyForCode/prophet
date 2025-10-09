@@ -21,6 +21,7 @@ import { ProductGroupQueryDao } from "../../infra/db/query_dao/ProductGroupQuery
 import { ProductQueryDao } from "../../infra/db/query_dao/ProductQueryDao.js"
 import { ProductGroupNotFoundException } from "../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
 import { ProductNotFoundException } from "../../domain/product_management/exceptions/ProductNotFoundException.js"
+import { domainEventBus } from "../../infra/events/EventBusConfiguration.js"
 
 const app = new Hono()
 
@@ -134,7 +135,7 @@ app.post(
 		const params = c.req.valid("param")
 		const body = c.req.valid("json")
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const usecase = new CreateSaleUsecase(uow, idGenerator)
+		const usecase = new CreateSaleUsecase(uow, idGenerator, domainEventBus)
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				accountId: fakeId,
@@ -162,7 +163,7 @@ app.delete(
 	async (c) => {
 		const params = c.req.valid("param")
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const usecase = new ArchiveSaleUsecase(uow)
+		const usecase = new ArchiveSaleUsecase(uow, domainEventBus)
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				saleId: params.saleId,

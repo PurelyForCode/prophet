@@ -6,6 +6,7 @@ import {
 	EntityAction,
 } from "../../../../core/interfaces/AggregateRoot.js"
 import { EntityId } from "../../../../core/types/EntityId.js"
+import { SaleArchivedEvent } from "../../events/SaleArchivedEvent.js"
 import { SaleQuantity } from "./value_objects/SaleQuantity.js"
 import { SaleStatus } from "./value_objects/SaleStatus.js"
 
@@ -130,11 +131,11 @@ export class Sale extends AggregateRoot {
 	archive() {
 		this.throwIfArchived()
 		this.deletedAt = new Date()
+		this.addDomainEvent(new SaleArchivedEvent(this.getProductId(), this.id))
 		this.addTrackedEntity(this, EntityAction.updated)
 	}
 
 	delete() {
-		this.throwIfArchived()
 		this.addTrackedEntity(this, EntityAction.deleted)
 	}
 

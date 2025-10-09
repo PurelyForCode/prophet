@@ -26,6 +26,7 @@ export class ProductGroupManager {
 	) {
 		const isNameUnique = await groupRepo.isNameUnique(
 			input.productGroupName,
+			undefined,
 		)
 		if (!isNameUnique) {
 			throw new DuplicateProductNameException()
