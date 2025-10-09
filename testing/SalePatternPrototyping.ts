@@ -1,164 +1,152 @@
-import { Knex } from "knex";
-import { SaleDatabaseTable } from "../src/infra/types/db/tables/SaleDatabaseTable.js";
-import { fakeId } from "../src/fakeId.js";
-import { idGenerator } from "../src/infra/utils/IdGenerator.js";
-import { knexInstance } from "../src/config/Knex.js";
-
-// Base interface for all patterns
+import { Knex } from "knex"
+import { fakeId } from "../src/fakeId.js"
+import { idGenerator } from "../src/infra/utils/IdGenerator.js"
+import { SaleDatabaseTable } from "../src/infra/db/types/tables/SaleDatabaseTable.js"
 interface Pattern {
-	generate(day: number, totalDays: number): number;
+	generate(day: number, totalDays: number): number
 }
 
-// 🔵 Linear Growth
 export class LinearPattern implements Pattern {
-	private min: number;
-	private max: number;
+	private min: number
+	private max: number
 
 	constructor(config: { min: number; max: number }) {
-		if (config.min < 0) {
-			throw new Error();
-		}
-		this.min = config.min;
-		this.max = config.max;
+		if (config.min < 0) throw new Error("min must be non-negative")
+		this.min = config.min
+		this.max = config.max
 	}
 
 	generate(day: number, totalDays: number) {
+		if (totalDays <= 1) return Math.round(this.max)
 		return Math.round(
-			this.min + ((this.max - this.min) / (totalDays - 1)) * day
-		);
+			this.min + ((this.max - this.min) / (totalDays - 1)) * day,
+		)
 	}
 }
 
-// 🌊 Seasonal Pattern
 export class SeasonalPattern implements Pattern {
-	private min: number;
-	private max: number;
-	private cycleLength: number;
-	private amplitude?: number;
+	private min: number
+	private max: number
+	private cycleLength: number
+	private amplitude?: number
 
 	constructor(config: {
-		min: number;
-		max: number;
-		cycleLength?: number;
-		amplitude?: number;
+		min: number
+		max: number
+		cycleLength?: number
+		amplitude?: number
 	}) {
-		if (config.min < 0) {
-			throw new Error();
-		}
-		this.min = config.min;
-		this.max = config.max;
-		this.cycleLength = config.cycleLength ?? 7;
-		this.amplitude = config.amplitude;
+		if (config.min < 0) throw new Error("min must be non-negative")
+		this.min = config.min
+		this.max = config.max
+		this.cycleLength = config.cycleLength ?? 7
+		this.amplitude = config.amplitude
 	}
 
 	generate(day: number, totalDays: number) {
-		const amp = this.amplitude ?? (this.max - this.min) / 2;
-		const base = this.min + amp;
-		const qty = base + amp * Math.sin((2 * Math.PI * day) / this.cycleLength);
-		return Math.round(Math.max(this.min, Math.min(this.max, qty)));
-	}
-}
-
-// 📈 S-Curve (Logistic)
-export class SCurvePattern implements Pattern {
-	private min: number;
-	private max: number;
-	private midpoint: number;
-	private steepness: number;
-
-	constructor(config: {
-		min: number;
-		max: number;
-		midpoint: number;
-		steepness?: number;
-	}) {
-		if (config.min < 0) {
-			throw new Error();
-		}
-		this.min = config.min;
-		this.max = config.max;
-		this.midpoint = config.midpoint;
-		this.steepness = config.steepness ?? 0.3;
-	}
-
-	generate(day: number, totalDays: number) {
+		const midpoint = (this.max + this.min) / 2
+		const amp = this.amplitude ?? (this.max - this.min) / 2
 		const qty =
-			this.max / (1 + Math.exp(-this.steepness * (day - this.midpoint)));
-		return Math.round(Math.max(this.min, Math.min(this.max, qty)));
+			midpoint + amp * Math.sin((2 * Math.PI * day) / this.cycleLength)
+		return Math.round(Math.max(this.min, Math.min(this.max, qty)))
 	}
 }
 
-// ⚡ Random Spikes
-export class RandomSpikesPattern implements Pattern {
-	private min: number;
-	private max: number;
-	private spikeChance: number;
-	private spikeAmount: number;
+export class SCurvePattern implements Pattern {
+	private min: number
+	private max: number
+	private midpoint: number
+	private steepness: number
 
 	constructor(config: {
-		min: number;
-		max: number;
-		spikeChance?: number;
-		spikeAmount?: number;
+		min: number
+		max: number
+		midpoint: number
+		steepness?: number
 	}) {
-		if (config.min < 0) {
-			throw new Error();
-		}
-		this.min = config.min;
-		this.max = config.max;
-		this.spikeChance = config.spikeChance ?? 0.1;
-		this.spikeAmount = config.spikeAmount ?? (this.max - this.min) * 2;
+		if (config.min < 0) throw new Error("min must be non-negative")
+		this.min = config.min
+		this.max = config.max
+		this.midpoint = config.midpoint
+		this.steepness = config.steepness ?? 0.3
 	}
 
 	generate(day: number, totalDays: number) {
-		let qty = this.min + Math.random() * (this.max - this.min);
-		if (Math.random() < this.spikeChance) qty += this.spikeAmount;
-		return Math.round(qty);
+		const normalized =
+			1 / (1 + Math.exp(-this.steepness * (day - this.midpoint)))
+		const qty = this.min + (this.max - this.min) * normalized
+		return Math.round(Math.max(this.min, Math.min(this.max, qty)))
 	}
 }
 
-// 📊 Stable Pattern
+export class RandomSpikesPattern implements Pattern {
+	private min: number
+	private max: number
+	private spikeChance: number
+	private spikeAmount: number
+
+	constructor(config: {
+		min: number
+		max: number
+		spikeChance?: number
+		spikeAmount?: number
+	}) {
+		if (config.min < 0) throw new Error("min must be non-negative")
+		this.min = config.min
+		this.max = config.max
+		this.spikeChance = config.spikeChance ?? 0.1
+		this.spikeAmount = config.spikeAmount ?? (this.max - this.min) * 2
+	}
+
+	generate(day: number, totalDays: number) {
+		let qty = this.min + Math.random() * (this.max - this.min)
+		if (Math.random() < this.spikeChance)
+			qty += this.spikeAmount * Math.random() // variable spike
+		qty = Math.min(this.max + this.spikeAmount, qty)
+		return Math.round(qty)
+	}
+}
+
 export class StablePattern implements Pattern {
-	private min: number;
+	private min: number
 
 	constructor(config: { min: number }) {
-		if (config.min < 0) {
-			throw new Error();
-		}
-		this.min = config.min;
+		if (config.min < 0) throw new Error("min must be non-negative")
+		this.min = config.min
 	}
 
 	generate(day: number, totalDays: number) {
-		const jitter = Math.random() * 2 - 1; // ±1 fluctuation
-		return Math.round(this.min + jitter);
+		const jitter = Math.random() * 2 - 1 // ±1 fluctuation
+		return Math.round(Math.max(0, this.min + jitter))
 	}
 }
 
-interface PatternSegment {
-	days: number;
-	pattern: Pattern;
+interface PatternSegment<P extends Pattern = Pattern> {
+	days: number
+	pattern: P
 }
 
 export async function generateSalesData(
 	knex: Knex,
 	productId: string,
 	patternSequence: PatternSegment[],
-	opts?: { hasCancelled?: boolean }
+	opts?: { hasCancelled?: boolean },
 ) {
-	const now = new Date();
-	const sales: any[] = [];
-	const hasCancelled = opts?.hasCancelled ?? false;
+	const now = new Date()
+	const sales: SaleDatabaseTable[] = []
+	const hasCancelled = opts?.hasCancelled ?? false
 
-	let dayCounter = 0;
-	const totalDays = patternSequence.reduce((a, c) => a + c.days, 0);
+	let dayCounter = 0
+	const totalDays = patternSequence.reduce((a, c) => a + c.days, 0)
 
 	for (const { days, pattern } of patternSequence) {
 		for (let i = 0; i < days; i++) {
-			dayCounter++;
-			const qty = pattern.generate(i, days);
+			dayCounter++
+			const qty = pattern.generate(i, days)
 
-			const date = new Date();
-			date.setDate(now.getDate() - (totalDays - dayCounter));
+			const date = new Date(now)
+			date.setDate(now.getDate() - (totalDays - dayCounter))
+			date.setHours(0, 0, 0, 0)
 
 			sales.push({
 				account_id: fakeId,
@@ -168,11 +156,19 @@ export async function generateSalesData(
 				id: idGenerator.generate(),
 				product_id: productId,
 				quantity: qty,
-				status: hasCancelled && Math.random() < 0.1 ? "cancelled" : "completed",
+				status:
+					hasCancelled && Math.random() < 0.1
+						? "cancelled"
+						: "completed",
 				updated_at: now,
-			});
+			})
 		}
 	}
 
-	await knex<SaleDatabaseTable>("sale").insert(sales);
+	const BATCH_SIZE = 1000
+	for (let i = 0; i < sales.length; i += BATCH_SIZE) {
+		await knex<SaleDatabaseTable>("sale").insert(
+			sales.slice(i, i + BATCH_SIZE),
+		)
+	}
 }

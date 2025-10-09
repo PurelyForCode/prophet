@@ -195,4 +195,13 @@ CREATE TABLE inventory_recommendation(
     updated_at DATE NOT NULL
 );
 
+
+CREATE TABLE prophet_model (
+	id UUID PRIMARY KEY,
+	product_id UUID NOT NULL REFERENCES product(id),
+	prophet_model_setting_id UUID NOT NULL REFERENCES prophet_model_setting(id),
+	file_path TEXT NOT NULL,
+	trained_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
 INSERT INTO account (id, username, password, email, role) VALUES ('01970607-cdb9-7209-bf1d-f1281b9cc056', 'test', 'password', 'test@gmail.com', 'store manager');

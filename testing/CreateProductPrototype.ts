@@ -1,19 +1,31 @@
-import { knexInstance } from "../src/config/Knex.js";
-import { ProductDAO } from "../src/infra/dao/ProductDAO.js";
-import { fakeId } from "../src/fakeId.js";
+import { knexInstance } from "../src/config/Knex.js"
+import { ProductName } from "../src/domain/product_management/entities/product/value_objects/ProductName.js"
+import { ProductSetting } from "../src/domain/product_management/entities/product/value_objects/ProductSetting.js"
+import { ProductGroupManager } from "../src/domain/product_management/services/ProductGroupManager.js"
+import { fakeId } from "../src/fakeId.js"
+import { idGenerator } from "../src/infra/utils/IdGenerator.js"
+import { repositoryFactory } from "../src/infra/utils/RepositoryFactory.js"
+import { UnitOfWork } from "../src/infra/utils/UnitOfWork.js"
 
-export async function prototypeProduct(id: string) {
-  const dao = new ProductDAO(knexInstance);
-  const now = new Date();
-  await dao.insert({
-    account_id: fakeId,
-    created_at: now,
-    deleted_at: null,
-    id: id,
-    name: "test",
-    product_category_id: null,
-    safety_stock: 0,
-    stock: 0,
-    updated_at: now,
-  });
+export async function createPrototypeProducts(
+	name: string,
+	setting: ProductSetting,
+) {
+	const uow = new UnitOfWork(knexInstance, repositoryFactory)
+	const groupMgr = new ProductGroupManager()
+	const groupRepo = uow.getProductGroupRepository()
+	const now = new Date()
+	const groupId = idGenerator.generate()
+	const productId = idGenerator.generate()
+	const group = await groupMgr.createProductGroup(groupRepo, {
+		accountId: fakeId,
+		now: now,
+		productCategoryId: null,
+		productGroupId: groupId,
+		productGroupName: new ProductName(name),
+		productId: productId,
+		settings: setting,
+	})
+	await groupRepo.create(group)
+	return { productId, groupId }
 }

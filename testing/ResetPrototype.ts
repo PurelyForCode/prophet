@@ -1,6 +1,6 @@
-import { Knex } from "knex";
+import { Knex } from "knex"
 
 export async function resetPrototype(knex: Knex) {
-  await knex("product").delete();
-  await knex("sale").delete();
+	await knex("group").delete()
+	await knex("sale").delete()
 }
