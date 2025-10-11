@@ -1,135 +1,145 @@
 import {
-  AggregateRoot,
-  EntityAction,
-} from "../../../../core/interfaces/AggregateRoot.js";
-import { EntityId } from "../../../../core/types/EntityId.js";
-import { HistoricalDaysCount } from "./value_objects/HistoricalDaysCount.js";
+	AggregateRoot,
+	EntityAction,
+} from "../../../../core/interfaces/AggregateRoot.js"
+import { EntityCollection } from "../../../../core/types/EntityCollection.js"
+import { EntityId } from "../../../../core/types/EntityId.js"
+import { ForecastEntry } from "../forecast_entry/ForecastEntry.js"
+import { DataDepth } from "./value_objects/HistoricalDaysCount.js"
 
-export class SalesForecast extends AggregateRoot {
-  private accountId: EntityId;
-  private productId: EntityId;
-  private historicalDaysCount: HistoricalDaysCount;
-  private forecastStartDate: Date;
-  private forecastEndDate: Date;
-  private createdAt: Date;
-  private updatedAt: Date;
-  private deletedAt: Date | null;
+export class Forecast extends AggregateRoot {
+	private _accountId: EntityId
+	private _productId: EntityId
+	private _dataDepth: DataDepth
+	private _processed: boolean
+	private _forecastStartDate: Date
+	private _forecastEndDate: Date
+	private _createdAt: Date
+	private _updatedAt: Date
+	private _deletedAt: Date | null
+	private _entries: EntityCollection<ForecastEntry>
 
-  archive() {
-    this.deletedAt = new Date();
-    this.addTrackedEntity(this, EntityAction.updated);
-  }
+	private constructor(
+		id: EntityId,
+		accountId: EntityId,
+		productId: EntityId,
+		dataDepth: DataDepth,
+		processed: boolean,
+		forecastStartDate: Date,
+		forecastEndDate: Date,
+		createdAt: Date,
+		updatedAt: Date,
+		deletedAt: Date | null,
+		entries: EntityCollection<ForecastEntry>,
+	) {
+		super(id)
+		this._accountId = accountId
+		this._productId = productId
+		this._dataDepth = dataDepth
+		this._processed = processed
+		this._forecastStartDate = forecastStartDate
+		this._forecastEndDate = forecastEndDate
+		this._createdAt = createdAt
+		this._updatedAt = updatedAt
+		this._deletedAt = deletedAt
+		this._entries = entries
+	}
 
-  delete() {
-    this.addTrackedEntity(this, EntityAction.deleted);
-  }
+	public static create(params: {
+		id: EntityId
+		accountId: EntityId
+		productId: EntityId
+		dataDepth: DataDepth
+		processed: boolean
+		forecastStartDate: Date
+		forecastEndDate: Date
+		createdAt: Date
+		updatedAt: Date
+		deletedAt: Date | null
+		entries: EntityCollection<ForecastEntry>
+	}): Forecast {
+		return new Forecast(
+			params.id,
+			params.accountId,
+			params.productId,
+			params.dataDepth,
+			params.processed,
+			params.forecastStartDate,
+			params.forecastEndDate,
+			params.createdAt,
+			params.updatedAt,
+			params.deletedAt,
+			params.entries,
+		)
+	}
 
-  private constructor(
-    id: EntityId,
-    accountId: EntityId,
-    productId: EntityId,
-    historicalDaysCount: HistoricalDaysCount,
-    forecastStartDate: Date,
-    forecastEndDate: Date,
-    createdAt: Date,
-    updatedAt: Date,
-    deletedAt: Date | null
-  ) {
-    super(id);
-    this.accountId = accountId;
-    this.productId = productId;
-    this.historicalDaysCount = historicalDaysCount;
-    this.forecastStartDate = forecastStartDate;
-    this.forecastEndDate = forecastEndDate;
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
-    this.deletedAt = deletedAt;
-  }
+	archive() {
+		this.deletedAt = new Date()
+		this.addTrackedEntity(this, EntityAction.updated)
+	}
 
-  public static create(params: {
-    id: EntityId;
-    accountId: EntityId;
-    productId: EntityId;
-    historicalDaysCount: HistoricalDaysCount;
-    forecastStartDate: Date;
-    forecastEndDate: Date;
-    createdAt: Date;
-    updatedAt: Date;
-    deletedAt: Date | null;
-  }): SalesForecast {
-    return new SalesForecast(
-      params.id,
-      params.accountId,
-      params.productId,
-      params.historicalDaysCount,
-      params.forecastStartDate,
-      params.forecastEndDate,
-      params.createdAt,
-      params.updatedAt,
-      params.deletedAt
-    );
-  }
+	delete() {
+		this.addTrackedEntity(this, EntityAction.deleted)
+	}
 
-  public getAccountId(): EntityId {
-    return this.accountId;
-  }
-  public setAccountId(value: EntityId) {
-    this.accountId = value;
-    this.addTrackedEntity(this, EntityAction.updated);
-  }
-  public getProductId(): EntityId {
-    return this.productId;
-  }
-  public setProductId(value: EntityId) {
-    this.productId = value;
-    this.addTrackedEntity(this, EntityAction.updated);
-  }
-
-  public getHistoricalDaysCount(): HistoricalDaysCount {
-    return this.historicalDaysCount;
-  }
-  public setHistoricalDaysCount(value: HistoricalDaysCount) {
-    this.historicalDaysCount = value;
-    this.addTrackedEntity(this, EntityAction.updated);
-  }
-
-  public getForecastStartDate(): Date {
-    return this.forecastStartDate;
-  }
-  public setForecastStartDate(value: Date) {
-    this.forecastStartDate = value;
-    this.addTrackedEntity(this, EntityAction.updated);
-  }
-
-  public getForecastEndDate(): Date {
-    return this.forecastEndDate;
-  }
-  public setForecastEndDate(value: Date) {
-    this.forecastEndDate = value;
-    this.addTrackedEntity(this, EntityAction.updated);
-  }
-
-  public getCreatedAt(): Date {
-    return this.createdAt;
-  }
-  public setCreatedAt(value: Date) {
-    this.createdAt = value;
-    this.addTrackedEntity(this, EntityAction.updated);
-  }
-
-  public getUpdatedAt(): Date {
-    return this.updatedAt;
-  }
-  public setUpdatedAt(value: Date) {
-    this.updatedAt = value;
-    this.addTrackedEntity(this, EntityAction.updated);
-  }
-
-  public getDeletedAt(): Date | null {
-    return this.deletedAt;
-  }
-  public setDeletedAt(value: Date | null) {
-    this.deletedAt = value;
-    this.addTrackedEntity(this, EntityAction.updated);
-  }
+	public get accountId(): EntityId {
+		return this._accountId
+	}
+	public set accountId(value: EntityId) {
+		this._accountId = value
+	}
+	public get productId(): EntityId {
+		return this._productId
+	}
+	public set productId(value: EntityId) {
+		this._productId = value
+	}
+	public get dataDepth(): DataDepth {
+		return this._dataDepth
+	}
+	public set dataDepth(value: DataDepth) {
+		this._dataDepth = value
+	}
+	public get processed(): boolean {
+		return this._processed
+	}
+	public set processed(value: boolean) {
+		this._processed = value
+	}
+	public get forecastStartDate(): Date {
+		return this._forecastStartDate
+	}
+	public set forecastStartDate(value: Date) {
+		this._forecastStartDate = value
+	}
+	public get forecastEndDate(): Date {
+		return this._forecastEndDate
+	}
+	public set forecastEndDate(value: Date) {
+		this._forecastEndDate = value
+	}
+	public get createdAt(): Date {
+		return this._createdAt
+	}
+	public set createdAt(value: Date) {
+		this._createdAt = value
+	}
+	public get updatedAt(): Date {
+		return this._updatedAt
+	}
+	public set updatedAt(value: Date) {
+		this._updatedAt = value
+	}
+	public get deletedAt(): Date | null {
+		return this._deletedAt
+	}
+	public set deletedAt(value: Date | null) {
+		this._deletedAt = value
+	}
+	public get entries(): EntityCollection<ForecastEntry> {
+		return this._entries
+	}
+	public set entries(value: EntityCollection<ForecastEntry>) {
+		this._entries = value
+	}
 }

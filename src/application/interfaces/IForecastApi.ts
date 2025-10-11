@@ -1,23 +1,23 @@
-import { EntityId } from "../../core/types/EntityId.js";
+import { EntityId } from "../../core/types/EntityId.js"
 
 export type GenerateForecastInput = {
-  productId: EntityId;
-  accountId: EntityId;
-  forecastStartDate: Date;
-  forecastEndDate: Date;
-  dataStartDate: Date;
-  dataEndDate: Date;
-};
+	accountId: EntityId
+	productId: EntityId
+	dataDepth: number
+	forecastStartDate: Date
+	forecastEndDate: Date
+	forecastingMethod: "prophet" | "croston"
+}
 
 export type GenerateAllForecastInput = {
-  accountId: EntityId;
-  forecastStartDate: Date;
-  forecastEndDate: Date;
-  dataStartDate: Date;
-  dataEndDate: Date;
-};
+	accountId: EntityId
+	forecastStartDate: Date
+	forecastEndDate: Date
+	dataStartDate: Date
+	dataEndDate: Date
+}
 
 export interface IForecastApi {
-  generateForecast(params: GenerateForecastInput): Promise<EntityId>;
-  generateAllForecasts(params: GenerateAllForecastInput): Promise<void>;
+	generateForecast(params: GenerateForecastInput): Promise<EntityId>
+	generateAllForecasts(params: GenerateAllForecastInput): Promise<void>
 }

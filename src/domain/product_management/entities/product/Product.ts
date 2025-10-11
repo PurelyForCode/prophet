@@ -15,6 +15,64 @@ export type UpdateProductFields = Partial<{
 }>
 
 export class Product extends Entity {
+	updateSetting(setting: ProductSetting) {
+		this.settings = setting
+	}
+
+	private constructor(
+		id: EntityId,
+		private _productGroupId: EntityId,
+		private _accountId: EntityId,
+		private _name: ProductName,
+		private _stock: ProductStock,
+		private _safetyStock: SafetyStock,
+		private _saleCount: SaleCount,
+		private _settings: ProductSetting,
+		private _createdAt: Date,
+		private _updatedAt: Date,
+		private _deletedAt: Date | null,
+	) {
+		super(id)
+		this._accountId = _accountId
+		this._productGroupId = _productGroupId
+		this._name = _name
+		this._stock = _stock
+		this._safetyStock = _safetyStock
+		this._saleCount = _saleCount
+		this._settings = _settings
+		this._createdAt = _createdAt
+		this._updatedAt = _updatedAt
+		this._deletedAt = _deletedAt
+	}
+
+	public static create(params: {
+		id: EntityId
+		productGroupId: EntityId
+		accountId: EntityId
+		name: ProductName
+		stock: ProductStock
+		safetyStock: SafetyStock
+		saleCount: SaleCount
+		settings: ProductSetting
+		createdAt: Date
+		updatedAt: Date
+		deletedAt: Date | null
+	}) {
+		return new Product(
+			params.id,
+			params.productGroupId,
+			params.accountId,
+			params.name,
+			params.stock,
+			params.safetyStock,
+			params.saleCount,
+			params.settings,
+			params.createdAt,
+			params.updatedAt,
+			params.deletedAt,
+		)
+	}
+
 	public get saleCount(): SaleCount {
 		return this._saleCount
 	}
@@ -74,63 +132,5 @@ export class Product extends Entity {
 	}
 	public set productGroupId(value: EntityId) {
 		this._productGroupId = value
-	}
-
-	private constructor(
-		id: EntityId,
-		private _productGroupId: EntityId,
-		private _accountId: EntityId,
-		private _name: ProductName,
-		private _stock: ProductStock,
-		private _safetyStock: SafetyStock,
-		private _saleCount: SaleCount,
-		private _settings: ProductSetting,
-		private _createdAt: Date,
-		private _updatedAt: Date,
-		private _deletedAt: Date | null,
-	) {
-		super(id)
-		this._accountId = _accountId
-		this._productGroupId = _productGroupId
-		this._name = _name
-		this._stock = _stock
-		this._safetyStock = _safetyStock
-		this._saleCount = _saleCount
-		this._settings = _settings
-		this._createdAt = _createdAt
-		this._updatedAt = _updatedAt
-		this._deletedAt = _deletedAt
-	}
-
-	public static create(params: {
-		id: EntityId
-		productGroupId: EntityId
-		accountId: EntityId
-		name: ProductName
-		stock: ProductStock
-		safetyStock: SafetyStock
-		saleCount: SaleCount
-		settings: ProductSetting
-		createdAt: Date
-		updatedAt: Date
-		deletedAt: Date | null
-	}) {
-		return new Product(
-			params.id,
-			params.productGroupId,
-			params.accountId,
-			params.name,
-			params.stock,
-			params.safetyStock,
-			params.saleCount,
-			params.settings,
-			params.createdAt,
-			params.updatedAt,
-			params.deletedAt,
-		)
-	}
-
-	updateSetting(setting: ProductSetting) {
-		this.settings = setting
 	}
 }

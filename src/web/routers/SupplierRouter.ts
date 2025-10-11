@@ -16,7 +16,8 @@ import {
 } from "../../infra/db/query_dao/SupplierQueryDao.js"
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
 import { sortStringSchema } from "../validation/SortStringSchema.js"
-import { z } from "zod"
+import { boolean, z } from "zod"
+import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 
 const app = new Hono()
 
@@ -26,9 +27,10 @@ app.get(
 		"query",
 		z
 			.object({
+				name: z.string().min(1).max(100),
+				archived: booleanStringSchema,
 				offset: z.coerce.number().int().nonnegative(),
 				limit: z.coerce.number().int().positive(),
-				name: z.string().min(1).max(100),
 				productId: z.uuidv7(),
 				sort: sortStringSchema(
 					new Set<SupplierSortableFields>(["leadTime"]),
@@ -45,7 +47,11 @@ app.get(
 		const query = c.req.valid("query")
 		const result = await supplierQueryDao.query(
 			{ limit: query.limit, offset: query.offset },
-			{ name: query.name, productId: query.productId },
+			{
+				name: query.name,
+				productId: query.productId,
+				archived: query.archived,
+			},
 			query.sort,
 			query.include,
 		)

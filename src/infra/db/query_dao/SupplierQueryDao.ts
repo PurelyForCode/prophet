@@ -77,14 +77,16 @@ export class SupplierQueryDao extends BaseQueryDao {
 			"s.updated_at",
 			"s.deleted_at",
 		)
+
+		if (filter && filter.archived) {
+			builder.whereNotNull("s.deleted_at")
+		} else {
+			builder.whereNull("s.deleted_at")
+		}
+
 		if (filter) {
 			if (filter.name) {
 				builder.where("s.name", "%", filter.name)
-			}
-			if (filter.archived) {
-				builder.whereNotNull("s.deleted_at")
-			} else {
-				builder.whereNull("s.deleted_at")
 			}
 		}
 		if (pagination) {
@@ -96,7 +98,7 @@ export class SupplierQueryDao extends BaseQueryDao {
 			}
 		} else {
 			builder.limit(defaultPagination.limit)
-			builder.offset(defaultPagination.limit)
+			builder.offset(defaultPagination.offset)
 		}
 
 		if (sort) {

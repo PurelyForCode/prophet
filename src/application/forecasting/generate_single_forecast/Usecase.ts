@@ -1,26 +1,26 @@
-import { EntityId } from "../../../core/types/EntityId.js";
-import { ForecastApi } from "../../../infra/services/ForecastAPI.js";
+import { EntityId } from "../../../core/types/EntityId.js"
+import { ForecastApi } from "../../../infra/services/ForecastApi.js"
 
 export type GenerateSingleForecastInput = {
-  productId: EntityId;
-  accountId: EntityId;
-  forecastStartDate: Date;
-  forecastEndDate: Date;
-  dataStartDate: Date;
-  dataEndDate: Date;
-};
+	productId: EntityId
+	accountId: EntityId
+	forecastStartDate: Date
+	forecastEndDate: Date
+	dataDepth: number
+	forecastingMethod: "prophet" | "croston"
+}
 
 export class GenerateSingleForecastUsecase {
-  constructor(private readonly forecastApi: ForecastApi) {}
+	constructor(private readonly forecastApi: ForecastApi) {}
 
-  async call(input: GenerateSingleForecastInput) {
-    await this.forecastApi.generateForecast({
-      accountId: input.accountId,
-      productId: input.productId,
-      dataEndDate: input.dataEndDate,
-      dataStartDate: input.dataStartDate,
-      forecastEndDate: input.forecastEndDate,
-      forecastStartDate: input.forecastStartDate,
-    });
-  }
+	async call(input: GenerateSingleForecastInput) {
+		const forecastId = await this.forecastApi.generateForecast({
+			accountId: input.accountId,
+			productId: input.productId,
+			dataDepth: input.dataDepth,
+			forecastingMethod: input.forecastingMethod,
+			forecastEndDate: input.forecastEndDate,
+			forecastStartDate: input.forecastStartDate,
+		})
+	}
 }

@@ -1,4 +1,4 @@
-import { IRepository } from "../../../core/interfaces/Repository.js";
-import { SalesForecast } from "../entities/forecast/Forecast.js";
+import { IRepository } from "../../../core/interfaces/Repository.js"
+import { Forecast } from "../entities/forecast/Forecast.js"
 
-export interface IForecastRepository extends IRepository<SalesForecast> {}
+export interface IForecastRepository extends IRepository<Forecast> {}
