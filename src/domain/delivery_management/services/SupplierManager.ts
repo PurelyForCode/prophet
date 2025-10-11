@@ -1,5 +1,4 @@
 import { EntityAction } from "../../../core/interfaces/AggregateRoot.js"
-import { Entity } from "../../../core/interfaces/Entity.js"
 import { EntityId } from "../../../core/types/EntityId.js"
 import {
 	Supplier,

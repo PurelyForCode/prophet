@@ -124,12 +124,12 @@ export class DeliveryQueryDao extends BaseQueryDao {
 			)
 			.join("supplier as s", "d.supplier_id", "s.id")
 
+		if (filters && filters.archived) {
+			builder.whereNotNull("d.deleted_at")
+		} else {
+			builder.whereNull("d.deleted_at")
+		}
 		if (filters) {
-			if (filters.archived) {
-				builder.whereNotNull("d.deleted_at")
-			} else {
-				builder.whereNull("d.deleted_at")
-			}
 			if (filters.status) {
 				builder.where("d.status", "=", filters.status)
 			}
@@ -144,7 +144,7 @@ export class DeliveryQueryDao extends BaseQueryDao {
 			}
 		} else {
 			builder.limit(defaultPagination.limit)
-			builder.limit(defaultPagination.offset)
+			builder.offset(defaultPagination.offset)
 		}
 		if (sort) {
 			sortQuery(builder, sort, this.deliverySortFieldMap)
@@ -276,16 +276,16 @@ export class DeliveryQueryDao extends BaseQueryDao {
 			})
 		}
 		return {
-			accountId: row.account_id,
-			cancelledAt: row.cancelled_at,
-			completedAt: row.completed_at,
-			createdAt: row.created_at,
-			deletedAt: row.deleted_at,
-			requestedAt: row.requested_at,
 			id: row.id,
-			scheduledArrivalDate: row.scheduled_arrival_date,
+			accountId: row.account_id,
 			status: row.status,
+			requestedAt: row.requested_at,
+			scheduledArrivalDate: row.scheduled_arrival_date,
+			completedAt: row.completed_at,
+			cancelledAt: row.cancelled_at,
+			createdAt: row.created_at,
 			updatedAt: row.updated_at,
+			deletedAt: row.deleted_at,
 			supplier: {
 				id: row.id,
 				leadTime: row.supplier_lead_time,

@@ -3,14 +3,11 @@ import { CreateDeliveryUsecase } from "../../application/delivery_management/del
 import { runInTransaction, UnitOfWork } from "../../infra/utils/UnitOfWork.js"
 import { knexInstance } from "../../config/Knex.js"
 import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js"
-import { EventBus } from "../../infra/events/DomainEventBus.js"
 import { idGenerator } from "../../infra/utils/IdGenerator.js"
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js"
 import { zValidator } from "@hono/zod-validator"
 import z from "zod"
 import { fakeId } from "../../fakeId.js"
-import { CancelDeliveryUsecase } from "../../application/delivery_management/delivery/cancel_delivery/Usecase.js"
-import { ConfirmDeliveryArrivalUsecase } from "../../application/delivery_management/delivery/confirm_delivery_arrival/Usecase.js"
 import { AddItemToDeliveryUsecase } from "../../application/delivery_management/delivery_item/add_item/Usecase.js"
 import { UpdateItemInDeliveryUsecase } from "../../application/delivery_management/delivery_item/update_item/Usecase.js"
 import { RemoveItemOnDeliveryUsecase } from "../../application/delivery_management/delivery_item/remove_item/Usecase.js"
@@ -22,6 +19,12 @@ import { sortStringSchema } from "../validation/SortStringSchema.js"
 import { DeliveryStatusValue } from "../../domain/delivery_management/entities/delivery/value_objects/DeliveryStatus.js"
 import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 import { DeliveryNotFoundException } from "../../domain/delivery_management/exceptions/DeliveryNotFoundException.js"
+import { UpdateDeliveryUsecase } from "../../application/delivery_management/delivery/update_delivery/Usecase.js"
+import {
+	DeliveryItemQueryDao,
+	DeliveryItemSortableFields,
+} from "../../infra/db/query_dao/DeliveryItemQueryDao.js"
+import { DeliveryItemNotFoundException } from "../../domain/delivery_management/exceptions/DeliveryItemNotFoundException.js"
 
 const app = new Hono()
 
@@ -91,19 +94,17 @@ app.post(
 				.array(
 					z.object({
 						productId: z.uuidv7(),
-						variantId: z.uuidv7().nullable(),
 						quantity: z.int().positive(),
 					}),
 				)
 				.optional(),
-			status: z.enum([]),
+			status: z.enum(["completed", "delivering", "cancelled"]),
 			supplierId: z.uuidv7(),
 		}),
 	),
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const eventBus = new EventBus()
-		const usecase = new CreateDeliveryUsecase(uow, eventBus, idGenerator)
+		const usecase = new CreateDeliveryUsecase(uow, idGenerator)
 		const body = c.req.valid("json")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
@@ -120,8 +121,20 @@ app.post(
 	},
 )
 
-app.post(
-	"/:deliveryId/arrived",
+app.patch(
+	"/:deliveryId",
+	zValidator(
+		"json",
+		z
+			.object({
+				status: z.enum(["completed", "delivering", "cancelled"]),
+				cancelledAt: z.coerce.date(),
+				completedAt: z.coerce.date(),
+				requestedAt: z.coerce.date(),
+				scheduledArrivalDate: z.coerce.date(),
+			})
+			.partial(),
+	),
 	zValidator(
 		"param",
 		z.object({
@@ -130,41 +143,85 @@ app.post(
 	),
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const eventBus = new EventBus()
-		const usecase = new ConfirmDeliveryArrivalUsecase(uow, eventBus)
+		const usecase = new UpdateDeliveryUsecase(uow)
+		const body = c.req.valid("json")
 		const params = c.req.valid("param")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				deliveryId: params.deliveryId,
+				fields: {
+					cancelledAt: body.cancelledAt,
+					completedAt: body.completedAt,
+					requestedAt: body.requestedAt,
+					scheduledArrivalDate: body.scheduledArrivalDate,
+					status: body.status,
+				},
 			})
 		})
 		return c.json({
-			message: "Delivery arrived successfully",
+			message: "Successfully updated delivery",
 		})
 	},
 )
 
-app.post(
-	"/:deliveryId/cancel",
+app.get(
+	"/:deliveryId/items",
 	zValidator(
 		"param",
 		z.object({
 			deliveryId: z.uuidv7(),
 		}),
 	),
-	async (c) => {
-		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const eventBus = new EventBus()
-		const usecase = new CancelDeliveryUsecase(uow, eventBus)
-		const params = c.req.valid("param")
-		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
-			await usecase.call({
-				deliveryId: params.deliveryId,
+	zValidator(
+		"query",
+		z
+			.object({
+				offset: z.coerce.number().nonnegative(),
+				limit: z.coerce.number().positive(),
+				archived: booleanStringSchema,
+				productId: z.uuidv7(),
+				sort: sortStringSchema(
+					new Set<DeliveryItemSortableFields>(["quantity"]),
+				),
 			})
-		})
-		return c.json({
-			message: "Successfully cancelled delivery",
-		})
+			.partial(),
+	),
+	async (c) => {
+		const params = c.req.valid("param")
+		const query = c.req.valid("query")
+		const deliveryItemQueryDao = new DeliveryItemQueryDao(knexInstance)
+		const result = await deliveryItemQueryDao.queryByDeliveryId(
+			params.deliveryId,
+			{ limit: query.limit, offset: query.offset },
+			{ productId: query.productId },
+			query.sort,
+		)
+		return c.json({ data: result })
+	},
+)
+
+app.get(
+	"/:deliveryId/items/:itemId",
+	zValidator(
+		"param",
+		z.object({
+			deliveryId: z.uuidv7(),
+			itemId: z.uuidv7(),
+		}),
+	),
+	async (c) => {
+		const params = c.req.valid("param")
+		const deliveryQueryDao = new DeliveryQueryDao(knexInstance)
+		const delivery = await deliveryQueryDao.exists(params.deliveryId)
+		if (!delivery) {
+			throw new DeliveryNotFoundException()
+		}
+		const deliveryItemQueryDao = new DeliveryItemQueryDao(knexInstance)
+		const result = await deliveryItemQueryDao.queryById(params.itemId)
+		if (!result) {
+			throw new DeliveryItemNotFoundException()
+		}
+		return c.json({ data: result })
 	},
 )
 
@@ -176,7 +233,6 @@ app.post(
 			items: z.array(
 				z.object({
 					productId: z.uuidv7(),
-					variantId: z.uuidv7().nullable(),
 					quantity: z.int().positive(),
 				}),
 			),
@@ -190,8 +246,7 @@ app.post(
 	),
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const eventBus = new EventBus()
-		const usecase = new AddItemToDeliveryUsecase(uow, eventBus, idGenerator)
+		const usecase = new AddItemToDeliveryUsecase(uow, idGenerator)
 		const body = c.req.valid("json")
 		const params = c.req.valid("param")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
@@ -212,12 +267,7 @@ app.patch(
 	zValidator(
 		"json",
 		z.object({
-			items: z.array(
-				z.object({
-					id: z.uuidv7(),
-					quantity: z.int().positive(),
-				}),
-			),
+			quantity: z.int().positive(),
 		}),
 	),
 	zValidator(
@@ -229,18 +279,18 @@ app.patch(
 	),
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const eventBus = new EventBus()
-		const usecase = new UpdateItemInDeliveryUsecase(uow, eventBus)
+		const usecase = new UpdateItemInDeliveryUsecase(uow)
 		const body = c.req.valid("json")
 		const params = c.req.valid("param")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				deliveryId: params.deliveryId,
-				items: body.items,
+				itemId: params.itemId,
+				quantity: body.quantity,
 			})
 		})
 		return c.json({
-			message: "Successfully updated items in delivery",
+			message: "Successfully updated item in delivery",
 		})
 	},
 )
@@ -256,7 +306,6 @@ app.delete(
 	),
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const eventBus = new EventBus()
 		const usecase = new RemoveItemOnDeliveryUsecase(uow)
 		const params = c.req.valid("param")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
@@ -266,7 +315,7 @@ app.delete(
 			})
 		})
 		return c.json({
-			message: "Successfully removed items in delivery",
+			message: "Successfully removed item in delivery",
 		})
 	},
 )

@@ -1,7 +1,7 @@
-import { ApplicationException } from "../../../core/exceptions/ApplicationException.js";
+import { ApplicationException } from "../../../core/exceptions/ApplicationException.js"
 
-export class DuplicateDeliveryItemInDeliveryException extends ApplicationException {
-  constructor() {
-    super("Item is already added in the delivery", 409);
-  }
+export class DuplicateDeliveryItemProductInDeliveryException extends ApplicationException {
+	constructor() {
+		super("Product is already added in the delivery", 409)
+	}
 }

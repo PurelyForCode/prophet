@@ -13,7 +13,7 @@ import { BaseQueryDao } from "./BaseQueryDao.js"
 
 export type ProductGroupQueryDto = {
 	id: EntityId
-	productCategoryId: EntityId | null
+	categoryId: EntityId | null
 	accountId: EntityId
 	name: string
 	createdAt: Date
@@ -202,13 +202,13 @@ export class ProductGroupQueryDao extends BaseQueryDao {
 		products: ProductQueryDto[],
 	): ProductGroupQueryDto {
 		return {
-			accountId: row.account_id,
-			createdAt: row.created_at,
-			deletedAt: row.deleted_at,
 			id: row.id,
+			accountId: row.account_id,
+			categoryId: row.product_category_id,
 			name: row.name,
-			productCategoryId: row.product_category_id,
+			createdAt: row.created_at,
 			updatedAt: row.updated_at,
+			deletedAt: row.deleted_at,
 			products: products,
 		}
 	}

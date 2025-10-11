@@ -29,8 +29,8 @@ export class ProductSettingDAO {
 	): ProductSettingQueryDto {
 		return {
 			classification: row.classification,
-			fillRate: row.fill_rate,
 			safetyStockCalculationMethod: row.safety_stock_calculation_method,
+			fillRate: row.fill_rate,
 			serviceLevel: row.service_level,
 			updatedAt: row.updated_at,
 		}
