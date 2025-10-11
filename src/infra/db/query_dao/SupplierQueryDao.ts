@@ -89,6 +89,7 @@ export class SupplierQueryDao extends BaseQueryDao {
 				builder.where("s.name", "%", filter.name)
 			}
 		}
+
 		if (pagination) {
 			if (pagination.limit) {
 				builder.limit(pagination.limit)
@@ -109,23 +110,24 @@ export class SupplierQueryDao extends BaseQueryDao {
 		const rows = await builder
 		let suppliers: SupplierQueryDto[] = []
 		for (const row of rows) {
+			let products = undefined
 			if (include && include.products) {
-				const results = await this.knex<{
+				products = await this.knex<{
 					min_orderable: number
 					max_orderable: number
 					name: string
 					id: EntityId
 				}>("product_supplier as ps")
-					.join("product_supplier as ps", "ps.supplier_id", "s.id")
 					.join("product as p", "p.id", "ps.product_id")
 					.select(
-						"p.id as product_id",
-						"p.name as product_name",
-						"ps.min_orderable as product_min_orderable",
-						"ps.max_orderable as product_max_orderable",
+						"p.id as id",
+						"p.name as name",
+						"ps.min_orderable as min_orderable",
+						"ps.max_orderable as max_orderable",
 					)
-				suppliers.push(this.mapToQueryDTO(row, results))
+					.where("ps.supplier_id", "=", row.id)
 			}
+			suppliers.push(this.mapToQueryDTO(row, products))
 		}
 		return suppliers
 	}
@@ -146,8 +148,12 @@ export class SupplierQueryDao extends BaseQueryDao {
 			.where("s.id", "=", id)
 		if (include) {
 			if (include.products) {
-				builder.join("product_supplier as ps", "ps.supplier_id", "s.id")
-				builder.join("product as p", "p.id", "ps.product_id")
+				builder.leftJoin(
+					"product_supplier as ps",
+					"ps.supplier_id",
+					"s.id",
+				)
+				builder.leftJoin("product as p", "p.id", "ps.product_id")
 				builder.select(
 					"p.id as product_id",
 					"p.name as product_name",
@@ -157,17 +163,19 @@ export class SupplierQueryDao extends BaseQueryDao {
 			}
 		}
 		const rows = await builder
-		return include?.products
-			? this.groupWithProducts(rows)
-			: rows.map((row) => ({
-					id: row.id,
-					accountId: row.account_id,
-					createdAt: row.created_at,
-					deletedAt: row.deleted_at,
-					leadTime: row.lead_time,
-					name: row.name,
-					updatedAt: row.updated_at,
-				}))
+
+		if (!rows[0]) {
+			return null
+		}
+
+		if (include) {
+			if (include.products) {
+				const suppliers = this.groupWithProducts(rows)
+				return suppliers[0]
+			}
+		} else {
+			return this.mapToQueryDTO(rows[0], undefined)
+		}
 	}
 
 	private groupWithProducts(
@@ -176,7 +184,6 @@ export class SupplierQueryDao extends BaseQueryDao {
 		const supplierMap = new Map<EntityId, SupplierQueryDto>()
 		for (const row of rows) {
 			let supplier = supplierMap.get(row.id)
-
 			if (!supplier) {
 				supplier = {
 					id: row.id,
@@ -190,13 +197,14 @@ export class SupplierQueryDao extends BaseQueryDao {
 				}
 				supplierMap.set(row.id, supplier)
 			}
-
-			supplier.products!.push({
-				id: row.product_id,
-				maxOrderable: row.product_max_orderable,
-				minOrderable: row.product_min_orderable,
-				name: row.product_name,
-			})
+			if (row.product_id) {
+				supplier.products!.push({
+					id: row.product_id,
+					maxOrderable: row.product_max_orderable,
+					minOrderable: row.product_min_orderable,
+					name: row.product_name,
+				})
+			}
 		}
 		return Array.from(supplierMap.values())
 	}
@@ -217,9 +225,9 @@ export class SupplierQueryDao extends BaseQueryDao {
 			formattedProducts = products.map((product) => {
 				return {
 					id: product.id,
+					name: product.name,
 					maxOrderable: product.max_orderable,
 					minOrderable: product.min_orderable,
-					name: product.name,
 				}
 			})
 		}

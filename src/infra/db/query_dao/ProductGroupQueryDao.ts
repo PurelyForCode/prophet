@@ -86,8 +86,6 @@ export class ProductGroupQueryDao extends BaseQueryDao {
 				builder.where("name", "=", filters.name)
 			}
 			if (filters.categoryId) {
-
-				console.log(filters.categoryId)
 				builder.where("product_category_id", "=", filters.categoryId)
 			}
 		}

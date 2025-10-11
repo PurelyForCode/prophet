@@ -17,9 +17,7 @@ export class IncrementProductSalesCountEventHandler
 			)
 			return
 		}
-		console.log(product.saleCount)
 		product.saleCount = new SaleCount(product.saleCount.value + 1)
-		console.log("updated")
 		await productRepo.update(product)
 		return
 	}

@@ -54,7 +54,10 @@ export class SuppliedProductRepository implements ISuppliedProductRepository {
 		const suppliedProducts = new Map()
 		for (const row of suppliedProductDTOs) {
 			const suppliedProduct = this.mapToEntity(row)
-			suppliedProducts.set(suppliedProduct.id, suppliedProduct)
+			suppliedProducts.set(
+				suppliedProduct.getProductId(),
+				suppliedProduct,
+			)
 		}
 		return suppliedProducts
 	}

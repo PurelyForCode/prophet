@@ -16,8 +16,11 @@ import {
 } from "../../infra/db/query_dao/SupplierQueryDao.js"
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
 import { sortStringSchema } from "../validation/SortStringSchema.js"
-import { boolean, z } from "zod"
+import { z } from "zod"
 import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
+import { CreateSuppliedProductUsecase } from "../../application/delivery_management/supplier/supply_product/usecase.js"
+import { RemoveSuppliedProductUsecase } from "../../application/delivery_management/supplier/remove_product/usecase.js"
+import { UpdateSuppliedProductUsecase } from "../../application/delivery_management/supplier/update_supplied_product/usecase.js"
 
 const app = new Hono()
 
@@ -121,7 +124,7 @@ app.post(
 	},
 )
 
-app.post(
+app.patch(
 	"/:supplierId",
 	zValidator(
 		"param",
@@ -154,6 +157,101 @@ app.post(
 		return c.json({
 			message: "Successfully updated supplier",
 		})
+	},
+)
+
+app.post(
+	"/:supplierId/products",
+	zValidator(
+		"param",
+		z.object({
+			supplierId: z.uuidv7(),
+		}),
+	),
+	zValidator(
+		"json",
+		z.object({
+			productId: z.uuidv7(),
+			min: z.number().int().positive(),
+			max: z.number().int().positive(),
+		}),
+	),
+	async (c) => {
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new CreateSuppliedProductUsecase(uow, idGenerator)
+		const params = c.req.valid("param")
+		const body = c.req.valid("json")
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+			await usecase.call({
+				max: body.max,
+				min: body.min,
+				productId: body.productId,
+				supplierId: params.supplierId,
+			})
+		})
+		c.status(201)
+		return c.json({ message: "Successfully created a supplied product" })
+	},
+)
+
+app.delete(
+	"/:supplierId/products/:productId",
+	zValidator(
+		"param",
+		z.object({
+			supplierId: z.uuidv7(),
+			productId: z.uuidv7(),
+		}),
+	),
+	async (c) => {
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new RemoveSuppliedProductUsecase(uow)
+		const params = c.req.valid("param")
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+			await usecase.call({
+				productId: params.productId,
+				supplierId: params.supplierId,
+			})
+		})
+		c.status(200)
+		return c.json({ message: "Successfully deleted a supplied product" })
+	},
+)
+
+app.patch(
+	"/:supplierId/products/:productId",
+	zValidator(
+		"param",
+		z.object({
+			supplierId: z.uuidv7(),
+			productId: z.uuidv7(),
+		}),
+	),
+	zValidator(
+		"json",
+		z
+			.object({
+				min: z.number().int().positive(),
+				max: z.number().int().positive(),
+			})
+			.partial(),
+	),
+	async (c) => {
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new UpdateSuppliedProductUsecase(uow)
+		const params = c.req.valid("param")
+		const body = c.req.valid("json")
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+			await usecase.call({
+				fields: {
+					max: body.max,
+					min: body.min,
+				},
+				productId: params.productId,
+				supplierId: params.supplierId,
+			})
+		})
+		return c.json({ message: "Successfully updated a supplied product" })
 	},
 )
 

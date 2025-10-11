@@ -129,12 +129,11 @@ CREATE TABLE supplier (
 );
 
 CREATE TABLE product_supplier (
+	id UUID PRIMARY KEY,
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
     supplier_id UUID NOT NULL REFERENCES supplier(id) ON DELETE CASCADE ON UPDATE CASCADE,
     min_orderable INTEGER,
-    max_orderable INTEGER,
-
-    PRIMARY KEY (product_id, supplier_id)
+    max_orderable INTEGER
 );
 
 CREATE TYPE delivery_status AS ENUM (

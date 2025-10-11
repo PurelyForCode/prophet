@@ -21,7 +21,6 @@ export class EventBus implements IEventBus {
 	}
 
 	async handleEvent(event: DomainEvent<any>, uow: UnitOfWork) {
-		console.log("handling: " + event.eventName)
 		const handlers = this.handlers.get(event.eventName)
 		if (!handlers) return
 		for (const handler of handlers) {
