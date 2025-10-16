@@ -6,6 +6,7 @@ import { DeliveryDAO, DeliveryDTO } from "../dao/DeliveryDao.js"
 import { DeliveryItemRepository } from "./DeliveryItemRepository.js"
 import { DeliveryItem } from "../../../domain/delivery_management/entities/delivery_item/DeliveryItem.js"
 import { DeliveryStatus } from "../../../domain/delivery_management/entities/delivery/value_objects/DeliveryStatus.js"
+import { ProductDelivery } from "../../../domain/inventory_recommendation/value_objects/ProductDelivery.js"
 
 export class DeliveryRepository implements IDeliveryRepository {
 	private deliveryDAO: DeliveryDAO
@@ -60,6 +61,36 @@ export class DeliveryRepository implements IDeliveryRepository {
 			deliveryDTO.id,
 		)
 		return this.mapToEntity(deliveryDTO, deliveryItems)
+	}
+
+	async findProductDeliveries(
+		productId: EntityId,
+	): Promise<ProductDelivery[]> {
+		const deliveryDtos =
+			await this.deliveryDAO.findProductDeliveries(productId)
+		let deliveries = []
+		for (const deliveryDto of deliveryDtos) {
+			deliveries.push(
+				this.mapToProductDelivery({
+					product_id: deliveryDto.productId,
+					quantity: deliveryDto.quantity,
+					scheduled_arrival_date: deliveryDto.arrivalDate,
+				}),
+			)
+		}
+		return deliveries
+	}
+
+	mapToProductDelivery(row: {
+		scheduled_arrival_date: Date
+		product_id: string
+		quantity: number
+	}): ProductDelivery {
+		return ProductDelivery.create(
+			row.product_id,
+			row.quantity,
+			row.scheduled_arrival_date,
+		)
 	}
 
 	private mapToEntity(

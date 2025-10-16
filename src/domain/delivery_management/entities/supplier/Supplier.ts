@@ -5,6 +5,7 @@ import {
 } from "../../../../core/interfaces/AggregateRoot.js"
 import { EntityCollection } from "../../../../core/types/EntityCollection.js"
 import { EntityId } from "../../../../core/types/EntityId.js"
+import { DefaultProductSupplierChangedDomainEvent } from "../../events/DefaultProductSupplierChangedDomainEvent.js"
 import { ProductIsAlreadySuppliedException } from "../../exceptions/ProductIsAlreadySuppliedException.js"
 import { SuppliedProductNotFound } from "../../exceptions/SuppliedProductNotFound.js"
 import { SuppliedProduct } from "../supplied_product/SuppliedProduct.js"
@@ -54,12 +55,12 @@ export class Supplier extends AggregateRoot {
 		)
 	}
 
-	// TODO
 	addSuppliedProduct(
 		id: EntityId,
 		productId: EntityId,
 		max: SuppliedProductMax,
 		min: SuppliedProductMax,
+		isDefault: boolean,
 	) {
 		const suppliedProduct = SuppliedProduct.create({
 			id,
@@ -67,6 +68,7 @@ export class Supplier extends AggregateRoot {
 			min,
 			productId,
 			supplierId: this.id,
+			isDefault,
 		})
 		for (const supplied of this.suppliedProducts.values()) {
 			if (supplied.getProductId() === suppliedProduct.getProductId()) {
@@ -91,20 +93,44 @@ export class Supplier extends AggregateRoot {
 
 	updateSuppliedProduct(
 		productId: EntityId,
-		fields: Partial<{ max: SuppliedProductMax; min: SuppliedProductMin }>,
+		fields: Partial<{
+			max: SuppliedProductMax
+			min: SuppliedProductMin
+			isDefault: boolean
+		}>,
 	) {
 		const toBeUpdated = this.suppliedProducts.get(productId)
 		if (!toBeUpdated) {
 			throw new SuppliedProductNotFound()
 		}
-		fields.max ? toBeUpdated.setMax(fields.max) : null
-		fields.min ? toBeUpdated.setMin(fields.min) : null
+
+		if (fields.max) toBeUpdated.setMax(fields.max)
+		if (fields.min) toBeUpdated.setMin(fields.min)
+
+		if (fields.isDefault !== undefined) {
+			const wasDefault = toBeUpdated.getIsDefault()
+			const willBeDefault = fields.isDefault
+
+			if (!wasDefault && willBeDefault) {
+				toBeUpdated.setIsDefault(true)
+
+				this.addDomainEvent(
+					new DefaultProductSupplierChangedDomainEvent({
+						newDefaultSupplierId: this.id,
+						productId: toBeUpdated.getProductId(),
+					}),
+				)
+			} else if (wasDefault && !willBeDefault) {
+				toBeUpdated.setIsDefault(false)
+			}
+		}
 
 		if (toBeUpdated.getMax().value <= toBeUpdated.getMin().value) {
 			throw new ValueException(
-				"Supplied product's max can not be smaller or equal to min",
+				"Supplied product's max cannot be smaller or equal to min",
 			)
 		}
+
 		this.addTrackedEntity(toBeUpdated, EntityAction.updated)
 	}
 

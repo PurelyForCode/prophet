@@ -1,20 +1,20 @@
-import { Knex } from "knex";
-import { EntityId } from "../../../core/types/EntityId.js";
-import { SupplierDatabaseTable } from "../types/tables/SupplierDatabaseTable.js";
+import { Knex } from "knex"
+import { EntityId } from "../../../core/types/EntityId.js"
+import { SupplierDatabaseTable } from "../types/tables/SupplierDatabaseTable.js"
 
 export type SupplierDTO = {
-	id: EntityId;
-	accountId: EntityId;
-	name: string;
-	leadTime: number;
-	createdAt: Date;
-	updatedAt: Date;
-	deletedAt: Date | null;
-};
+	id: EntityId
+	accountId: EntityId
+	name: string
+	leadTime: number
+	createdAt: Date
+	updatedAt: Date
+	deletedAt: Date | null
+}
 
 export class SupplierDAO {
-	private tableName = "supplier";
-	constructor(private readonly knex: Knex) { }
+	private tableName = "supplier"
+	constructor(private readonly knex: Knex) {}
 	async insert(table: SupplierDatabaseTable) {
 		await this.knex<SupplierDatabaseTable>(this.tableName).insert({
 			account_id: table.account_id,
@@ -23,11 +23,11 @@ export class SupplierDAO {
 			id: table.id,
 			lead_time: table.lead_time,
 			name: table.name,
-		});
+		})
 	}
 
 	async delete(id: EntityId) {
-		await this.knex(this.tableName).delete().where({ id: id });
+		await this.knex(this.tableName).delete().where({ id: id })
 	}
 
 	async update(table: SupplierDatabaseTable) {
@@ -40,18 +40,18 @@ export class SupplierDAO {
 				lead_time: table.lead_time,
 				name: table.name,
 			})
-			.where({ id: table.id });
+			.where({ id: table.id })
 	}
 
 	async findById(id: EntityId): Promise<SupplierDTO | null> {
 		const row = await this.knex<SupplierDatabaseTable>(this.tableName)
 			.select("*")
 			.where({ id: id })
-			.first();
+			.first()
 		if (!row) {
-			return null;
+			return null
 		} else {
-			return this.mapToDTO(row);
+			return this.mapToDTO(row)
 		}
 	}
 
@@ -59,12 +59,29 @@ export class SupplierDAO {
 		const row = await this.knex<SupplierDatabaseTable>(this.tableName)
 			.select("*")
 			.where({ name: name })
-			.first();
+			.first()
 		if (!row) {
-			return null;
+			return null
 		} else {
-			return this.mapToDTO(row);
+			return this.mapToDTO(row)
 		}
+	}
+
+	async findDefaultSupplier(productId: EntityId) {
+		const row = await this.knex<SupplierDatabaseTable>(
+			`${this.tableName} as s`,
+		)
+			.select("s.*")
+			.join("product_supplier as ps", "ps.supplier_id", "s.id")
+			.where("ps.product_id", "=", productId)
+			.where("ps.is_default", true)
+			.first()
+
+		if (!row) {
+			return null
+		}
+
+		return this.mapToDTO(row)
 	}
 
 	private mapToDTO(row: SupplierDatabaseTable): SupplierDTO {
@@ -76,6 +93,6 @@ export class SupplierDAO {
 			leadTime: row.lead_time,
 			name: row.name,
 			updatedAt: row.updated_at,
-		};
+		}
 	}
 }

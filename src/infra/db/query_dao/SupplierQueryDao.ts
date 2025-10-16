@@ -10,13 +10,15 @@ export type SuppliedProductJoinedTable = {
 	product_id: EntityId
 	product_min_orderable: number
 	product_max_orderable: number
+	product_is_default: boolean
 }
 
 export type SuppliedProductQueryDto = {
 	id: EntityId
+	name: string
 	minOrderable: number
 	maxOrderable: number
-	name: string
+	isDefault: boolean
 }
 
 export type SupplierQueryDto = {
@@ -124,6 +126,7 @@ export class SupplierQueryDao extends BaseQueryDao {
 						"p.name as name",
 						"ps.min_orderable as min_orderable",
 						"ps.max_orderable as max_orderable",
+						"ps.is_default as is_default",
 					)
 					.where("ps.supplier_id", "=", row.id)
 			}
@@ -159,6 +162,7 @@ export class SupplierQueryDao extends BaseQueryDao {
 					"p.name as product_name",
 					"ps.min_orderable as product_min_orderable",
 					"ps.max_orderable as product_max_orderable",
+					"ps.is_default as product_is_default",
 				)
 			}
 		}
@@ -203,6 +207,7 @@ export class SupplierQueryDao extends BaseQueryDao {
 					maxOrderable: row.product_max_orderable,
 					minOrderable: row.product_min_orderable,
 					name: row.product_name,
+					isDefault: row.product_is_default,
 				})
 			}
 		}
@@ -217,6 +222,7 @@ export class SupplierQueryDao extends BaseQueryDao {
 					name: string
 					min_orderable: number
 					max_orderable: number
+					is_default: boolean
 			  }[]
 			| undefined,
 	): SupplierQueryDto {
@@ -228,6 +234,7 @@ export class SupplierQueryDao extends BaseQueryDao {
 					name: product.name,
 					maxOrderable: product.max_orderable,
 					minOrderable: product.min_orderable,
+					isDefault: product.is_default,
 				}
 			})
 		}

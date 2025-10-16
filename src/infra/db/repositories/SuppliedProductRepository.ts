@@ -15,6 +15,15 @@ export class SuppliedProductRepository implements ISuppliedProductRepository {
 	constructor(knex: Knex) {
 		this.suppliedProductDAO = new SuppliedProductDAO(knex)
 	}
+
+	async doesProductHaveDefaultSupplier(
+		productId: EntityId,
+	): Promise<boolean> {
+		return await this.suppliedProductDAO.doesProductHaveDefaultSupplier(
+			productId,
+		)
+	}
+
 	async delete(entity: SuppliedProduct): Promise<void> {
 		this.suppliedProductDAO.delete(entity.id)
 	}
@@ -25,6 +34,7 @@ export class SuppliedProductRepository implements ISuppliedProductRepository {
 			min_orderable: entity.getMin().value,
 			product_id: entity.getProductId(),
 			supplier_id: entity.getSupplierId(),
+			is_default: entity.getIsDefault(),
 		})
 	}
 	async create(entity: SuppliedProduct): Promise<void> {
@@ -34,6 +44,7 @@ export class SuppliedProductRepository implements ISuppliedProductRepository {
 			min_orderable: entity.getMin().value,
 			product_id: entity.getProductId(),
 			supplier_id: entity.getSupplierId(),
+			is_default: entity.getIsDefault(),
 		})
 	}
 
@@ -72,6 +83,7 @@ export class SuppliedProductRepository implements ISuppliedProductRepository {
 			supplierId: row.supplierId,
 			min: min,
 			max: max,
+			isDefault: row.isDefault,
 		})
 	}
 }

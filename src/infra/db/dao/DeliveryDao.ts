@@ -2,6 +2,13 @@ import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
 import { DeliveryStatus } from "../../../domain/delivery_management/entities/delivery/value_objects/DeliveryStatus.js"
 import { DeliveryDatabaseTable } from "../types/tables/DeliveryDatabaseTable.js"
+import { DeliveryItemDatabaseTable } from "../types/tables/DeliveryItemDatabaseTable.js"
+
+export type ProductDeliveryDto = {
+	productId: EntityId
+	quantity: number
+	arrivalDate: Date
+}
 
 export type DeliveryDTO = {
 	id: EntityId
@@ -84,6 +91,35 @@ export class DeliveryDAO {
 			deliveries.push(this.mapToDTO(row))
 		}
 		return deliveries
+	}
+
+	async findProductDeliveries(
+		productId: EntityId,
+	): Promise<ProductDeliveryDto[]> {
+		const rows = await this.knex<
+			DeliveryDatabaseTable & DeliveryItemDatabaseTable
+		>("delivery as d")
+			.select("d.scheduled_arrival_date", "i.product_id", "i.quantity")
+			.join("delivery_item as i", "i.delivery_id", "d.id")
+			.where("d.status", "=", "delivering")
+			.where("i.product_id", "=", productId)
+		let productDeliveries = []
+		for (const row of rows) {
+			productDeliveries.push(this.mapToProductDeliveryDto(row))
+		}
+		return productDeliveries
+	}
+
+	mapToProductDeliveryDto(row: {
+		scheduled_arrival_date: Date
+		product_id: string
+		quantity: number
+	}): ProductDeliveryDto {
+		return {
+			productId: row.product_id,
+			quantity: row.quantity,
+			arrivalDate: row.scheduled_arrival_date,
+		}
 	}
 
 	mapToDTO(row: DeliveryDatabaseTable): DeliveryDTO {

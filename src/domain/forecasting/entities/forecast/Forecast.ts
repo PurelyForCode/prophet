@@ -5,50 +5,36 @@ import {
 import { EntityCollection } from "../../../../core/types/EntityCollection.js"
 import { EntityId } from "../../../../core/types/EntityId.js"
 import { ForecastEntry } from "../forecast_entry/ForecastEntry.js"
-import { DataDepth } from "./value_objects/HistoricalDaysCount.js"
+import { ModelType } from "./value_objects/ModelType.js"
+import { DataDepth } from "./value_objects/DataDepth.js"
 
 export class Forecast extends AggregateRoot {
-	private _accountId: EntityId
-	private _productId: EntityId
-	private _dataDepth: DataDepth
-	private _processed: boolean
-	private _forecastStartDate: Date
-	private _forecastEndDate: Date
-	private _createdAt: Date
-	private _updatedAt: Date
-	private _deletedAt: Date | null
-	private _entries: EntityCollection<ForecastEntry>
-
 	private constructor(
 		id: EntityId,
-		accountId: EntityId,
-		productId: EntityId,
-		dataDepth: DataDepth,
-		processed: boolean,
-		forecastStartDate: Date,
-		forecastEndDate: Date,
-		createdAt: Date,
-		updatedAt: Date,
-		deletedAt: Date | null,
-		entries: EntityCollection<ForecastEntry>,
+		private _productId: EntityId,
+		private _accountId: EntityId,
+		private _prophetModelId: EntityId,
+		private _crostonModelId: EntityId,
+		private _modelType: ModelType,
+		private _dataDepth: DataDepth,
+		private _forecastStartDate: Date,
+		private _forecastEndDate: Date,
+		private _processed: boolean,
+		private _createdAt: Date,
+		private _updatedAt: Date,
+		private _deletedAt: Date | null,
+		private _entries: EntityCollection<ForecastEntry>,
 	) {
 		super(id)
-		this._accountId = accountId
-		this._productId = productId
-		this._dataDepth = dataDepth
-		this._processed = processed
-		this._forecastStartDate = forecastStartDate
-		this._forecastEndDate = forecastEndDate
-		this._createdAt = createdAt
-		this._updatedAt = updatedAt
-		this._deletedAt = deletedAt
-		this._entries = entries
 	}
 
 	public static create(params: {
 		id: EntityId
 		accountId: EntityId
 		productId: EntityId
+		prophetModelId: EntityId
+		crostonModelId: EntityId
+		modelType: ModelType
 		dataDepth: DataDepth
 		processed: boolean
 		forecastStartDate: Date
@@ -60,12 +46,15 @@ export class Forecast extends AggregateRoot {
 	}): Forecast {
 		return new Forecast(
 			params.id,
-			params.accountId,
 			params.productId,
+			params.accountId,
+			params.prophetModelId,
+			params.crostonModelId,
+			params.modelType,
 			params.dataDepth,
-			params.processed,
 			params.forecastStartDate,
 			params.forecastEndDate,
+			params.processed,
 			params.createdAt,
 			params.updatedAt,
 			params.deletedAt,
@@ -82,6 +71,25 @@ export class Forecast extends AggregateRoot {
 		this.addTrackedEntity(this, EntityAction.deleted)
 	}
 
+	public get prophetModelId(): EntityId {
+		return this._prophetModelId
+	}
+
+	public set prophetModelId(value: EntityId) {
+		this._prophetModelId = value
+	}
+	public get crostonModelId(): EntityId {
+		return this._crostonModelId
+	}
+	public set crostonModelId(value: EntityId) {
+		this._crostonModelId = value
+	}
+	public get modelType(): ModelType {
+		return this._modelType
+	}
+	public set modelType(value: ModelType) {
+		this._modelType = value
+	}
 	public get accountId(): EntityId {
 		return this._accountId
 	}

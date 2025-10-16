@@ -4,6 +4,35 @@ import { SuppliedProductMax } from "./value_objects/SuppliedProductMax.js"
 import { SuppliedProductMin } from "./value_objects/SuppliedProductMin.js"
 
 export class SuppliedProduct extends Entity {
+	private constructor(
+		id: EntityId,
+		private productId: EntityId,
+		private supplierId: EntityId,
+		private min: SuppliedProductMin,
+		private max: SuppliedProductMax,
+		private isDefault: boolean,
+	) {
+		super(id)
+	}
+
+	static create(params: {
+		id: EntityId
+		productId: EntityId
+		supplierId: EntityId
+		min: SuppliedProductMin
+		max: SuppliedProductMax
+		isDefault: boolean
+	}) {
+		return new SuppliedProduct(
+			params.id,
+			params.productId,
+			params.supplierId,
+			params.min,
+			params.max,
+			params.isDefault,
+		)
+	}
+
 	getMax(): SuppliedProductMax {
 		return this.max
 	}
@@ -30,29 +59,11 @@ export class SuppliedProduct extends Entity {
 		this.productId = value
 	}
 
-	private constructor(
-		id: EntityId,
-		private productId: EntityId,
-		private supplierId: EntityId,
-		private min: SuppliedProductMin,
-		private max: SuppliedProductMax,
-	) {
-		super(id)
+	getIsDefault() {
+		return this.isDefault
 	}
 
-	static create(params: {
-		id: EntityId
-		productId: EntityId
-		supplierId: EntityId
-		min: SuppliedProductMin
-		max: SuppliedProductMax
-	}) {
-		return new SuppliedProduct(
-			params.id,
-			params.productId,
-			params.supplierId,
-			params.min,
-			params.max,
-		)
+	setIsDefault(value: boolean) {
+		this.isDefault = value
 	}
 }

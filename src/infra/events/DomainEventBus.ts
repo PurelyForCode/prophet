@@ -5,14 +5,9 @@ import {
 } from "../../core/interfaces/IDomainEventBus.js"
 import { AggregateRoot } from "../../core/interfaces/AggregateRoot.js"
 import { UnitOfWork } from "../utils/UnitOfWork.js"
-import { IncrementProductSalesCountEventHandler } from "./handlers/sales/sale_created/IncrementProductSalesCountEventHandler.js"
 
 export class EventBus implements IEventBus {
 	private handlers: Map<string, DomainEventHandler<any>[]> = new Map()
-
-	constructor() {
-		this.register(new IncrementProductSalesCountEventHandler())
-	}
 
 	register<T>(handler: DomainEventHandler<any>) {
 		const handlers = this.handlers.get(handler.eventName) || []

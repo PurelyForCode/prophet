@@ -120,7 +120,7 @@ CREATE TABLE sale (
 
 CREATE TABLE supplier (
     id UUID PRIMARY KEY,
-    account_id UUID NOT NULL REFERENCES account(id),
+    account_id UUID NOT NULL REFERENCES account(id) ON DELETE SET NULL ON UPDATE CASCADE,
     name VARCHAR(100) NOT NULL,
     lead_time INTEGER NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
@@ -133,7 +133,8 @@ CREATE TABLE product_supplier (
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
     supplier_id UUID NOT NULL REFERENCES supplier(id) ON DELETE CASCADE ON UPDATE CASCADE,
     min_orderable INTEGER,
-    max_orderable INTEGER
+    max_orderable INTEGER,
+    is_default BOOLEAN NOT NULL
 );
 
 CREATE TYPE delivery_status AS ENUM (
@@ -144,8 +145,8 @@ CREATE TYPE delivery_status AS ENUM (
 
 CREATE TABLE delivery (
     id UUID PRIMARY KEY,
-    supplier_id UUID NOT NULL REFERENCES supplier(id),
-    account_id UUID NOT NULL REFERENCES account(id),
+    supplier_id UUID NOT NULL REFERENCES supplier(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    account_id UUID NOT NULL REFERENCES account(id) ON DELETE SET NULL ON UPDATE CASCADE,
     status delivery_status NOT NULL DEFAULT 'delivering',
     completed_at TIMESTAMPTZ,
     requested_at TIMESTAMPTZ DEFAULT now() NOT NULL,
@@ -158,15 +159,140 @@ CREATE TABLE delivery (
 
 CREATE TABLE delivery_item (
     id UUID PRIMARY KEY,
-    product_id UUID NOT NULL REFERENCES product(id),
-    delivery_id UUID NOT NULL REFERENCES delivery(id),
+    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    delivery_id UUID NOT NULL REFERENCES delivery(id) ON DELETE CASCADE ON UPDATE CASCADE,
     quantity INTEGER NOT NULL
 );
 
+CREATE TABLE croston_model_setting (
+    id UUID PRIMARY KEY,
+    alpha NUMERIC(5,4) NOT NULL DEFAULT 0.1, -- smoothing factor
+    variant TEXT NOT NULL DEFAULT 'classic', -- 'classic', 'sba', 'optimized'
+    optimizer_method TEXT, -- if alpha was optimized
+    initial_demand NUMERIC,
+    initial_interval NUMERIC,
+    period INTEGER, -- e.g., forecast granularity in days/weeks
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+CREATE TABLE croston_model (
+    id UUID PRIMARY KEY,
+    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
+    croston_model_setting_id UUID NOT NULL REFERENCES croston_model_setting(id) ON DELETE CASCADE,
+    model_version INTEGER NOT NULL DEFAULT 1,
+    trained_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+CREATE TYPE prophet_growth_type AS ENUM('linear', 'logistic');
+
+CREATE TYPE changepoint_selection_method AS ENUM ('auto', 'manual');
+CREATE TYPE seasonality_mode AS ENUM ('additive', 'multiplicative')
+
+CREATE TABLE prophet_model_setting (
+    id UUID PRIMARY KEY,
+	prophet_model_id UUID NOT NULL REFERENCES prophet_model(id) ON DELETE CASCADE ON UPDATE CASCADE,
+
+    growth_type prophet_growth_type NOT NULL DEFAULT 'linear',          -- 'linear' or 'logistic'
+    cap_enabled BOOLEAN NOT NULL DEFAULT FALSE,          -- TRUE if logistic growth is used
+
+    -- Trend changepoints
+    changepoint_selection_method TEXT NOT NULL DEFAULT 'auto'
+        CHECK (changepoint_selection_method IN ('auto', 'manual')),
+    n_changepoints INTEGER,                              -- only used when method = 'auto'
+    changepoint_prior_scale NUMERIC(12,6),               -- controls flexibility of trend
+    changepoint_range NUMERIC(5,4),                      -- fraction (e.g. 0.8 of history to consider)
+
+    -- Seasonalities
+    yearly_seasonality BOOLEAN,
+    weekly_seasonality BOOLEAN,
+    daily_seasonality BOOLEAN,
+
+    seasonality_mode seasonality_mode,                               -- 'additive' or 'multiplicative'
+    seasonality_prior_scale NUMERIC(12,6),               -- global seasonal prior scale
+    holidays_prior_scale NUMERIC(12,6),                  -- controls strength of holiday effects
+
+    -- Uncertainty / intervals
+    interval_width NUMERIC(5,4) DEFAULT 0.8,             -- default coverage level (e.g. 0.8, 0.95)
+    uncertainty_samples INTEGER DEFAULT 1000,            -- posterior predictive draws
+    seed INTEGER,                                        -- random seed for reproducibility
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+
+-- =========================================================
+-- Seasonality configuration (custom or default)
+-- =========================================================
+CREATE TABLE prophet_setting_seasonality (
+    id UUID PRIMARY KEY,
+    model_setting_id UUID NOT NULL REFERENCES prophet_model_setting(id) ON DELETE CASCADE,
+
+    name TEXT NOT NULL,
+    period_days NUMERIC NOT NULL,      -- seasonal period in days
+    fourier_order INTEGER NOT NULL,    -- number of Fourier terms
+    prior_scale NUMERIC(12,6),         -- optional per-seasonality prior scale
+    mode TEXT,                         -- 'additive' or 'multiplicative'
+    condition_name TEXT                -- for conditional seasonalities
+);
+
+
+-- =========================================================
+-- Explicit changepoint overrides
+-- =========================================================
+CREATE TABLE prophet_setting_changepoint_override (
+    id UUID PRIMARY KEY,
+    model_setting_id UUID NOT NULL REFERENCES prophet_model_setting(id) ON DELETE CASCADE,
+    changepoint_date DATE NOT NULL
+);
+
+
+-- =========================================================
+-- Holidays / special events
+-- =========================================================
+CREATE TABLE prophet_setting_holiday (
+    id UUID PRIMARY KEY,
+    model_setting_id UUID NOT NULL REFERENCES prophet_model_setting(id) ON DELETE CASCADE,
+
+    holiday_name TEXT NOT NULL,
+    ds DATE NOT NULL,
+    lower_window INTEGER NOT NULL DEFAULT 0,
+    upper_window INTEGER NOT NULL DEFAULT 0
+);
+
+
+-- =========================================================
+-- Extra regressors
+-- =========================================================
+CREATE TABLE prophet_setting_regressor (
+    id UUID PRIMARY KEY,
+    model_setting_id UUID NOT NULL REFERENCES prophet_model_setting(id) ON DELETE CASCADE,
+
+    regressor_name TEXT NOT NULL,
+    prior_scale NUMERIC(12,6),
+    standardize BOOLEAN DEFAULT TRUE,
+    mode TEXT CHECK (mode IN ('additive', 'multiplicative'))
+);
+
+-- =========================================================
+-- Model versioning and file tracking
+-- =========================================================
+CREATE TABLE prophet_model (
+    id UUID PRIMARY KEY,
+    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    file_path TEXT,           -- Nullable when model is not activated
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    trained_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TYPE model_type AS ENUM ('prophet', 'croston'); 
+
 CREATE TABLE forecast(
     id UUID PRIMARY KEY,
-    product_id UUID NOT NULL REFERENCES product(id),
-    account_id UUID NOT NULL REFERENCES account(id),
+    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    account_id UUID NOT NULL REFERENCES account(id) ON DELETE SET NULL ON UPDATE CASCADE,
+	prophet_model_id UUID REFERENCES prophet_model(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	croston_model_id UUID REFERENCES prophet_model(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	model_type model_type NOT NULL,
     data_depth INT NOT NULL DEFAULT(100),
     forecast_start_date DATE NOT NULL,
     forecast_end_date DATE NOT NULL,
@@ -178,32 +304,24 @@ CREATE TABLE forecast(
 
 CREATE TABLE forecast_entry(
     id UUID PRIMARY KEY,
-    forecast_id UUID NOT NULL REFERENCES forecast(id),
+    forecast_id UUID NOT NULL REFERENCES forecast(id) ON DELETE CASCADE ON UPDATE CASCADE,
     yhat FLOAT NOT NULL,
     yhat_upper FLOAT NOT NULL,
     yhat_lower FLOAT NOT NULL,
     date DATE NOT NULL
 );
 
-CREATE TABLE inventory_recommendation(
-    product_id UUID NOT NULL REFERENCES product(id),
+CREATE TABLE inventory_recommendation (
+    id UUID PRIMARY KEY,
+    forecast_id UUID NOT NULL REFERENCES forecast(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    supplier_id UUID NOT NULL REFERENCES supplier(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	leadtime INTEGER NOT NULL,
     runs_out_at DATE NOT NULL,
-    optimal_restock_date DATE NOT NULL,
-    recommended_restock_amount INTEGER,
-    created_at DATE NOT NULL,
-    updated_at DATE NOT NULL
-);
-
-CREATE TABLE prophet_model_setting(
-	id UUID PRIMARY KEY
-);
-
-CREATE TABLE prophet_model (
-	id UUID PRIMARY KEY,
-	product_id UUID NOT NULL REFERENCES product(id),
-	prophet_model_setting_id UUID NOT NULL REFERENCES prophet_model_setting(id),
-	file_path TEXT NOT NULL,
-	trained_at TIMESTAMP NOT NULL DEFAULT now()
+    restock_at DATE NOT NULL,
+    restock_amount INTEGER NOT NULL,
+    coverage_days INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 INSERT INTO account (id, username, password, email, role) VALUES ('01970607-cdb9-7209-bf1d-f1281b9cc056', 'test', 'password', 'test@gmail.com', 'store manager');

@@ -8,11 +8,23 @@ export type SuppliedProductDTO = {
 	supplierId: EntityId
 	min: number
 	max: number
+	isDefault: boolean
 }
 
 export class SuppliedProductDAO {
 	private tableName = "product_supplier"
 	constructor(private readonly knex: Knex) {}
+
+	async doesProductHaveDefaultSupplier(productId: EntityId) {
+		const defaultSupplier = await this.knex<SuppliedProductDatabaseTable>(
+			this.tableName,
+		)
+			.select("id")
+			.where("product_id", "=", productId)
+			.where("is_default", true)
+			.first()
+		return defaultSupplier ? true : false
+	}
 
 	async insert(table: SuppliedProductDatabaseTable) {
 		await this.knex<SuppliedProductDatabaseTable>(this.tableName).insert(
@@ -66,6 +78,7 @@ export class SuppliedProductDAO {
 			min: row.min_orderable,
 			productId: row.product_id,
 			supplierId: row.supplier_id,
+			isDefault: row.is_default,
 		}
 	}
 }

@@ -1,0 +1,3 @@
+export enum DeliveryManagementDomainEventList {
+	DEFAULT_PRODUCT_SUPPLIER_CHANGED = "DEFAULT_PRODUCT_SUPPLIER_CHANGED",
+}

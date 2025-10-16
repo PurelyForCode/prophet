@@ -8,7 +8,7 @@ import { SupplierNotFoundException } from "../../../../domain/delivery_managemen
 export type UpdateSuppliedProductInput = {
 	productId: EntityId
 	supplierId: EntityId
-	fields: Partial<{ max: number; min: number }>
+	fields: Partial<{ max: number; min: number; isDefault: boolean }>
 }
 export class UpdateSuppliedProductUsecase implements Usecase<any, any> {
 	constructor(private readonly uow: IUnitOfWork) {}
@@ -26,6 +26,7 @@ export class UpdateSuppliedProductUsecase implements Usecase<any, any> {
 			min: input.fields.min
 				? new SuppliedProductMin(input.fields.min)
 				: undefined,
+			isDefault: input.fields.isDefault ?? undefined,
 		})
 
 		await this.uow.save(supplier)

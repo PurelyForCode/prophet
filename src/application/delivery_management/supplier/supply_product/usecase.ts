@@ -22,6 +22,7 @@ export class CreateSuppliedProductUsecase implements Usecase<any, any> {
 
 	async call(input: CreateSuppliedProductInput): Promise<any> {
 		const supplierRepo = this.uow.getSupplierRepository()
+		const suppliedProductRepo = this.uow.getSuppliedProductRepository()
 		const productRepo = this.uow.getProductRepository()
 		const supplier = await supplierRepo.findById(input.supplierId)
 		if (!supplier) {
@@ -30,12 +31,20 @@ export class CreateSuppliedProductUsecase implements Usecase<any, any> {
 		if (!(await productRepo.exists(input.productId))) {
 			throw new ProductNotFoundException()
 		}
-
+		let isDefault = false
+		const hasDefaultSupplier =
+			await suppliedProductRepo.doesProductHaveDefaultSupplier(
+				input.productId,
+			)
+		if (!hasDefaultSupplier) {
+			isDefault = true
+		}
 		supplier.addSuppliedProduct(
 			this.idGenerator.generate(),
 			input.productId,
 			new SuppliedProductMax(input.max),
 			new SuppliedProductMin(input.min),
+			isDefault,
 		)
 
 		await this.uow.save(supplier)

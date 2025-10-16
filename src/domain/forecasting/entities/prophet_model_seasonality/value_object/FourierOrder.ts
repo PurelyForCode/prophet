@@ -1,10 +1,11 @@
 import { ValueException } from "../../../../../core/exceptions/ValueException.js"
 
-export class DataDepth {
+export class FourierOrder {
 	public readonly value: number
+
 	constructor(value: number) {
-		if (value < 1) {
-			throw new ValueException("Forecast's data depth can not be below 1")
+		if (!Number.isInteger(value) || value <= 0) {
+			throw new ValueException("Fourier order must be a positive integer")
 		}
 		this.value = value
 	}

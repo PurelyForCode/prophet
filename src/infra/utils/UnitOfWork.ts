@@ -22,13 +22,24 @@ import { IDeliveryRepository } from "../../domain/delivery_management/repositori
 import { DeliveryRepository } from "../db/repositories/DeliveryRepository.js"
 import { IProductGroupRepository } from "../../domain/product_management/repositories/IProductGroupRepository.js"
 import { ProductGroupRepository } from "../db/repositories/ProductGroupRepository.js"
+import { IForecastRepository } from "../../domain/forecasting/repositories/IForecastRepository.js"
+import { ForecastRepository } from "../db/repositories/ForecastRepository.js"
 
 export class UnitOfWork implements IUnitOfWork {
-	private trx: Knex.Transaction | null = null
+	public trx: Knex.Transaction | null = null
 	constructor(
 		private readonly knex: Knex,
 		private readonly repositoryFactory: RepositoryFactory,
 	) {}
+
+	getForecastRepository(): IForecastRepository {
+		if (this.trx) {
+			return new ForecastRepository(this.trx)
+		} else {
+			return new ForecastRepository(this.knex)
+		}
+	}
+
 	getCategoryRepository(): ICategoryRepository {
 		if (this.trx) {
 			return new CategoryRepository(this.trx)

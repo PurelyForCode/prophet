@@ -17,6 +17,16 @@ export class SupplierRepository implements ISupplierRepository {
 		this.suppliedProductRepo = new SuppliedProductRepository(knex)
 		this.supplierDAO = new SupplierDAO(knex)
 	}
+	async findDefaultSupplier(productId: EntityId): Promise<Supplier | null> {
+		const supplierDTO =
+			await this.supplierDAO.findDefaultSupplier(productId)
+		if (!supplierDTO) {
+			return null
+		}
+		const suppliedProducts =
+			await this.suppliedProductRepo.findAllBySupplierId(supplierDTO.id)
+		return this.mapToEntity(supplierDTO, suppliedProducts)
+	}
 
 	async findByName(name: SupplierName): Promise<Supplier | null> {
 		const supplierDTO = await this.supplierDAO.findByName(name.value)
@@ -31,6 +41,7 @@ export class SupplierRepository implements ISupplierRepository {
 	async delete(entity: Supplier): Promise<void> {
 		await this.supplierDAO.delete(entity.id)
 	}
+
 	async update(entity: Supplier): Promise<void> {
 		await this.supplierDAO.update({
 			account_id: entity.getAccountId(),

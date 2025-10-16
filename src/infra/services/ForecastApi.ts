@@ -52,10 +52,13 @@ export class ForecastApi implements IForecastApi {
 			return result.data.data
 		} catch (err) {
 			if (axios.isAxiosError(err)) {
+				console.log(err)
 				const status = err.response?.status ?? 500
 				const detail =
 					err.response?.data?.detail?.message ?? "Unknown error"
 				throw new ForecastApiError(detail, status)
+			} else if (err instanceof ApplicationException) {
+				throw err
 			} else {
 				console.log(err)
 				throw new InternalServerError()
@@ -69,7 +72,7 @@ export class ForecastApi implements IForecastApi {
 	}
 
 	async isApiAvailable() {
-		const result = await this.axios.get("/health")
+		const result = await this.axios.get("/healthcheck")
 		if (result.status === 200) {
 			return true
 		} else {

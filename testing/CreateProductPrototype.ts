@@ -5,7 +5,6 @@ import { ProductName } from "../src/domain/product_management/entities/product/v
 import { ProductSetting } from "../src/domain/product_management/entities/product/value_objects/ProductSetting.js"
 import { ProductGroupManager } from "../src/domain/product_management/services/ProductGroupManager.js"
 import { fakeId } from "../src/fakeId.js"
-import { idGenerator } from "../src/infra/utils/IdGenerator.js"
 import { repositoryFactory } from "../src/infra/utils/RepositoryFactory.js"
 import { runInTransaction, UnitOfWork } from "../src/infra/utils/UnitOfWork.js"
 

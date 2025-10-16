@@ -7,6 +7,8 @@ import { ISupplierRepository } from "../../domain/delivery_management/repositori
 import { ISuppliedProductRepository } from "../../domain/delivery_management/repositories/ISuppliedProductRepository.js"
 import { ICategoryRepository } from "../../domain/product_management/repositories/ICategoryRepository.js"
 import { IProductGroupRepository } from "../../domain/product_management/repositories/IProductGroupRepository.js"
+import { IForecastRepository } from "../../domain/forecasting/repositories/IForecastRepository.js"
+import { Knex } from "knex"
 
 export enum IsolationLevel {
 	READ_COMMITTED = "READ COMMITTED",
@@ -15,6 +17,8 @@ export enum IsolationLevel {
 }
 
 export interface IUnitOfWork {
+	trx: Knex.Transaction | null
+
 	getProductRepository(): IProductRepository
 	getCategoryRepository(): ICategoryRepository
 	getSaleRepository(): ISaleRepository
@@ -23,6 +27,7 @@ export interface IUnitOfWork {
 	getSupplierRepository(): ISupplierRepository
 	getSuppliedProductRepository(): ISuppliedProductRepository
 	getProductGroupRepository(): IProductGroupRepository
+	getForecastRepository(): IForecastRepository
 
 	transaction(
 		config?: { isolationLevel: IsolationLevel } | undefined,

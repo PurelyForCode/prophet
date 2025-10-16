@@ -7,6 +7,7 @@ import { ProductSetting } from "../src/domain/product_management/entities/produc
 
 const productId = "0199c7d3-6473-75d9-abd5-8fa1bc2cf175"
 const groupId = "0199c7d3-6473-75d9-abd5-88e78d9ccf56"
+
 async function main() {
 	await resetPrototype(knexInstance)
 	const now = new Date()

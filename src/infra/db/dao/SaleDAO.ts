@@ -1,48 +1,62 @@
-import { Knex } from "knex";
-import { EntityId } from "../../../core/types/EntityId.js";
-import { SaleDatabaseTable } from "../types/tables/SaleDatabaseTable.js";
+import { Knex } from "knex"
+import { EntityId } from "../../../core/types/EntityId.js"
+import { SaleDatabaseTable } from "../types/tables/SaleDatabaseTable.js"
 
 export type SaleDto = {
-	id: EntityId;
-	account_id: EntityId;
-	product_id: EntityId;
-	quantity: number;
-	status: string;
-	date: Date;
-	created_at: Date;
-	updated_at: Date;
-	deleted_at: Date | null;
-};
+	id: EntityId
+	account_id: EntityId
+	product_id: EntityId
+	quantity: number
+	status: string
+	date: Date
+	created_at: Date
+	updated_at: Date
+	deleted_at: Date | null
+}
 
 export class SaleDAO {
-	private tableName = "sale";
-	constructor(private readonly knex: Knex) { }
+	private tableName = "sale"
+	constructor(private readonly knex: Knex) {}
 	async delete(id: EntityId) {
 		await this.knex<SaleDatabaseTable>(this.tableName)
 			.delete()
-			.where({ id: id });
+			.where({ id: id })
 	}
 
 	async insert(input: SaleDatabaseTable) {
-		await this.knex<SaleDatabaseTable>(this.tableName).insert(input);
+		await this.knex<SaleDatabaseTable>(this.tableName).insert(input)
 	}
 
 	async update(input: SaleDatabaseTable) {
 		await this.knex<SaleDatabaseTable>(this.tableName)
 			.update(input)
-			.where({ id: input.id });
+			.where({ id: input.id })
 	}
 
 	async findById(id: EntityId): Promise<SaleDto | null> {
 		const row = await this.knex<SaleDatabaseTable>(this.tableName)
-			.select()
+			.select("*")
 			.where("id", "=", id)
-			.first();
+			.first()
 		if (row) {
-			return this.mapToDto(row);
+			return this.mapToDto(row)
 		} else {
-			return null;
+			return null
 		}
+	}
+
+	//TODO:
+	async findProductSales(productId: EntityId, days: number) {
+		const rows = await this.knex<SaleDatabaseTable>(this.tableName)
+			.select("date")
+			.sum("quantity as quantity")
+			.where("product_id", "=", productId)
+			.andWhere("status", "=", "completed")
+			.groupBy("date")
+			.orderBy("date", "desc")
+			.limit(days)
+
+		return rows
 	}
 
 	mapToDto(row: SaleDatabaseTable): SaleDto {

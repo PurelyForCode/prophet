@@ -1,16 +1,12 @@
 import { DomainEvent } from "../../../core/interfaces/DomainEvent.js"
 import { EntityId } from "../../../core/types/EntityId.js"
-import { ForecastDomainEventList } from "./SaleForecastDomainEventList.js"
+import { ForecastDomainEventList } from "./ForecastDomainEventList.js"
 
 type ForecastGeneratedDomainEventPayload = {
-	productId: EntityId
 	forecastId: EntityId
-	forecastEndDate: Date
-	forecastStartDate: Date
-	historicalDaysCount: number
 }
 
-export class SingleForecastGeneratedDomainEvent
+export class ForecastGeneratedDomainEvent
 	implements DomainEvent<ForecastGeneratedDomainEventPayload>
 {
 	public readonly eventName: string
@@ -18,7 +14,7 @@ export class SingleForecastGeneratedDomainEvent
 	public readonly payload: ForecastGeneratedDomainEventPayload
 	constructor(payload: ForecastGeneratedDomainEventPayload) {
 		this.occurredOn = new Date()
-		this.eventName = ForecastDomainEventList.SINGLE_FORECAST_GENERATED
+		this.eventName = ForecastDomainEventList.FORECAST_GENERATED
 		this.payload = payload
 	}
 }
