@@ -1,6 +1,5 @@
 -- ===========================================
--- DROP ALL TABLES, TYPES, ENUMS (in reverse order)
--- ===========================================
+-- DROP ALL TABLES, TYPES, ENUMS (in reverse order) ===========================================
 
 -- 1️⃣ Tables with dependencies on others
 DROP TABLE IF EXISTS inventory_recommendation CASCADE;
@@ -56,6 +55,7 @@ DROP TYPE IF EXISTS prophet_growth_type CASCADE;
 DROP TYPE IF EXISTS changepoint_selection_method CASCADE;
 DROP TYPE IF EXISTS seasonality_mode CASCADE;
 DROP TYPE IF EXISTS model_type CASCADE;
+DROP TYPE IF EXISTS inventory_status CASCADE;
 
 -- ===========================================
 -- ✅ Done
