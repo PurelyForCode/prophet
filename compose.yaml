@@ -6,7 +6,7 @@ services:
     env_file:
       - .env
     environment:
-      - POSTGRES_INITDB_ARGS=--timezone=UTC
+      - TZ=UTC
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d
