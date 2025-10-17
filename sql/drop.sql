@@ -9,8 +9,7 @@ DROP TABLE IF EXISTS forecast CASCADE;
 
 -- Prophet-related tables
 DROP TABLE IF EXISTS prophet_setting_regressor CASCADE;
-DROP TABLE IF EXISTS prophet_setting_holiday CASCADE;
-DROP TABLE IF EXISTS prophet_setting_changepoint CASCADE;
+DROP TABLE IF EXISTS prophet_setting_holiday CASCADE; DROP TABLE IF EXISTS prophet_setting_changepoint CASCADE;
 DROP TABLE IF EXISTS prophet_setting_season CASCADE;
 DROP TABLE IF EXISTS prophet_model_setting CASCADE;
 DROP TABLE IF EXISTS prophet_model CASCADE;
@@ -35,6 +34,7 @@ DROP TABLE IF EXISTS product_group CASCADE;
 DROP TABLE IF EXISTS product_category CASCADE;
 
 -- Accounts and permissions
+DROP TABLE IF EXISTS global_settings CASCADE;
 DROP TABLE IF EXISTS recovery_token CASCADE;
 DROP TABLE IF EXISTS account_permission CASCADE;
 DROP TABLE IF EXISTS permission CASCADE;
