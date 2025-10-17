@@ -9,6 +9,7 @@ import z from "zod"
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js"
 import { fakeId } from "../../fakeId.js"
 import { domainEventBus } from "../../infra/events/EventBusConfiguration.js"
+import { idGenerator } from "../../infra/utils/IdGenerator.js"
 
 const app = new Hono()
 
@@ -32,19 +33,18 @@ app.post(
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
 		const usecase = new GenerateSingleForecastUsecase(
 			forecastApi,
+			idGenerator,
 			uow,
 			domainEventBus,
 		)
 		const params = c.req.valid("param")
 		const body = c.req.valid("json")
-		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
-			return await usecase.call({
-				productId: params.productId,
-				accountId: fakeId,
-				dataDepth: body.dataDepth,
-				forecastEndDate: body.forecastEndDate,
-				forecastStartDate: body.forecastStartDate,
-			})
+		await usecase.call({
+			productId: params.productId,
+			accountId: fakeId,
+			dataDepth: body.dataDepth,
+			forecastEndDate: body.forecastEndDate,
+			forecastStartDate: body.forecastStartDate,
 		})
 		return c.json({
 			message: "Successfully created forecast",

@@ -1,6 +1,6 @@
 import { EntityId } from "../../../../core/types/EntityId.js"
 
-export type InventoryRecommendationTable = {
+export type InventoryRecommendationDatabaseTable = {
 	id: EntityId
 	forecast_id: EntityId
 	supplier_id: EntityId

@@ -2,6 +2,7 @@ import { EntityId } from "../../core/types/EntityId.js"
 
 export type GenerateForecastInput = {
 	accountId: EntityId
+	forecastId: EntityId
 	productId: EntityId
 	dataDepth: number
 	forecastStartDate: Date

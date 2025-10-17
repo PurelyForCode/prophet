@@ -16,6 +16,45 @@ export class ForecastRepository implements IForecastRepository {
 		this.entryDao = new ForecastEntryDao(knex)
 	}
 
+	async delete(entity: Forecast): Promise<void> {
+		await this.forecastDao.delete(entity.id)
+	}
+	async update(entity: Forecast): Promise<void> {
+		await this.forecastDao.update({
+			account_id: entity.accountId,
+			created_at: entity.createdAt,
+			croston_model_id: entity.crostonModelId,
+			data_depth: entity.dataDepth.value,
+			deleted_at: entity.deletedAt,
+			forecast_end_date: entity.forecastEndDate,
+			forecast_start_date: entity.forecastStartDate,
+			id: entity.id,
+			model_type: entity.modelType.value,
+			processed: entity.processed,
+			product_id: entity.productId,
+			prophet_model_id: entity.prophetModelId,
+			updated_at: entity.updatedAt,
+		})
+	}
+
+	async create(entity: Forecast): Promise<void> {
+		await this.forecastDao.insert({
+			account_id: entity.accountId,
+			created_at: entity.createdAt,
+			croston_model_id: entity.crostonModelId,
+			data_depth: entity.dataDepth.value,
+			deleted_at: entity.deletedAt,
+			forecast_end_date: entity.forecastEndDate,
+			forecast_start_date: entity.forecastStartDate,
+			id: entity.id,
+			model_type: entity.modelType.value,
+			processed: entity.processed,
+			product_id: entity.productId,
+			prophet_model_id: entity.prophetModelId,
+			updated_at: entity.updatedAt,
+		})
+	}
+
 	async findById(id: EntityId): Promise<Forecast | null> {
 		const forecast = await this.forecastDao.findById(id)
 		if (!forecast) {

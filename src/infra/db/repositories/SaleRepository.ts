@@ -15,8 +15,8 @@ export class SaleRepository implements ISaleRepository {
 		this.saleDAO = new SaleDAO(knex)
 	}
 
-	findProductSales(productId: EntityId, days: number): Promise<Sale> {
-		throw new Error()
+	async doesSaleExistInDate(date: Date): Promise<boolean> {
+		return await this.saleDAO.doesSaleExistInDate(date)
 	}
 
 	async findById(id: EntityId): Promise<Sale | null> {

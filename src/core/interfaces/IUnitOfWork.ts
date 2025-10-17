@@ -9,6 +9,8 @@ import { ICategoryRepository } from "../../domain/product_management/repositorie
 import { IProductGroupRepository } from "../../domain/product_management/repositories/IProductGroupRepository.js"
 import { IForecastRepository } from "../../domain/forecasting/repositories/IForecastRepository.js"
 import { Knex } from "knex"
+import { IProphetModelRepository } from "../../domain/forecasting/repositories/IProphetModelRepository.js"
+import { IAccountRepository } from "../../domain/account_management/repositories/IAccountRepository.js"
 
 export enum IsolationLevel {
 	READ_COMMITTED = "READ COMMITTED",
@@ -28,6 +30,8 @@ export interface IUnitOfWork {
 	getSuppliedProductRepository(): ISuppliedProductRepository
 	getProductGroupRepository(): IProductGroupRepository
 	getForecastRepository(): IForecastRepository
+	getProphetModelRepository(): IProphetModelRepository
+	getAccountRepository(): IAccountRepository
 
 	transaction(
 		config?: { isolationLevel: IsolationLevel } | undefined,

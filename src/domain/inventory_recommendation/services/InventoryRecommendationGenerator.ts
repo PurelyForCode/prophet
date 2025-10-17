@@ -5,8 +5,8 @@ import { ForecastEntry } from "../../forecasting/entities/forecast_entry/Forecas
 import { ProductDelivery } from "../value_objects/ProductDelivery.js"
 import { InventoryRecommendation } from "../entities/inventory_recommendation/InventoryRecommendation.js"
 import { EntityId } from "../../../core/types/EntityId.js"
-
-type RestockStrategyValues = "minimal" | "safe" | "aggressive"
+import { ForecastOutOfDateException } from "../exceptions/ForecastOutOfDateException.js"
+import { InventoryStatus } from "../entities/inventory_recommendation/value_objects/InventoryStatus.js"
 
 export class InventoryRecommendationGenerator {
 	constructor() {}
@@ -59,15 +59,20 @@ export class InventoryRecommendationGenerator {
 		forecast: Forecast,
 		deliveries: ProductDelivery[],
 		defaultSupplier: Supplier,
-		userPreference: {
-			restockStrategy: RestockStrategyValues
-		},
+		coverageDays: number,
 	): InventoryRecommendation | null {
 		let currentStock = product.stock.value
 
-		const forecastEntries = [...forecast.entries.values()].sort(
+		const sortedEntries = [...forecast.entries.values()].sort(
 			(a, b) => a.date.getTime() - b.date.getTime(),
 		)
+
+		const now = new Date()
+		const forecasts = sortedEntries.filter((entry) => entry.date >= now)
+
+		if (forecasts.length === 0) {
+			throw new ForecastOutOfDateException()
+		}
 
 		const deliveriesByDate = deliveries.reduce<Record<string, number>>(
 			(acc, delivery) => {
@@ -78,7 +83,7 @@ export class InventoryRecommendationGenerator {
 			{},
 		)
 
-		const forecastDays = forecastEntries.map((entry) => {
+		const forecastDays = forecasts.map((entry) => {
 			const key = entry.date.toISOString().split("T")[0]
 			const deliveriesForDay = deliveriesByDate[key] ?? 0
 			return {
@@ -106,21 +111,25 @@ export class InventoryRecommendationGenerator {
 		let restockAt = new Date(runsOutAt)
 		restockAt.setDate(restockAt.getDate() - leadTime)
 
+		let inventoryStatus: InventoryStatus | undefined
+		// Case 1: Stockout or overdue restock
+		if (runsOutAt <= now) {
+			inventoryStatus = new InventoryStatus("critical")
+			// Case 2: Needs restock soon (within lead time window)
+		} else if (restockAt <= now && runsOutAt > now) {
+			inventoryStatus = new InventoryStatus("urgent")
+			// Case 3: Restock date still in the future, stock is fine
+		} else {
+			inventoryStatus = new InventoryStatus("good")
+		}
+
 		const restockArrivalDate = new Date(restockAt)
 		restockArrivalDate.setDate(restockArrivalDate.getDate() + leadTime)
 		const cutOffDate = new Date(restockArrivalDate)
 
-		if (userPreference.restockStrategy === "minimal") {
-			cutOffDate.setDate(restockArrivalDate.getDate() + leadTime)
-		} else if (userPreference.restockStrategy === "safe") {
-			cutOffDate.setDate(restockArrivalDate.getDate() + 14)
-		} else if (userPreference.restockStrategy === "aggressive") {
-			cutOffDate.setDate(
-				forecastDays[forecastDays.length - 1].date.getDate(),
-			)
-		}
+		cutOffDate.setDate(restockArrivalDate.getDate() + coverageDays)
 
-		const demandTillCutOff = forecastEntries
+		const demandTillCutOff = forecasts
 			.filter(
 				(entry) =>
 					entry.date >= restockArrivalDate &&
@@ -130,18 +139,20 @@ export class InventoryRecommendationGenerator {
 
 		const safetyStock = this.computeSafetyStock(
 			product,
-			forecastEntries,
+			forecasts,
 			defaultSupplier,
 		)
 
 		const restockAmount = demandTillCutOff + safetyStock
-		const now = new Date()
 
 		return InventoryRecommendation.create(
 			inventoryRecommendationId,
 			forecast.id,
 			defaultSupplier.id,
+
 			defaultSupplier.getLeadTime(),
+			inventoryStatus,
+
 			runsOutAt,
 			restockAt,
 			restockAmount,

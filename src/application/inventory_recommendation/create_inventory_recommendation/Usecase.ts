@@ -4,7 +4,7 @@ import { Usecase } from "../../../core/interfaces/Usecase.js"
 import { EntityId } from "../../../core/types/EntityId.js"
 import { ForecastNotFoundException } from "../../../domain/forecasting/exceptions/ForecastNotFoundException.js"
 import { ProductNeedsASupplierToGiveRecommendations } from "../../../domain/forecasting/exceptions/ProductNeedsASupplierToGiveRecommendations.js"
-import { InventoryRecommendationGenerator } from "../../../domain/inventory_recommendation/services/ForecastAnalyzer.js"
+import { InventoryRecommendationGenerator } from "../../../domain/inventory_recommendation/services/InventoryRecommendationGenerator.js"
 import { ProductNotFoundException } from "../../../domain/product_management/exceptions/ProductNotFoundException.js"
 
 type CreateInventoryRecommendationInput = {
@@ -51,9 +51,7 @@ export class CreateInventoryRecommendationUsecase implements Usecase<any, any> {
 			forecast,
 			deliveries,
 			defaultSupplier,
-			{
-				restockStrategy: "safe",
-			},
+			14,
 		)
 		if (inventoryRecommendation) {
 			await this.uow.save(inventoryRecommendation)

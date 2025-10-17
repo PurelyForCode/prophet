@@ -13,8 +13,8 @@ export class Forecast extends AggregateRoot {
 		id: EntityId,
 		private _productId: EntityId,
 		private _accountId: EntityId,
-		private _prophetModelId: EntityId,
-		private _crostonModelId: EntityId,
+		private _prophetModelId: EntityId | null,
+		private _crostonModelId: EntityId | null,
 		private _modelType: ModelType,
 		private _dataDepth: DataDepth,
 		private _forecastStartDate: Date,
@@ -32,8 +32,8 @@ export class Forecast extends AggregateRoot {
 		id: EntityId
 		accountId: EntityId
 		productId: EntityId
-		prophetModelId: EntityId
-		crostonModelId: EntityId
+		prophetModelId: EntityId | null
+		crostonModelId: EntityId | null
 		modelType: ModelType
 		dataDepth: DataDepth
 		processed: boolean
@@ -71,17 +71,17 @@ export class Forecast extends AggregateRoot {
 		this.addTrackedEntity(this, EntityAction.deleted)
 	}
 
-	public get prophetModelId(): EntityId {
+	public get prophetModelId(): EntityId | null {
 		return this._prophetModelId
 	}
 
-	public set prophetModelId(value: EntityId) {
+	public set prophetModelId(value: EntityId | null) {
 		this._prophetModelId = value
 	}
-	public get crostonModelId(): EntityId {
+	public get crostonModelId(): EntityId | null {
 		return this._crostonModelId
 	}
-	public set crostonModelId(value: EntityId) {
+	public set crostonModelId(value: EntityId | null) {
 		this._crostonModelId = value
 	}
 	public get modelType(): ModelType {

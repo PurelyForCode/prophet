@@ -31,6 +31,7 @@ export class CreateSaleUsecase implements Usecase<CreateSaleInput> {
 	async call(input: CreateSaleInput) {
 		const groupRepo = this.uow.getProductGroupRepository()
 		const productRepo = this.uow.getProductRepository()
+		const saleRepo = this.uow.getSaleRepository()
 		const groupExists = await groupRepo.exists(input.groupId)
 		if (!groupExists) {
 			throw new ProductGroupNotFoundException()
@@ -46,7 +47,7 @@ export class CreateSaleUsecase implements Usecase<CreateSaleInput> {
 		const now = new Date()
 		const quantity = new SaleQuantity(input.quantity)
 		const status = new SaleStatus(input.status)
-		const sale = saleService.createSale({
+		const sale = await saleService.createSale(saleRepo, {
 			id: this.idGenerator.generate(),
 			accountId: input.accountId,
 			productId: input.productId,

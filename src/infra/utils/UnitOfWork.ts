@@ -24,6 +24,9 @@ import { IProductGroupRepository } from "../../domain/product_management/reposit
 import { ProductGroupRepository } from "../db/repositories/ProductGroupRepository.js"
 import { IForecastRepository } from "../../domain/forecasting/repositories/IForecastRepository.js"
 import { ForecastRepository } from "../db/repositories/ForecastRepository.js"
+import { ProphetModelRepository } from "../db/repositories/ProphetModelRepository.js"
+import { IAccountRepository } from "../../domain/account_management/repositories/IAccountRepository.js"
+import { AccountRepository } from "../db/repositories/AccountRepository.js"
 
 export class UnitOfWork implements IUnitOfWork {
 	public trx: Knex.Transaction | null = null
@@ -31,6 +34,22 @@ export class UnitOfWork implements IUnitOfWork {
 		private readonly knex: Knex,
 		private readonly repositoryFactory: RepositoryFactory,
 	) {}
+
+	getAccountRepository(): IAccountRepository {
+		if (this.trx) {
+			return new AccountRepository(this.trx)
+		} else {
+			return new AccountRepository(this.knex)
+		}
+	}
+
+	getProphetModelRepository() {
+		if (this.trx) {
+			return new ProphetModelRepository(this.trx)
+		} else {
+			return new ProphetModelRepository(this.knex)
+		}
+	}
 
 	getForecastRepository(): IForecastRepository {
 		if (this.trx) {

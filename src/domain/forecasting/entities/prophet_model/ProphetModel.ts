@@ -5,9 +5,9 @@ export class ProphetModel extends AggregateRoot {
 	private constructor(
 		id: EntityId,
 		private _productId: EntityId,
-		private _filePath: string,
+		private _filePath: string | null,
 		private _active: boolean,
-		private _trainedAt: Date,
+		private _trainedAt: Date | null,
 	) {
 		super(id)
 	}
@@ -15,17 +15,17 @@ export class ProphetModel extends AggregateRoot {
 	static create(
 		id: EntityId,
 		productId: EntityId,
-		filePath: string,
+		filePath: string | null,
 		active: boolean,
-		trainedAt: Date,
+		trainedAt: Date | null,
 	) {
 		return new ProphetModel(id, productId, filePath, active, trainedAt)
 	}
 
-	public get trainedAt(): Date {
+	public get trainedAt(): Date | null {
 		return this._trainedAt
 	}
-	public set trainedAt(value: Date) {
+	public set trainedAt(value: Date | null) {
 		this._trainedAt = value
 	}
 	public get active(): boolean {
@@ -34,10 +34,10 @@ export class ProphetModel extends AggregateRoot {
 	public set active(value: boolean) {
 		this._active = value
 	}
-	public get filePath(): string {
+	public get filePath(): string | null {
 		return this._filePath
 	}
-	public set filePath(value: string) {
+	public set filePath(value: string | null) {
 		this._filePath = value
 	}
 	public get productId(): EntityId {

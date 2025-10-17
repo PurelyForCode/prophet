@@ -18,6 +18,8 @@ import { ProductGroupRepository } from "../db/repositories/ProductGroupRepositor
 import { ProductGroup } from "../../domain/product_management/entities/product_group/ProductGroup.js"
 import { InventoryRecommendation } from "../../domain/inventory_recommendation/entities/inventory_recommendation/InventoryRecommendation.js"
 import { InventoryRecommendationRepository } from "../db/repositories/InventoryRecommendationRepository.js"
+import { ProphetModel } from "../../domain/forecasting/entities/prophet_model/ProphetModel.js"
+import { ProphetModelRepository } from "../db/repositories/ProphetModelRepository.js"
 
 type RepositoryConstructor<T> = new (
 	knex: Knex | Knex.Transaction,
@@ -39,6 +41,7 @@ export class RepositoryFactory {
 			InventoryRecommendation,
 			InventoryRecommendationRepository,
 		)
+		this.register(ProphetModel, ProphetModelRepository)
 	}
 
 	private register<T>(entity: Function, repositoryConstructor: Function) {

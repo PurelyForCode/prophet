@@ -45,6 +45,7 @@ export class ForecastApi implements IForecastApi {
 			>(endpointUrl, {
 				accountId: params.accountId,
 				dataDepth: params.dataDepth,
+				forecastId: params.forecastId,
 				forecastEndDate: params.forecastEndDate,
 				forecastStartDate: params.forecastStartDate,
 				forecastingMethod: params.forecastingMethod,

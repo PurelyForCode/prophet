@@ -4,7 +4,7 @@ import { ForecastDomainEventList } from "../../../../domain/forecasting/events/F
 import { ForecastGeneratedDomainEvent } from "../../../../domain/forecasting/events/ForecastGeneratedEvent.js"
 import { ForecastNotFoundException } from "../../../../domain/forecasting/exceptions/ForecastNotFoundException.js"
 import { ProductNeedsASupplierToGiveRecommendations } from "../../../../domain/forecasting/exceptions/ProductNeedsASupplierToGiveRecommendations.js"
-import { InventoryRecommendationGenerator } from "../../../../domain/inventory_recommendation/services/ForecastAnalyzer.js"
+import { InventoryRecommendationGenerator } from "../../../../domain/inventory_recommendation/services/InventoryRecommendationGenerator.js"
 import { ProductNotFoundException } from "../../../../domain/product_management/exceptions/ProductNotFoundException.js"
 import { idGenerator } from "../../../../infra/utils/IdGenerator.js"
 
@@ -52,10 +52,9 @@ export class GenerateInventoryRecommendationDomainHandler
 				forecast,
 				deliveries,
 				defaultSupplier,
-				{
-					restockStrategy: "safe",
-				},
+				14,
 			)
+
 		if (inventoryRecommendation) {
 			console.log("generated")
 			await uow.save(inventoryRecommendation)

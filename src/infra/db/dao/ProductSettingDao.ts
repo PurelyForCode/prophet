@@ -26,7 +26,7 @@ export class ProductSettingDAO {
 			.where({ product_id: input.product_id });
 	}
 
-	async delete(id: EntityId) {
+	async delete(_id: EntityId) {
 		throw new Error("Deleting a product setting invalidates a technical rule");
 	}
 }

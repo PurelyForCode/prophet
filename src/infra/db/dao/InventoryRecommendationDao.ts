@@ -1,7 +1,7 @@
 import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
 import { ForecastDatabaseTable } from "../types/tables/ForecastDatabaseTable.js"
-import { InventoryRecommendationTable } from "../types/tables/InventoryRecommendationTable.js"
+import { InventoryRecommendationDatabaseTable } from "../types/tables/InventoryRecommendationTable.js"
 
 export type InventoryRecommendationDto = {
 	id: EntityId
@@ -22,7 +22,7 @@ export class InventoryRecommendationDao {
 	constructor(private readonly knex: Knex) {}
 
 	async findById(id: EntityId) {
-		const row = await this.knex<InventoryRecommendationTable>(
+		const row = await this.knex<InventoryRecommendationDatabaseTable>(
 			this.tableName,
 		)
 			.select("*")
@@ -36,7 +36,7 @@ export class InventoryRecommendationDao {
 		}
 	}
 
-	async insert(table: InventoryRecommendationTable) {
+	async insert(table: InventoryRecommendationDatabaseTable) {
 		await this.knex(this.tableName).insert(table)
 	}
 
@@ -44,11 +44,13 @@ export class InventoryRecommendationDao {
 		await this.knex(this.tableName).delete().where("id", "=", id)
 	}
 
-	async update(table: InventoryRecommendationTable) {
+	async update(table: InventoryRecommendationDatabaseTable) {
 		await this.knex(this.tableName).update(table).where("id", "=", table.id)
 	}
 
-	mapToDTO(row: InventoryRecommendationTable): InventoryRecommendationDto {
+	mapToDTO(
+		row: InventoryRecommendationDatabaseTable,
+	): InventoryRecommendationDto {
 		return {
 			id: row.id,
 			forecastId: row.forecast_id,

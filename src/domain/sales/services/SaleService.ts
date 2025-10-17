@@ -3,24 +3,31 @@ import { EntityId } from "../../../core/types/EntityId.js"
 import { Sale, SaleUpdateableFields } from "../entities/sale/Sale.js"
 import { SaleQuantity } from "../entities/sale/value_objects/SaleQuantity.js"
 import { SaleStatus } from "../entities/sale/value_objects/SaleStatus.js"
-import { SaleArchivedEvent } from "../events/SaleArchivedEvent.js"
-import { SaleCreatedEvent } from "../events/SaleCreatedEvent.js"
+import { FirstSaleCreatedForDate } from "../events/SaleCreatedEvent.js"
+import { ISaleRepository } from "../repositories/ISaleRepository.js"
 
 export class SaleService {
-	createSale(params: {
-		id: EntityId
-		accountId: EntityId
-		productId: EntityId
-		quantity: SaleQuantity
-		status: SaleStatus
-		date: Date
-		createdAt: Date
-		updatedAt: Date
-		deletedAt: Date | null
-	}) {
+	async createSale(
+		saleRepo: ISaleRepository,
+		params: {
+			id: EntityId
+			accountId: EntityId
+			productId: EntityId
+			quantity: SaleQuantity
+			status: SaleStatus
+			date: Date
+			createdAt: Date
+			updatedAt: Date
+			deletedAt: Date | null
+		},
+	) {
 		const sale = Sale.create(params)
 		sale.addTrackedEntity(sale, EntityAction.created)
-		sale.addDomainEvent(new SaleCreatedEvent(sale.getProductId(), sale.id))
+		if (!(await saleRepo.doesSaleExistInDate(sale.getDate()))) {
+			sale.addDomainEvent(
+				new FirstSaleCreatedForDate(sale.getProductId(), sale.id),
+			)
+		}
 		return sale
 	}
 

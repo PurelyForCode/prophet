@@ -23,6 +23,18 @@ export class SaleDAO {
 			.where({ id: id })
 	}
 
+	async doesSaleExistInDate(date: Date): Promise<boolean> {
+		const result = await this.knex<SaleDatabaseTable>(this.tableName)
+			.select(this.knex.raw("1"))
+			.where("date", "=", date)
+			.first()
+		if (result) {
+			return true
+		} else {
+			return false
+		}
+	}
+
 	async insert(input: SaleDatabaseTable) {
 		await this.knex<SaleDatabaseTable>(this.tableName).insert(input)
 	}
@@ -45,19 +57,6 @@ export class SaleDAO {
 		}
 	}
 
-	//TODO:
-	async findProductSales(productId: EntityId, days: number) {
-		const rows = await this.knex<SaleDatabaseTable>(this.tableName)
-			.select("date")
-			.sum("quantity as quantity")
-			.where("product_id", "=", productId)
-			.andWhere("status", "=", "completed")
-			.groupBy("date")
-			.orderBy("date", "desc")
-			.limit(days)
-
-		return rows
-	}
 
 	mapToDto(row: SaleDatabaseTable): SaleDto {
 		return {

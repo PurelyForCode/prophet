@@ -1,5 +1,14 @@
 CREATE TYPE outbox_status AS ENUM ('pending', 'sent', 'failed');
 
+CREATE TABLE global_settings (
+	id SERIAL PRIMARY KEY,
+	coverage_days INTEGER NOT NULL DEFAULT 14,
+	prophet_interval_width INTEGER NOT NULL DEFAULT 80,
+	service_level NUMERIC(4,3) NOT NULL DEFAULT 0.950,
+	created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE outbox_events (
     id UUID PRIMARY KEY NOT NULL,
     aggregate_type TEXT NOT NULL,          -- e.g., 'Product'
@@ -16,13 +25,13 @@ CREATE TABLE outbox_events (
 
 CREATE TYPE account_role AS ENUM (
     'store manager',
+    'admin',
     'staff'
 );
 
 CREATE TABLE account(
     id UUID PRIMARY KEY,
     username VARCHAR(30) NOT NULL UNIQUE,
-    email VARCHAR(254) NOT NULL UNIQUE,
     password TEXT NOT NULL,
     role account_role NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
@@ -164,8 +173,16 @@ CREATE TABLE delivery_item (
     quantity INTEGER NOT NULL
 );
 
+CREATE TABLE croston_model (
+    id UUID PRIMARY KEY,
+    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
+    model_version INTEGER NOT NULL DEFAULT 1,
+    trained_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
 CREATE TABLE croston_model_setting (
     id UUID PRIMARY KEY,
+    croston_model_id UUID NOT NULL REFERENCES croston_model(id) ON DELETE CASCADE,
     alpha NUMERIC(5,4) NOT NULL DEFAULT 0.1, -- smoothing factor
     variant TEXT NOT NULL DEFAULT 'classic', -- 'classic', 'sba', 'optimized'
     optimizer_method TEXT, -- if alpha was optimized
@@ -175,18 +192,22 @@ CREATE TABLE croston_model_setting (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
-CREATE TABLE croston_model (
+
+-- =========================================================
+-- Model versioning and file tracking
+-- =========================================================
+CREATE TABLE prophet_model (
     id UUID PRIMARY KEY,
-    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
-    croston_model_setting_id UUID NOT NULL REFERENCES croston_model_setting(id) ON DELETE CASCADE,
-    model_version INTEGER NOT NULL DEFAULT 1,
-    trained_at TIMESTAMPTZ DEFAULT now() NOT NULL
+    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    file_path TEXT,           -- null when model is not activated
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    trained_at TIMESTAMPTZ
 );
 
 CREATE TYPE prophet_growth_type AS ENUM('linear', 'logistic');
-
 CREATE TYPE changepoint_selection_method AS ENUM ('auto', 'manual');
-CREATE TYPE seasonality_mode AS ENUM ('additive', 'multiplicative')
+CREATE TYPE seasonality_mode AS ENUM ('additive', 'multiplicative');
+
 
 CREATE TABLE prophet_model_setting (
     id UUID PRIMARY KEY,
@@ -223,7 +244,7 @@ CREATE TABLE prophet_model_setting (
 -- =========================================================
 -- Seasonality configuration (custom or default)
 -- =========================================================
-CREATE TABLE prophet_setting_seasonality (
+CREATE TABLE prophet_setting_season (
     id UUID PRIMARY KEY,
     model_setting_id UUID NOT NULL REFERENCES prophet_model_setting(id) ON DELETE CASCADE,
 
@@ -239,7 +260,7 @@ CREATE TABLE prophet_setting_seasonality (
 -- =========================================================
 -- Explicit changepoint overrides
 -- =========================================================
-CREATE TABLE prophet_setting_changepoint_override (
+CREATE TABLE prophet_setting_changepoint (
     id UUID PRIMARY KEY,
     model_setting_id UUID NOT NULL REFERENCES prophet_model_setting(id) ON DELETE CASCADE,
     changepoint_date DATE NOT NULL
@@ -273,16 +294,6 @@ CREATE TABLE prophet_setting_regressor (
     mode TEXT CHECK (mode IN ('additive', 'multiplicative'))
 );
 
--- =========================================================
--- Model versioning and file tracking
--- =========================================================
-CREATE TABLE prophet_model (
-    id UUID PRIMARY KEY,
-    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    file_path TEXT,           -- Nullable when model is not activated
-    active BOOLEAN NOT NULL DEFAULT TRUE,
-    trained_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
 
 CREATE TYPE model_type AS ENUM ('prophet', 'croston'); 
 
@@ -311,10 +322,13 @@ CREATE TABLE forecast_entry(
     date DATE NOT NULL
 );
 
+CREATE TYPE inventory_status AS ENUM('critical', 'urgent', 'good');
+
 CREATE TABLE inventory_recommendation (
     id UUID PRIMARY KEY,
     forecast_id UUID NOT NULL REFERENCES forecast(id) ON DELETE CASCADE ON UPDATE CASCADE,
     supplier_id UUID NOT NULL REFERENCES supplier(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	status inventory_status NOT NULL,
 	leadtime INTEGER NOT NULL,
     runs_out_at DATE NOT NULL,
     restock_at DATE NOT NULL,

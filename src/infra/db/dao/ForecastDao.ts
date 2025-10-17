@@ -7,8 +7,8 @@ export type ForecastDto = {
 	accountId: EntityId
 	productId: EntityId
 	modelType: string
-	crostonModelId: EntityId
-	prophetModelId: EntityId
+	crostonModelId: EntityId | null
+	prophetModelId: EntityId | null
 	dataDepth: number
 	forecastStartDate: Date
 	forecastEndDate: Date
@@ -21,6 +21,16 @@ export type ForecastDto = {
 export class ForecastDao {
 	private tableName = "forecast"
 	constructor(private readonly knex: Knex) {}
+
+	async insert(table: ForecastDatabaseTable) {
+		await this.knex(this.tableName).insert(table)
+	}
+	async update(table: ForecastDatabaseTable) {
+		await this.knex(this.tableName).update(table).where("id", "=", table.id)
+	}
+	async delete(id: EntityId) {
+		await this.knex(this.tableName).delete().where("id", "=", id)
+	}
 
 	async findById(id: EntityId) {
 		const row = await this.knex<ForecastDatabaseTable>(this.tableName)
