@@ -12,6 +12,14 @@ import { PermissionQueryDao } from "../../infra/db/query_dao/PermissionQueryDao.
 import { GrantPermissionUsecase } from "../../application/account_management/grant_permission/Usecase.js"
 import { fakeId } from "../../fakeId.js"
 import { RevokePermissionUsecase } from "../../application/account_management/revoke_permission/Usecase.js"
+import {
+	AccountIncludeField,
+	AccountQueryDao,
+	AccountSortableFields,
+} from "../../infra/db/query_dao/AccountQueryDao.js"
+import { includeStringSchema } from "../validation/IncludeStringSchema.js"
+import { sortStringSchema } from "../validation/SortStringSchema.js"
+import { RoleValues } from "../../domain/account_management/entities/account/value_objects/Role.js"
 
 const app = new Hono()
 
@@ -23,13 +31,74 @@ app.get("/permissions", async (c) => {
 	})
 })
 
-app.get("/", (c) => {
-	return c.json({})
-})
+app.get(
+	"/",
+	zValidator(
+		"query",
+		z
+			.object({
+				sort: sortStringSchema(
+					new Set<AccountSortableFields>(["role"]),
+				),
+				include: includeStringSchema(
+					new Set<AccountIncludeField>(["permissions"]),
+				),
+				role: z.enum<RoleValues[]>([
+					"store manager",
+					"staff",
+					"admin",
+					"superadmin",
+				]),
+				limit: z.coerce.number().int().positive(),
+				offset: z.coerce.number().int().nonnegative(),
+			})
+			.partial(),
+	),
+	async (c) => {
+		const accountQueryDao = new AccountQueryDao(knexInstance)
+		const query = c.req.valid("query")
+		const data = await accountQueryDao.query(
+			{
+				limit: query.limit,
+				offset: query.offset,
+			},
+			{ role: query.role },
+			query.include,
+			query.sort,
+		)
+		return c.json({ data })
+	},
+)
 
-app.get("/:accountId", (c) => {
-	return c.json({})
-})
+app.get(
+	"/:accountId",
+	zValidator(
+		"param",
+		z.object({
+			accountId: z.uuidv7(),
+		}),
+	),
+	zValidator(
+		"query",
+		z
+			.object({
+				include: includeStringSchema(
+					new Set<AccountIncludeField>(["permissions"]),
+				),
+			})
+			.partial(),
+	),
+	async (c) => {
+		const accountQueryDao = new AccountQueryDao(knexInstance)
+		const query = c.req.valid("query")
+		const params = c.req.valid("param")
+		const data = await accountQueryDao.queryById(
+			params.accountId,
+			query.include,
+		)
+		return c.json({ data })
+	},
+)
 
 app.post(
 	"/",
@@ -51,7 +120,6 @@ app.post(
 		const body = c.req.valid("json")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
-				accountId: fakeId,
 				password: body.password,
 				role: body.role,
 				username: body.username,
@@ -69,10 +137,6 @@ app.delete("/:accountId", (c) => {
 })
 
 app.patch("/:accountId", (c) => {
-	return c.json({})
-})
-
-app.get("/:accountId/permissions", (c) => {
 	return c.json({})
 })
 

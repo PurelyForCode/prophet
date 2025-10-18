@@ -1,6 +1,5 @@
 import { IIdGenerator } from "../../../core/interfaces/IIdGenerator.js"
 import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js"
-import { EntityId } from "../../../core/types/EntityId.js"
 import { Password } from "../../../domain/account_management/entities/account/value_objects/Password.js"
 import { Role } from "../../../domain/account_management/entities/account/value_objects/Role.js"
 import { Username } from "../../../domain/account_management/entities/account/value_objects/Username.js"
@@ -9,7 +8,6 @@ import { AccountManager } from "../../../domain/account_management/services/Acco
 import { IPasswordUtility } from "../../../domain/account_management/utils/IPasswordUtility.js"
 
 export type CreateAccountInput = {
-	accountId: EntityId
 	username: string
 	password: string
 	role: string
@@ -38,6 +36,19 @@ export class CreateAccountUsecase {
 			username,
 			password,
 		)
+		if (
+			account.role.value === "store manager" ||
+			account.role.value === "admin"
+		) {
+			const permissionRepo = this.uow.getPermissionRepository()
+			const permissions = await permissionRepo.findAll()
+			for (const permission of permissions.values()) {
+				account.grantPermission(permission)
+			}
+		}
+		for (const permission of account.permissions.values()) {
+			console.log(permission.id.permissionId)
+		}
 		await this.uow.save(account)
 	}
 }

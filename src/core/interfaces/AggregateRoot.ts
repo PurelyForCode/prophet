@@ -34,7 +34,7 @@ export abstract class AggregateRoot<T = EntityId> extends Entity<T> {
 	}
 
 	addTrackedEntity(entity: Entity<any>, action: EntityAction) {
-		const key = `${entity.id}_${action}`
+		const key = `${entity.key()}_${action}`
 
 		//dedupe
 		if (!this.trackedEntities.has(key)) {

@@ -13,6 +13,11 @@ export class AccountManager {
 		password: Password,
 	) {
 		const now = new Date()
+		let permissions = new Map()
+
+		if (role.value === "store manager") {
+		}
+
 		const account = Account.create({
 			id,
 			createdAt: now,
@@ -21,8 +26,11 @@ export class AccountManager {
 			role,
 			updatedAt: now,
 			username,
+			permissions: permissions,
 		})
 		account.addTrackedEntity(account, EntityAction.created)
 		return account
 	}
+
+	archiveAccount() {}
 }

@@ -53,10 +53,10 @@ export class Account extends AggregateRoot {
 		if (this.permissions.has(permission.id)) {
 			throw new PermissionAlreadyGrantedException()
 		}
-		const accountPermission = new AccountPermission({
-			accountId: this.id,
-			permissionId: permission.id,
-		})
+		const accountPermission = AccountPermission.create(
+			this.id,
+			permission.id,
+		)
 
 		this.permissions.set(
 			accountPermission.id.permissionId,

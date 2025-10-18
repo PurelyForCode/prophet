@@ -14,6 +14,18 @@ export class PermissionDao {
 	private tableName = "permission"
 	constructor(private readonly knex: Knex) {}
 
+	async findAll() {
+		const rows = await this.knex<PermissionDatabaseTable>(
+			this.tableName,
+		).select("*")
+
+		let permissions = new Map()
+		for (const row of rows) {
+			const permission = this.mapToDTO(row)
+			permissions.set(permission.id, permission)
+		}
+		return permissions
+	}
 	async findById(id: EntityId) {
 		const row = await this.knex<PermissionDatabaseTable>(this.tableName)
 			.select("*")

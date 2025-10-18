@@ -28,9 +28,18 @@ export class AccountPermissionRepository
 			permission_id: entity.id.permissionId,
 		})
 	}
-
 	async findByAccountId(accountId: EntityId) {
-		return await this.accountPermissionDao.findByAccountId(accountId)
+		const accountPermissionDtos =
+			await this.accountPermissionDao.findByAccountId(accountId)
+		let accountPermissions = new Map()
+		for (const accountPermissionDto of accountPermissionDtos) {
+			const accountPermission = this.mapToEntity(accountPermissionDto)
+			accountPermissions.set(
+				accountPermission.id.permissionId,
+				accountPermission,
+			)
+		}
+		return accountPermissions
 	}
 
 	async update(_entity: AccountPermission): Promise<void> {
@@ -38,9 +47,6 @@ export class AccountPermissionRepository
 	}
 
 	mapToEntity(account: AccountPermissionDto): AccountPermission {
-		return new AccountPermission({
-			accountId: account.accountId,
-			permissionId: account.permissionId,
-		})
+		return AccountPermission.create(account.accountId, account.permissionId)
 	}
 }

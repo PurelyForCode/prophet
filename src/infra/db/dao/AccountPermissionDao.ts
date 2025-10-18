@@ -1,6 +1,7 @@
 import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
 import { AccountPermissionDatabaseTable } from "../types/tables/AccountPermissionDatabaseTable.js"
+import { AccountPermission } from "../../../domain/account_management/entities/account/value_objects/AccountPermission.js"
 
 export type AccountPermissionDto = {
 	accountId: EntityId
@@ -30,13 +31,10 @@ export class AccountPermissionDao {
 		)
 			.select("*")
 			.where("account_id", "=", accountId)
-		let accountPermissions = new Map()
+		let accountPermissions = []
 		for (const row of rows) {
 			const accountPermission = this.mapToDTO(row)
-			accountPermissions.set(
-				accountPermission.permissionId,
-				accountPermission,
-			)
+			accountPermissions.push(accountPermission)
 		}
 		return accountPermissions
 	}

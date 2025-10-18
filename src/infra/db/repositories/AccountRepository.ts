@@ -8,7 +8,10 @@ import { Role } from "../../../domain/account_management/entities/account/value_
 import { Password } from "../../../domain/account_management/entities/account/value_objects/Password.js"
 import { AccountPermission } from "../../../domain/account_management/entities/account/value_objects/AccountPermission.js"
 import { EntityCollection } from "../../../core/types/EntityCollection.js"
-import { AccountPermissionDao } from "../dao/AccountPermissionDao.js"
+import {
+	AccountPermissionDao,
+	AccountPermissionDto,
+} from "../dao/AccountPermissionDao.js"
 
 export class AccountRepository implements IAccountRepository {
 	private accountDao: AccountDAO
@@ -57,22 +60,42 @@ export class AccountRepository implements IAccountRepository {
 			deleted_at: entity.deletedAt,
 			id: entity.id,
 		})
+
+		// for (const permission of entity.permissions.values()) {
+		// 	await this.accountPermissionDao.insert({
+		// 		account_id: permission.id.accountId,
+		// 		permission_id: permission.id.permissionId,
+		// 	})
+		// }
 	}
 
 	async findById(id: EntityId): Promise<Account | null> {
 		const result = await this.accountDao.findById(id)
 		if (!result) return null
+
 		const permissions = await this.accountPermissionDao.findByAccountId(
 			result.id,
 		)
 
-		return this.mapToEntity(result, permissions)
+		const account = this.mapToEntity(result, permissions)
+		return account
 	}
 
 	mapToEntity(
 		account: AccountDTO,
-		permissions: EntityCollection<AccountPermission>,
+		permissions: AccountPermissionDto[],
 	): Account {
+		const accountPermissions = new Map()
+		for (const perm of permissions) {
+			const accountPermission = AccountPermission.create(
+				perm.accountId,
+				perm.permissionId,
+			)
+			accountPermissions.set(
+				accountPermission.id.permissionId,
+				accountPermission,
+			)
+		}
 		return Account.create({
 			id: account.id,
 			createdAt: account.createdAt,
@@ -81,7 +104,7 @@ export class AccountRepository implements IAccountRepository {
 			role: new Role(account.role),
 			updatedAt: account.updatedAt,
 			username: new Username(account.username),
-			permissions: permissions,
+			permissions: accountPermissions,
 		})
 	}
 }

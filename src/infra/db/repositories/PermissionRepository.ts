@@ -4,11 +4,16 @@ import { IPermissionRepository } from "../../../domain/account_management/reposi
 import { PermissionDao, PermissionDto } from "../dao/PermissionDao.js"
 import { Permission } from "../../../domain/account_management/entities/permission/Permission.js"
 import { StandardName } from "../../../core/value_objects/StandardName.js"
+import { EntityCollection } from "../../../core/types/EntityCollection.js"
 
 export class PermissionRepository implements IPermissionRepository {
 	private permissionDao: PermissionDao
 	constructor(knex: Knex) {
 		this.permissionDao = new PermissionDao(knex)
+	}
+
+	async findAll(): Promise<EntityCollection<Permission>> {
+		return await this.permissionDao.findAll()
 	}
 
 	async findById(id: EntityId): Promise<Permission | null> {
