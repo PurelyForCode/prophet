@@ -8,6 +8,7 @@ import { BaseQueryDao } from "./BaseQueryDao.js"
 export type SaleQueryFilter = Partial<{
 	productId: EntityId
 	archived: boolean
+	date: Date
 }>
 
 export type SaleSortableField = "quantity" | "status" | "date"
@@ -53,6 +54,9 @@ export class SaleQueryDao extends BaseQueryDao {
 		if (filters) {
 			if (filters.productId) {
 				builder.where("s.product_id", "=", filters.productId)
+			}
+			if (filters.date) {
+				builder.where("s.date", "=", filters.date)
 			}
 		}
 

@@ -1,10 +1,9 @@
 import knexBuilder from "knex"
 import "dotenv/config"
 import { InternalServerError } from "../core/exceptions/InternalServerError.js"
-import { types } from "pg"
 
 const host = process.env.DB_HOST
-const name = process.env.DB_NAME
+const name = process.env.POSTGRES_DB
 const user = process.env.DB_USERNAME
 const password = process.env.DB_PASSWORD
 let port: number

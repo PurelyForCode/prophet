@@ -1,4 +1,4 @@
-export abstract class DomainEvent<T> {
+export abstract class DomainEvent<T = any> {
 	readonly occurredOn: Date
 	readonly eventName: string
 	readonly payload: T

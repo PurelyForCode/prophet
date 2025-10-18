@@ -6,20 +6,29 @@ import { AccountDAO, AccountDTO } from "../dao/AccountDao.js"
 import { Account } from "../../../domain/account_management/entities/account/Account.js"
 import { Role } from "../../../domain/account_management/entities/account/value_objects/Role.js"
 import { Password } from "../../../domain/account_management/entities/account/value_objects/Password.js"
+import { AccountPermission } from "../../../domain/account_management/entities/account/value_objects/AccountPermission.js"
+import { EntityCollection } from "../../../core/types/EntityCollection.js"
+import { AccountPermissionDao } from "../dao/AccountPermissionDao.js"
 
 export class AccountRepository implements IAccountRepository {
 	private accountDao: AccountDAO
+	private accountPermissionDao: AccountPermissionDao
 	constructor(knex: Knex) {
 		this.accountDao = new AccountDAO(knex)
+		this.accountPermissionDao = new AccountPermissionDao(knex)
+	}
+
+	async doesSuperAdminExist(): Promise<boolean> {
+		return await this.accountDao.doesSuperAdminExist()
 	}
 
 	async findByUsername(username: Username): Promise<null | Account> {
 		const result = await this.accountDao.findByUsername(username.value)
-		if (result) {
-			return this.mapToEntity(result)
-		} else {
-			return null
-		}
+		if (!result) return null
+		const permissions = await this.accountPermissionDao.findByAccountId(
+			result.id,
+		)
+		return this.mapToEntity(result, permissions)
 	}
 
 	async delete(entity: Account): Promise<void> {
@@ -52,14 +61,18 @@ export class AccountRepository implements IAccountRepository {
 
 	async findById(id: EntityId): Promise<Account | null> {
 		const result = await this.accountDao.findById(id)
-		if (result) {
-			return this.mapToEntity(result)
-		} else {
-			return null
-		}
+		if (!result) return null
+		const permissions = await this.accountPermissionDao.findByAccountId(
+			result.id,
+		)
+
+		return this.mapToEntity(result, permissions)
 	}
 
-	mapToEntity(account: AccountDTO): Account {
+	mapToEntity(
+		account: AccountDTO,
+		permissions: EntityCollection<AccountPermission>,
+	): Account {
 		return Account.create({
 			id: account.id,
 			createdAt: account.createdAt,
@@ -68,6 +81,7 @@ export class AccountRepository implements IAccountRepository {
 			role: new Role(account.role),
 			updatedAt: account.updatedAt,
 			username: new Username(account.username),
+			permissions: permissions,
 		})
 	}
 }

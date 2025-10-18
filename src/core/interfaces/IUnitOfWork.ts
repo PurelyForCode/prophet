@@ -11,6 +11,8 @@ import { IForecastRepository } from "../../domain/forecasting/repositories/IFore
 import { Knex } from "knex"
 import { IProphetModelRepository } from "../../domain/forecasting/repositories/IProphetModelRepository.js"
 import { IAccountRepository } from "../../domain/account_management/repositories/IAccountRepository.js"
+import { IPermissionRepository } from "../../domain/account_management/repositories/IPermissionRepository.js"
+import { IAccountPermissionRepository } from "../../domain/account_management/repositories/IAccountPermissionRepository.js"
 
 export enum IsolationLevel {
 	READ_COMMITTED = "READ COMMITTED",
@@ -32,6 +34,8 @@ export interface IUnitOfWork {
 	getForecastRepository(): IForecastRepository
 	getProphetModelRepository(): IProphetModelRepository
 	getAccountRepository(): IAccountRepository
+	getPermissionRepository(): IPermissionRepository
+	getAccountPermissionRepository(): IAccountPermissionRepository
 
 	transaction(
 		config?: { isolationLevel: IsolationLevel } | undefined,

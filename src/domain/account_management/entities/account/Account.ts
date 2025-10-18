@@ -1,5 +1,14 @@
-import { AggregateRoot } from "../../../../core/interfaces/AggregateRoot.js"
+import {
+	AggregateRoot,
+	EntityAction,
+} from "../../../../core/interfaces/AggregateRoot.js"
+import { Entity } from "../../../../core/interfaces/Entity.js"
+import { EntityCollection } from "../../../../core/types/EntityCollection.js"
 import { EntityId } from "../../../../core/types/EntityId.js"
+import { PermissionAlreadyGrantedException } from "../../exceptions/PermissionAlreadyGrantedException.js"
+import { PermissionNotGrantedToAccountException } from "../../exceptions/PermissionNotGrantedToAccountException.js"
+import { Permission } from "../permission/Permission.js"
+import { AccountPermission } from "./value_objects/AccountPermission.js"
 import { Password } from "./value_objects/Password.js"
 import { Role } from "./value_objects/Role.js"
 import { Username } from "./value_objects/Username.js"
@@ -13,6 +22,7 @@ export class Account extends AggregateRoot {
 		private _createdAt: Date,
 		private _updatedAt: Date,
 		private _deletedAt: Date | null,
+		private _permissions: EntityCollection<AccountPermission>,
 	) {
 		super(id)
 	}
@@ -25,6 +35,7 @@ export class Account extends AggregateRoot {
 		createdAt: Date
 		updatedAt: Date
 		deletedAt: Date | null
+		permissions: EntityCollection<AccountPermission>
 	}) {
 		return new Account(
 			props.id,
@@ -34,7 +45,33 @@ export class Account extends AggregateRoot {
 			props.createdAt,
 			props.updatedAt,
 			props.deletedAt,
+			props.permissions,
 		)
+	}
+
+	grantPermission(permission: Permission) {
+		if (this.permissions.has(permission.id)) {
+			throw new PermissionAlreadyGrantedException()
+		}
+		const accountPermission = new AccountPermission({
+			accountId: this.id,
+			permissionId: permission.id,
+		})
+
+		this.permissions.set(
+			accountPermission.id.permissionId,
+			accountPermission,
+		)
+		this.addTrackedEntity(accountPermission, EntityAction.created)
+	}
+
+	revokePermission(permission: Permission) {
+		const revoked = this.permissions.get(permission.id)
+		if (!revoked) {
+			throw new PermissionNotGrantedToAccountException()
+		}
+		this.permissions.delete(permission.id)
+		this.addTrackedEntity(revoked, EntityAction.deleted)
 	}
 
 	public get deletedAt(): Date | null {
@@ -72,5 +109,12 @@ export class Account extends AggregateRoot {
 	}
 	public set username(value: Username) {
 		this._username = value
+	}
+
+	public get permissions(): EntityCollection<AccountPermission> {
+		return this._permissions
+	}
+	public set permissions(value: EntityCollection<AccountPermission>) {
+		this._permissions = value
 	}
 }

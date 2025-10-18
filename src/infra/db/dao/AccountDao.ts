@@ -13,7 +13,7 @@ export type AccountDTO = {
 }
 
 export class AccountDAO {
-	private tableName = "product_category"
+	private tableName = "account"
 	constructor(private readonly knex: Knex) {}
 
 	async insert(table: AccountDatabaseTable) {
@@ -40,6 +40,14 @@ export class AccountDAO {
 		} else {
 			return this.mapToDTO(row)
 		}
+	}
+
+	async doesSuperAdminExist() {
+		return (await this.knex(this.tableName)
+			.first()
+			.where("role", "=", "superadmin"))
+			? true
+			: false
 	}
 
 	async findByUsername(username: string) {

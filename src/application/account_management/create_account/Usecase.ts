@@ -4,7 +4,7 @@ import { EntityId } from "../../../core/types/EntityId.js"
 import { Password } from "../../../domain/account_management/entities/account/value_objects/Password.js"
 import { Role } from "../../../domain/account_management/entities/account/value_objects/Role.js"
 import { Username } from "../../../domain/account_management/entities/account/value_objects/Username.js"
-import { UsernameIsTakenException } from "../../../domain/account_management/exceptions/ForecastNotFoundException.js"
+import { UsernameIsTakenException } from "../../../domain/account_management/exceptions/UsernameIsTakenException.js"
 import { AccountManager } from "../../../domain/account_management/services/AccountManager.js"
 import { IPasswordUtility } from "../../../domain/account_management/utils/IPasswordUtility.js"
 

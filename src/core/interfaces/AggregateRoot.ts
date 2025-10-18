@@ -1,48 +1,49 @@
-import { DomainEvent } from "./DomainEvent.js";
-import { Entity } from "./Entity.js";
+import { EntityId } from "../types/EntityId.js"
+import { DomainEvent } from "./DomainEvent.js"
+import { Entity } from "./Entity.js"
 
 export enum EntityAction {
-  deleted,
-  created,
-  updated,
+	deleted,
+	created,
+	updated,
 }
 
 export interface ChangedEntity {
-  entity: Entity;
-  action: EntityAction;
+	entity: Entity
+	action: EntityAction
 }
 
-export abstract class AggregateRoot extends Entity {
-  private domainEvents: DomainEvent[] = [];
-  private trackedEntities: Map<string, ChangedEntity> = new Map();
+export abstract class AggregateRoot<T = EntityId> extends Entity<T> {
+	private domainEvents: DomainEvent<any>[] = []
+	private trackedEntities: Map<string, ChangedEntity> = new Map()
 
-  getDomainEvent() {
-    return this.domainEvents;
-  }
+	getDomainEvent() {
+		return this.domainEvents
+	}
 
-  addDomainEvent(domainEvent: DomainEvent) {
-    this.domainEvents.push(domainEvent);
-  }
+	addDomainEvent(domainEvent: DomainEvent<any>) {
+		this.domainEvents.push(domainEvent)
+	}
 
-  clearDomainEvent() {
-    this.domainEvents = [];
-  }
+	clearDomainEvent() {
+		this.domainEvents = []
+	}
 
-  getTrackedEntities() {
-    return this.trackedEntities;
-  }
+	getTrackedEntities() {
+		return this.trackedEntities
+	}
 
-  addTrackedEntity(entity: Entity, action: EntityAction) {
-    const key = `${entity.id}_${action}`;
+	addTrackedEntity(entity: Entity<any>, action: EntityAction) {
+		const key = `${entity.id}_${action}`
 
-    //dedupe
-    if (!this.trackedEntities.has(key)) {
-      const tracked = { entity, action };
-      this.trackedEntities.set(key, tracked);
-    }
-  }
+		//dedupe
+		if (!this.trackedEntities.has(key)) {
+			const tracked = { entity, action }
+			this.trackedEntities.set(key, tracked)
+		}
+	}
 
-  clearTrackedEntities() {
-    this.trackedEntities = new Map();
-  }
+	clearTrackedEntities() {
+		this.trackedEntities = new Map()
+	}
 }

@@ -27,6 +27,10 @@ import { ForecastRepository } from "../db/repositories/ForecastRepository.js"
 import { ProphetModelRepository } from "../db/repositories/ProphetModelRepository.js"
 import { IAccountRepository } from "../../domain/account_management/repositories/IAccountRepository.js"
 import { AccountRepository } from "../db/repositories/AccountRepository.js"
+import { IPermissionRepository } from "../../domain/account_management/repositories/IPermissionRepository.js"
+import { PermissionRepository } from "../db/repositories/PermissionRepository.js"
+import { IAccountPermissionRepository } from "../../domain/account_management/repositories/IAccountPermissionRepository.js"
+import { AccountPermissionRepository } from "../db/repositories/AccountPermissionRepository.js"
 
 export class UnitOfWork implements IUnitOfWork {
 	public trx: Knex.Transaction | null = null
@@ -34,6 +38,22 @@ export class UnitOfWork implements IUnitOfWork {
 		private readonly knex: Knex,
 		private readonly repositoryFactory: RepositoryFactory,
 	) {}
+
+	getAccountPermissionRepository(): IAccountPermissionRepository {
+		if (this.trx) {
+			return new AccountPermissionRepository(this.trx)
+		} else {
+			return new AccountPermissionRepository(this.knex)
+		}
+	}
+
+	getPermissionRepository(): IPermissionRepository {
+		if (this.trx) {
+			return new PermissionRepository(this.trx)
+		} else {
+			return new PermissionRepository(this.knex)
+		}
+	}
 
 	getAccountRepository(): IAccountRepository {
 		if (this.trx) {

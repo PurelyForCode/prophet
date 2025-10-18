@@ -6,6 +6,7 @@ export class Role {
 	constructor(value: string) {
 		if (
 			value !== "store manager" &&
+			value !== "superadmin" &&
 			value !== "admin" &&
 			value !== "staff"
 		) {
