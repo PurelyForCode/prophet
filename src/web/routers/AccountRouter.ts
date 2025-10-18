@@ -36,7 +36,6 @@ app.post(
 	zValidator(
 		"json",
 		z.object({
-			accountId: z.uuidv7(),
 			username: z.string().min(1).max(100),
 			password: z.string().min(8),
 			role: z.enum(["admin", "store manager", "staff"]),
@@ -52,7 +51,7 @@ app.post(
 		const body = c.req.valid("json")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
-				accountId: body.accountId,
+				accountId: fakeId,
 				password: body.password,
 				role: body.role,
 				username: body.username,

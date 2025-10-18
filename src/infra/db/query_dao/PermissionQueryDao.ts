@@ -1,6 +1,5 @@
 import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
-import { AccountDatabaseTable } from "../types/tables/AccountDatabaseTable.js"
 import { PermissionDatabaseTable } from "../types/tables/PermissionDatabaseTable.js"
 
 export type PermissionQueryDto = {
