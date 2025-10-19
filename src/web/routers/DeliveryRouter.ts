@@ -25,6 +25,7 @@ import {
 	DeliveryItemSortableFields,
 } from "../../infra/db/query_dao/DeliveryItemQueryDao.js"
 import { DeliveryItemNotFoundException } from "../../domain/delivery_management/exceptions/DeliveryItemNotFoundException.js"
+import { ArchiveDeliveryUsecase } from "../../application/delivery_management/delivery/archive_delivery/Usecase.js"
 
 const app = new Hono()
 
@@ -160,6 +161,29 @@ app.patch(
 		})
 		return c.json({
 			message: "Successfully updated delivery",
+		})
+	},
+)
+
+app.delete(
+	"/:deliveryId",
+	zValidator(
+		"param",
+		z.object({
+			deliveryId: z.uuidv7(),
+		}),
+	),
+	async (c) => {
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new ArchiveDeliveryUsecase(uow)
+		const params = c.req.valid("param")
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+			await usecase.call({
+				deliveryId: params.deliveryId,
+			})
+		})
+		return c.json({
+			message: "Successfully archived delivery",
 		})
 	},
 )
