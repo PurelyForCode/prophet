@@ -12,6 +12,10 @@ export class PermissionRepository implements IPermissionRepository {
 		this.permissionDao = new PermissionDao(knex)
 	}
 
+	async findDefaultStaffPermissions(): Promise<EntityCollection<Permission>> {
+		return new Map()
+	}
+
 	async findAll(): Promise<EntityCollection<Permission>> {
 		return await this.permissionDao.findAll()
 	}

@@ -147,22 +147,26 @@ export class UnitOfWork implements IUnitOfWork {
 		if (this.trx) {
 			throw new Error("Transaction already started")
 		}
-		const trx = await this.knex.transaction(null)
+		const trx = await this.knex.transaction()
 		this.trx = trx
 	}
 
 	async rollback(): Promise<void> {
-		if (!this.trx) {
-			throw new Error("No transaction in progress")
+		if (!this.trx) throw new Error("No transaction in progress")
+		try {
+			await this.trx.rollback()
+		} finally {
+			this.trx = null
 		}
-		await this.trx.rollback()
 	}
 
 	async commit(): Promise<void> {
-		if (!this.trx) {
-			throw new Error("No transaction in progress")
+		if (!this.trx) throw new Error("No transaction in progress")
+		try {
+			await this.trx.commit()
+		} finally {
+			this.trx = null
 		}
-		await this.trx.commit()
 	}
 
 	async save(aggregateRoot: AggregateRoot): Promise<void> {
@@ -203,8 +207,11 @@ export async function runInTransaction<T>(
 		await uow.commit()
 		return result
 	} catch (error) {
-		console.log(error)
-		await uow.rollback()
+		try {
+			await uow.rollback()
+		} catch {
+			console.log(error)
+		}
 		throw error
 	}
 }

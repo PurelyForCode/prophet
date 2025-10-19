@@ -7,7 +7,6 @@ import { Account } from "../../../domain/account_management/entities/account/Acc
 import { Role } from "../../../domain/account_management/entities/account/value_objects/Role.js"
 import { Password } from "../../../domain/account_management/entities/account/value_objects/Password.js"
 import { AccountPermission } from "../../../domain/account_management/entities/account/value_objects/AccountPermission.js"
-import { EntityCollection } from "../../../core/types/EntityCollection.js"
 import {
 	AccountPermissionDao,
 	AccountPermissionDto,

@@ -20,6 +20,10 @@ import {
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
 import { sortStringSchema } from "../validation/SortStringSchema.js"
 import { RoleValues } from "../../domain/account_management/entities/account/value_objects/Role.js"
+import { ArchiveAccountUsecase } from "../../application/account_management/archive_account/Usecase.js"
+import { UpdateAccountUsecase } from "../../application/account_management/update_account/Usecase.js"
+import { ChangePasswordUsecase } from "../../application/account_management/change_password/Usecase.js"
+import { Password } from "../../domain/account_management/entities/account/value_objects/Password.js"
 
 const app = new Hono()
 
@@ -132,13 +136,88 @@ app.post(
 	},
 )
 
-app.delete("/:accountId", (c) => {
-	return c.json({})
-})
+app.delete(
+	"/:accountId",
+	zValidator(
+		"param",
+		z.object({
+			accountId: z.uuidv7(),
+		}),
+	),
+	async (c) => {
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new ArchiveAccountUsecase(uow)
+		const params = c.req.valid("param")
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+			await usecase.call({ accountId: params.accountId })
+		})
+		return c.json({ message: "Account successfully archived" })
+	},
+)
 
-app.patch("/:accountId", (c) => {
-	return c.json({})
-})
+app.patch(
+	"/:accountId",
+	zValidator(
+		"param",
+		z.object({
+			accountId: z.uuidv7(),
+		}),
+	),
+
+	zValidator(
+		"json",
+		z.object({
+			role: z.enum<RoleValues[]>(["store manager", "admin", "staff"]),
+			username: z.string().min(3).max(100),
+		}),
+	),
+	async (c) => {
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new UpdateAccountUsecase(uow)
+		const params = c.req.valid("param")
+		const body = c.req.valid("json")
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+			await usecase.call({
+				accountId: params.accountId,
+				fields: { role: body.role, username: body.username },
+			})
+		})
+		return c.json({ message: "Account successfully updated" })
+	},
+)
+
+app.patch(
+	"/:accountId/password",
+	zValidator(
+		"param",
+		z.object({
+			accountId: z.uuidv7(),
+		}),
+	),
+
+	zValidator(
+		"json",
+		z.object({
+			password: z.string().min(8),
+		}),
+	),
+	async (c) => {
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new ChangePasswordUsecase(uow, new PasswordUtility())
+		const params = c.req.valid("param")
+		const body = c.req.valid("json")
+
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+			await usecase.call({
+				accountId: params.accountId,
+				actorId: fakeId,
+				password: body.password,
+			})
+		})
+
+		return c.json({ message: "Account password changed" })
+	},
+)
 
 app.post(
 	"/:accountId/permissions",
@@ -156,7 +235,7 @@ app.post(
 		const params = c.req.valid("param")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
-				accountId: fakeId,
+				actorId: fakeId,
 				granteeId: params.accountId,
 				permissionId: body.permissionId,
 			})

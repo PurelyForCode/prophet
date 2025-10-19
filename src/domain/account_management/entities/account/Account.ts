@@ -2,7 +2,6 @@ import {
 	AggregateRoot,
 	EntityAction,
 } from "../../../../core/interfaces/AggregateRoot.js"
-import { Entity } from "../../../../core/interfaces/Entity.js"
 import { EntityCollection } from "../../../../core/types/EntityCollection.js"
 import { EntityId } from "../../../../core/types/EntityId.js"
 import { PermissionAlreadyGrantedException } from "../../exceptions/PermissionAlreadyGrantedException.js"
@@ -12,6 +11,11 @@ import { AccountPermission } from "./value_objects/AccountPermission.js"
 import { Password } from "./value_objects/Password.js"
 import { Role } from "./value_objects/Role.js"
 import { Username } from "./value_objects/Username.js"
+
+export type AccountUpdateableFields = {
+	username: string
+	role: string
+}
 
 export class Account extends AggregateRoot {
 	private constructor(
@@ -49,10 +53,21 @@ export class Account extends AggregateRoot {
 		)
 	}
 
+	archive() {
+		this.deletedAt = new Date()
+		this.addTrackedEntity(this, EntityAction.updated)
+	}
+
+	changePassword(password: Password) {
+		this.password = password
+		this.addTrackedEntity(this, EntityAction.updated)
+	}
+
 	grantPermission(permission: Permission) {
 		if (this.permissions.has(permission.id)) {
 			throw new PermissionAlreadyGrantedException()
 		}
+
 		const accountPermission = AccountPermission.create(
 			this.id,
 			permission.id,
@@ -65,12 +80,12 @@ export class Account extends AggregateRoot {
 		this.addTrackedEntity(accountPermission, EntityAction.created)
 	}
 
-	revokePermission(permission: Permission) {
-		const revoked = this.permissions.get(permission.id)
+	revokePermission(permissionId: EntityId) {
+		const revoked = this.permissions.get(permissionId)
 		if (!revoked) {
 			throw new PermissionNotGrantedToAccountException()
 		}
-		this.permissions.delete(permission.id)
+		this.permissions.delete(permissionId)
 		this.addTrackedEntity(revoked, EntityAction.deleted)
 	}
 

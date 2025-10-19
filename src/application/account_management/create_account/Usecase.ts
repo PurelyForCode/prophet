@@ -3,7 +3,6 @@ import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js"
 import { Password } from "../../../domain/account_management/entities/account/value_objects/Password.js"
 import { Role } from "../../../domain/account_management/entities/account/value_objects/Role.js"
 import { Username } from "../../../domain/account_management/entities/account/value_objects/Username.js"
-import { UsernameIsTakenException } from "../../../domain/account_management/exceptions/UsernameIsTakenException.js"
 import { AccountManager } from "../../../domain/account_management/services/AccountManager.js"
 import { IPasswordUtility } from "../../../domain/account_management/utils/IPasswordUtility.js"
 
@@ -21,34 +20,23 @@ export class CreateAccountUsecase {
 	) {}
 	async call(input: CreateAccountInput) {
 		const accountRepo = this.uow.getAccountRepository()
+		const permissionRepo = this.uow.getPermissionRepository()
+
 		const username = new Username(input.username)
-		const taken = await accountRepo.findByUsername(username)
-		if (taken) {
-			throw new UsernameIsTakenException()
-		}
 		const role = new Role(input.role)
 		const hashed = await this.passwordUtility.hash(input.password)
 		const password = new Password(hashed)
+
 		const accountManager = new AccountManager()
-		const account = accountManager.createAccount(
+
+		const account = await accountManager.createAccount(
+			accountRepo,
+			permissionRepo,
 			this.idGenerator.generate(),
 			role,
 			username,
 			password,
 		)
-		if (
-			account.role.value === "store manager" ||
-			account.role.value === "admin"
-		) {
-			const permissionRepo = this.uow.getPermissionRepository()
-			const permissions = await permissionRepo.findAll()
-			for (const permission of permissions.values()) {
-				account.grantPermission(permission)
-			}
-		}
-		for (const permission of account.permissions.values()) {
-			console.log(permission.id.permissionId)
-		}
 		await this.uow.save(account)
 	}
 }

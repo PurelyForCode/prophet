@@ -14,6 +14,7 @@ const permissionNames = [
 	"MANAGE_PRODUCTS",
 	"MANAGE_FORECASTS",
 	"MANAGE_SALES",
+	"ACCESS_DEBUG",
 ]
 
 export async function createPermissions() {

@@ -13,6 +13,7 @@ export async function createSuperAdmin(
 	idGenerator: IIdGenerator,
 ) {
 	const accountRepo = uow.getAccountRepository()
+	const permissionRepo = uow.getPermissionRepository()
 	if (await accountRepo.doesSuperAdminExist()) {
 		return
 	}
@@ -27,12 +28,14 @@ export async function createSuperAdmin(
 	const password = new Password(await passwordUtility.hash(plainPassword))
 	const accountManager = new AccountManager()
 
-	const account = accountManager.createAccount(
+	const account = await accountManager.createAccount(
+		accountRepo,
+		permissionRepo,
 		idGenerator.generate(),
 		new Role("superadmin"),
 		username,
 		password,
 	)
 
-	uow.save(account)
+	await uow.save(account)
 }
