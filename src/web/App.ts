@@ -6,6 +6,7 @@ import categoryRouter from "./routers/CategoryRouter.js"
 import forecastRouter from "./routers/ForecastRouter.js"
 import groupRouter from "./routers/ProductGroupRouter.js"
 import accountRouter from "./routers/AccountRouter.js"
+import saleRouter from "./routers/IndependentSaleRouter.js"
 import { ApplicationException } from "../core/exceptions/ApplicationException.js"
 import { StatusCode } from "hono/utils/http-status"
 
@@ -53,6 +54,6 @@ app.route("/suppliers", supplierRouter)
 app.route("/deliveries", deliveryRouter)
 app.route("/categories", categoryRouter)
 app.route("/forecasts", forecastRouter)
+app.route("/sales", saleRouter)
 
 export default app
-

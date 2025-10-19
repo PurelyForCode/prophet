@@ -7,21 +7,12 @@ import {
 	SaleQueryDao,
 	SaleSortableField,
 } from "../../infra/db/query_dao/SaleQueryDao.js"
-import { ProductGroupQueryDao } from "../../infra/db/query_dao/ProductGroupQueryDao.js"
-import { ProductQueryDao } from "../../infra/db/query_dao/ProductQueryDao.js"
 import { knexInstance } from "../../config/Knex.js"
 
 const app = new Hono()
 
 app.get(
 	"/",
-	zValidator(
-		"param",
-		z.object({
-			productId: z.uuidv7(),
-			groupId: z.uuidv7(),
-		}),
-	),
 	zValidator(
 		"query",
 		z
@@ -52,3 +43,22 @@ app.get(
 		return c.json({ data: sales })
 	},
 )
+
+app.get(
+	"/:saleId",
+	zValidator(
+		"param",
+		z.object({
+			saleId: z.uuidv7(),
+		}),
+	),
+	async (c) => {
+		const params = c.req.valid("param")
+		const saleQueryDto = new SaleQueryDao(knexInstance)
+		const sales = await saleQueryDto.queryById(params.saleId, undefined)
+
+		return c.json({ data: sales })
+	},
+)
+
+export default app
