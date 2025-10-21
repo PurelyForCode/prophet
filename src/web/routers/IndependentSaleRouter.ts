@@ -23,6 +23,8 @@ app.get(
 				sort: sortStringSchema(
 					new Set<SaleSortableField>(["quantity", "status", "date"]),
 				),
+				date: z.coerce.date(),
+				summed: booleanStringSchema,
 			})
 			.partial(),
 	),
@@ -36,6 +38,8 @@ app.get(
 			},
 			{
 				archived: query.archived,
+				date: query.date,
+				summed: query.summed,
 			},
 			query.sort,
 		)

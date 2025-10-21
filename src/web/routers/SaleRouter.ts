@@ -41,6 +41,8 @@ app.get(
 				offset: z.coerce.number().int().nonnegative(),
 				limit: z.coerce.number().int().positive(),
 				archived: booleanStringSchema,
+				summed: booleanStringSchema,
+				date: z.coerce.date(),
 				sort: sortStringSchema(
 					new Set<SaleSortableField>(["quantity", "status", "date"]),
 				),
@@ -71,6 +73,8 @@ app.get(
 			{
 				archived: query.archived,
 				productId: params.productId,
+				summed: query.summed,
+				date: query.date,
 			},
 			query.sort,
 		)

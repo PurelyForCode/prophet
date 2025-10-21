@@ -5,9 +5,15 @@ import { defaultPagination, Pagination } from "../types/queries/Pagination.js"
 import { Sort, sortQuery } from "../utils/Sort.js"
 import { BaseQueryDao } from "./BaseQueryDao.js"
 
+export type SummedSaleQueryDto = {
+	date: Date
+	quantity: number
+}
+
 export type SaleQueryFilter = Partial<{
 	productId: EntityId
 	archived: boolean
+	summed: boolean
 	date: Date
 }>
 
@@ -40,38 +46,42 @@ export class SaleQueryDao extends BaseQueryDao {
 		pagination: Pagination,
 		filters: SaleQueryFilter | undefined,
 		sort: Sort<SaleSortableField>,
-	): Promise<SaleQueryDto[]> {
-		const builder = this.knex<SaleDatabaseTable>(
-			`${this.tableName} as s`,
-		).select("s.*")
+	): Promise<(SaleQueryDto | SummedSaleQueryDto)[]> {
+		const builder = this.knex<SaleDatabaseTable>(`${this.tableName} as s`)
 
-		if (filters && filters.archived) {
+		// --- SUMMED MODE ---
+		if (filters?.summed) {
+			builder
+				.select("s.date")
+				.sum<{ quantity: number }>("s.quantity as quantity")
+				.groupBy("s.date")
+		} else {
+			builder.select("s.*")
+		}
+
+		// --- ARCHIVE FILTER ---
+		if (filters?.archived) {
 			builder.whereNotNull("s.deleted_at")
 		} else {
 			builder.whereNull("s.deleted_at")
 		}
 
-		if (filters) {
-			if (filters.productId) {
-				builder.where("s.product_id", "=", filters.productId)
-			}
-			if (filters.date) {
-				builder.where("s.date", "=", filters.date)
-			}
+		// --- OTHER FILTERS ---
+		if (filters?.productId) {
+			builder.where("s.product_id", "=", filters.productId)
+		}
+		if (filters?.date) {
+			builder.where("s.date", "=", filters.date)
 		}
 
-		if (pagination) {
-			if (pagination.limit) {
-				builder.limit(pagination.limit)
-			}
-			if (pagination.offset) {
-				builder.offset(pagination.offset)
-			}
-		} else {
-			builder.limit(defaultPagination.limit)
-			builder.offset(defaultPagination.offset)
-		}
+		// --- PAGINATION ---
+		if (pagination?.limit) builder.limit(pagination.limit)
+		else builder.limit(defaultPagination.limit)
 
+		if (pagination?.offset) builder.offset(pagination.offset)
+		else builder.offset(defaultPagination.offset)
+
+		// --- SORT ---
 		if (sort) {
 			sortQuery(builder, sort, this.saleSortFieldMap)
 		} else {
@@ -79,11 +89,16 @@ export class SaleQueryDao extends BaseQueryDao {
 		}
 
 		const rows = await builder
-		const sales: SaleQueryDto[] = []
-		for (const row of rows) {
-			sales.push(this.mapToQueryDTO(row))
+
+		// --- MAP RESULTS ---
+		if (filters?.summed) {
+			return rows.map((row: any) => ({
+				date: row.date,
+				quantity: Number(row.quantity),
+			}))
 		}
-		return sales
+
+		return rows.map((row: SaleDatabaseTable) => this.mapToQueryDTO(row))
 	}
 
 	async queryById(
