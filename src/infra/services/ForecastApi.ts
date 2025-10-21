@@ -53,7 +53,7 @@ export class ForecastApi implements IForecastApi {
 			return result.data.data
 		} catch (err) {
 			if (axios.isAxiosError(err)) {
-				console.log(err)
+				console.log(err.message)
 				const status = err.response?.status ?? 500
 				const detail =
 					err.response?.data?.detail?.message ?? "Unknown error"
@@ -61,7 +61,6 @@ export class ForecastApi implements IForecastApi {
 			} else if (err instanceof ApplicationException) {
 				throw err
 			} else {
-				console.log(err)
 				throw new InternalServerError()
 			}
 		}

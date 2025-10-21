@@ -13,7 +13,6 @@ import { ProphetModelManager } from "../../../domain/forecasting/services/Prophe
 import { IIdGenerator } from "../../../core/interfaces/IIdGenerator.js"
 import { runInTransaction } from "../../../infra/utils/UnitOfWork.js"
 import { ForecastManager } from "../../../domain/forecasting/services/ForecastManager.js"
-import { ProphetModel } from "../../../domain/forecasting/entities/prophet_model/ProphetModel.js"
 import { DataDepth } from "../../../domain/forecasting/entities/forecast/value_objects/DataDepth.js"
 import { ModelType } from "../../../domain/forecasting/entities/forecast/value_objects/ModelType.js"
 
@@ -49,23 +48,22 @@ export class GenerateSingleForecastUsecase {
 				}
 				let crostonModelId = null
 				let prophetModelId = null
-				if (product.settings.classification === "fast") {
-					if (
-						!(await prophetModelRepo.doesProductHaveModel(
-							product.id,
-						))
-					) {
-						const prophetModelManager = new ProphetModelManager()
-						const prophetModel =
-							prophetModelManager.createProphetModel(
-								this.idGenerator.generate(),
-								product.id,
-							)
-						prophetModelId = prophetModel.id
-						await this.uow.save(prophetModel)
-					} else {
-						// TODO:
-					}
+				const hasModel = await prophetModelRepo.doesProductHaveModel(
+					product.id,
+				)
+				if (product.settings.classification === "fast" && !hasModel) {
+					const prophetModelManager = new ProphetModelManager()
+					const prophetModel = prophetModelManager.createProphetModel(
+						this.idGenerator.generate(),
+						product.id,
+					)
+					prophetModelId = prophetModel.id
+					await this.uow.save(prophetModel)
+					console.log("usecase saved")
+				} else if (
+					product.settings.classification === "slow" &&
+					hasModel
+				) {
 				}
 
 				const forecastManager = new ForecastManager()
@@ -95,23 +93,32 @@ export class GenerateSingleForecastUsecase {
 			forecastEndDate: input.forecastEndDate,
 			forecastStartDate: input.forecastStartDate,
 		})
-
-		await runInTransaction(
-			this.uow,
-			IsolationLevel.READ_COMMITTED,
-			async () => {
-				const forecastRepo = this.uow.getForecastRepository()
-				const forecast = await forecastRepo.findById(forecastId)
-				if (!forecast) {
-					throw new ForecastNotFoundException()
-				}
-				forecast.addDomainEvent(
-					new ForecastGeneratedDomainEvent({
-						forecastId: forecast.id,
-					}),
-				)
-				await this.eventBus.dispatchAggregateEvents(forecast, this.uow)
-			},
+		const supplierRepo = this.uow.getSupplierRepository()
+		const hasDefaultSupplier = await supplierRepo.findDefaultSupplier(
+			forecast.productId,
 		)
+
+		if (hasDefaultSupplier) {
+			await runInTransaction(
+				this.uow,
+				IsolationLevel.READ_COMMITTED,
+				async () => {
+					const forecastRepo = this.uow.getForecastRepository()
+					const forecast = await forecastRepo.findById(forecastId)
+					if (!forecast) {
+						throw new ForecastNotFoundException()
+					}
+					forecast.addDomainEvent(
+						new ForecastGeneratedDomainEvent({
+							forecastId: forecast.id,
+						}),
+					)
+					await this.eventBus.dispatchAggregateEvents(
+						forecast,
+						this.uow,
+					)
+				},
+			)
+		}
 	}
 }

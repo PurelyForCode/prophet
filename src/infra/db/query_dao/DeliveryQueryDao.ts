@@ -221,7 +221,6 @@ export class DeliveryQueryDao extends BaseQueryDao {
 	groupWithItems(rows: CompleteDeliveryRow[]): DeliveryQueryDto[] {
 		const deliveriesMap = new Map<EntityId, DeliveryQueryDto>()
 
-		console.log("before")
 		for (const row of rows) {
 			let delivery = deliveriesMap.get(row.id)
 

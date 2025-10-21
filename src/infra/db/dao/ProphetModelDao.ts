@@ -18,11 +18,12 @@ export class ProphetModelDAO {
 		const exists = await this.knex<ProphetModelDatabaseTable>(
 			this.tableName,
 		)
-			.select(this.knex.raw("1"))
+			.select("id")
 			.where("product_id", "=", productId)
 			.where("active", true)
-
 			.whereNotNull("trained_at")
+			.first()
+
 		if (exists) {
 			return true
 		} else {

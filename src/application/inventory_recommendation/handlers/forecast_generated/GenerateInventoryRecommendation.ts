@@ -56,7 +56,6 @@ export class GenerateInventoryRecommendationDomainHandler
 			)
 
 		if (inventoryRecommendation) {
-			console.log("generated")
 			await uow.save(inventoryRecommendation)
 		}
 	}

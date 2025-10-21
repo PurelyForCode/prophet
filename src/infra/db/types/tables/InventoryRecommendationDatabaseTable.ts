@@ -5,6 +5,7 @@ export type InventoryRecommendationDatabaseTable = {
 	forecast_id: EntityId
 	supplier_id: EntityId
 	leadtime: number
+	status: string
 	runs_out_at: Date
 	restock_at: Date
 	restock_amount: number

@@ -1,18 +1,23 @@
 import { Hono } from "hono"
 import { cors } from "hono/cors"
+import { ApplicationException } from "../core/exceptions/ApplicationException.js"
+import { StatusCode } from "hono/utils/http-status"
+import { sessionMiddleware, SessionOptions } from "hono-sessions"
+import { knexInstance } from "../config/Knex.js"
+import { PostgresqlSessionStore } from "../infra/utils/PostgresqlSessionStore.js"
+
 import supplierRouter from "./routers/SupplierRouter.js"
 import deliveryRouter from "./routers/DeliveryRouter.js"
 import categoryRouter from "./routers/CategoryRouter.js"
-import forecastRouter from "./routers/ForecastRouter.js"
 import groupRouter from "./routers/ProductGroupRouter.js"
 import accountRouter from "./routers/AccountRouter.js"
 import saleRouter from "./routers/IndependentSaleRouter.js"
-import { ApplicationException } from "../core/exceptions/ApplicationException.js"
-import { StatusCode } from "hono/utils/http-status"
+import recommendationRouter from "./routers/RecommendationRouter.js"
+import authenticationRouter from "./routers/AuthenticationRouter.js"
+
+const environment = process.env.ENVIRONMENT ?? "dev"
 
 const app = new Hono()
-
-app.use("/*", cors())
 
 app.use(
 	"/*",
@@ -25,6 +30,37 @@ app.use(
 		credentials: true,
 	}),
 )
+
+const postgresqlSessionStore = new PostgresqlSessionStore(knexInstance)
+
+const sessionOptions: SessionOptions =
+	environment === "prod"
+		? {
+				store: postgresqlSessionStore,
+				cookieOptions: {
+					httpOnly: true,
+					secure: true,
+					sameSite: "Lax",
+					path: "/",
+					maxAge: 60 * 60 * 24 * 7,
+				},
+				autoExtendExpiration: true,
+				sessionCookieName: "session",
+			}
+		: {
+				store: postgresqlSessionStore,
+				cookieOptions: {
+					httpOnly: true,
+					secure: false,
+					sameSite: "Lax",
+					path: "/",
+					maxAge: 60 * 60 * 24,
+				},
+				autoExtendExpiration: true,
+				sessionCookieName: "session",
+			}
+
+app.use("*", sessionMiddleware(sessionOptions))
 
 app.onError((err, c) => {
 	if (err instanceof ApplicationException) {
@@ -48,12 +84,12 @@ app.onError((err, c) => {
 	)
 })
 
+app.route("/auth", authenticationRouter)
+app.route("/recommendations", recommendationRouter)
 app.route("/accounts", accountRouter)
 app.route("/groups", groupRouter)
 app.route("/suppliers", supplierRouter)
 app.route("/deliveries", deliveryRouter)
 app.route("/categories", categoryRouter)
-app.route("/forecasts", forecastRouter)
 app.route("/sales", saleRouter)
-
 export default app

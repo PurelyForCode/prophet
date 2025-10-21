@@ -7,10 +7,9 @@ import { InventoryRecommendation } from "../entities/inventory_recommendation/In
 import { EntityId } from "../../../core/types/EntityId.js"
 import { ForecastOutOfDateException } from "../exceptions/ForecastOutOfDateException.js"
 import { InventoryStatus } from "../entities/inventory_recommendation/value_objects/InventoryStatus.js"
+import { EntityAction } from "../../../core/interfaces/AggregateRoot.js"
 
 export class InventoryRecommendationGenerator {
-	constructor() {}
-
 	private computeSafetyStock(
 		product: Product,
 		forecastEntries: ForecastEntry[],
@@ -111,14 +110,18 @@ export class InventoryRecommendationGenerator {
 		let restockAt = new Date(runsOutAt)
 		restockAt.setDate(restockAt.getDate() - leadTime)
 
-		let inventoryStatus: InventoryStatus | undefined
-		// Case 1: Stockout or overdue restock
+		// Determine status
+		const daysUntilRunout =
+			(runsOutAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+
+		let inventoryStatus: InventoryStatus
+
 		if (runsOutAt <= now) {
 			inventoryStatus = new InventoryStatus("critical")
-			// Case 2: Needs restock soon (within lead time window)
 		} else if (restockAt <= now && runsOutAt > now) {
 			inventoryStatus = new InventoryStatus("urgent")
-			// Case 3: Restock date still in the future, stock is fine
+		} else if (daysUntilRunout <= leadTime + 2) {
+			inventoryStatus = new InventoryStatus("warning")
 		} else {
 			inventoryStatus = new InventoryStatus("good")
 		}
@@ -143,9 +146,9 @@ export class InventoryRecommendationGenerator {
 			defaultSupplier,
 		)
 
-		const restockAmount = demandTillCutOff + safetyStock
+		const restockAmount = Math.round(demandTillCutOff + safetyStock)
 
-		return InventoryRecommendation.create(
+		const invRec = InventoryRecommendation.create(
 			inventoryRecommendationId,
 			forecast.id,
 			defaultSupplier.id,
@@ -160,5 +163,7 @@ export class InventoryRecommendationGenerator {
 			now,
 			now,
 		)
+		invRec.addTrackedEntity(invRec, EntityAction.created)
+		return invRec
 	}
 }

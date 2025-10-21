@@ -24,6 +24,8 @@ import { Account } from "../../domain/account_management/entities/account/Accoun
 import { AccountRepository } from "../db/repositories/AccountRepository.js"
 import { AccountPermission } from "../../domain/account_management/entities/account/value_objects/AccountPermission.js"
 import { AccountPermissionRepository } from "../db/repositories/AccountPermissionRepository.js"
+import { Forecast } from "../../domain/forecasting/entities/forecast/Forecast.js"
+import { ForecastRepository } from "../db/repositories/ForecastRepository.js"
 
 type RepositoryConstructor<T> = new (
 	knex: Knex | Knex.Transaction,
@@ -45,6 +47,7 @@ export class RepositoryFactory {
 			InventoryRecommendation,
 			InventoryRecommendationRepository,
 		)
+		this.register(Forecast, ForecastRepository)
 		this.register(ProphetModel, ProphetModelRepository)
 		this.register(Account, AccountRepository)
 		this.register(AccountPermission, AccountPermissionRepository)

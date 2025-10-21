@@ -1,4 +1,10 @@
-CREATE TYPE outbox_status AS ENUM ('pending', 'sent', 'failed');
+CREATE TABLE session (
+  id TEXT PRIMARY KEY,
+  data JSONB NOT NULL,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE TYPE outbox_status AS ENUM ('pending', 'sent', 'failed');schema
 
 CREATE TABLE global_settings (
 	id SERIAL PRIMARY KEY,
@@ -323,7 +329,7 @@ CREATE TABLE forecast_entry(
     date DATE NOT NULL
 );
 
-CREATE TYPE inventory_status AS ENUM('critical', 'urgent', 'good');
+CREATE TYPE inventory_status AS ENUM('critical', 'urgent', 'warning', 'good');
 
 CREATE TABLE inventory_recommendation (
     id UUID PRIMARY KEY,

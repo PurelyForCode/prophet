@@ -25,6 +25,7 @@ import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 import { ProductNotFoundException } from "../../domain/product_management/exceptions/ProductNotFoundException.js"
 import { ProductGroupQueryDao } from "../../infra/db/query_dao/ProductGroupQueryDao.js"
 import { ProductGroupNotFoundException } from "../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
+import forecastRouter from "./ForecastRouter.js"
 
 const app = new Hono()
 
@@ -236,5 +237,6 @@ app.post(
 )
 
 app.route("/:productId/sales", saleRouter)
+app.route("/:productId/forecasts", forecastRouter)
 
 export default app

@@ -9,7 +9,7 @@ import { ProductNotFoundException } from "../../../domain/product_management/exc
 
 type CreateInventoryRecommendationInput = {
 	forecastId: EntityId
-	days: number
+	coverageDays: number
 }
 
 export class CreateInventoryRecommendationUsecase implements Usecase<any, any> {

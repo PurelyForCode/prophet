@@ -1,10 +1,10 @@
 import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
-import { ForecastDatabaseTable } from "../types/tables/ForecastDatabaseTable.js"
-import { InventoryRecommendationDatabaseTable } from "../types/tables/InventoryRecommendationTable.js"
+import { InventoryRecommendationDatabaseTable } from "../types/tables/InventoryRecommendationDatabaseTable.js"
 
 export type InventoryRecommendationDto = {
 	id: EntityId
+	status: string
 	forecastId: EntityId
 	supplierId: EntityId
 	leadtime: number
@@ -58,6 +58,7 @@ export class InventoryRecommendationDao {
 			coverageDays: row.coverage_days,
 			leadtime: row.leadtime,
 			restockAmount: row.restock_amount,
+			status: row.status,
 			restockAt: row.restock_at,
 			runsOutAt: row.runs_out_at,
 			createdAt: row.created_at,

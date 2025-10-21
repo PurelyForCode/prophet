@@ -7,6 +7,7 @@ import {
 	InventoryRecommendationDto,
 } from "../dao/InventoryRecommendationDao.js"
 import { LeadTime } from "../../../domain/delivery_management/entities/supplier/value_objects/LeadTime.js"
+import { InventoryStatus } from "../../../domain/inventory_recommendation/entities/inventory_recommendation/value_objects/InventoryStatus.js"
 
 export class InventoryRecommendationRepository
 	implements IInventoryRecommendationRepository
@@ -21,6 +22,7 @@ export class InventoryRecommendationRepository
 	}
 	async update(entity: InventoryRecommendation): Promise<void> {
 		await this.invRecDao.update({
+			status: entity.status.value,
 			coverage_days: entity.coverageDays,
 			created_at: entity.createdAt,
 			forecast_id: entity.forecastId,
@@ -36,6 +38,7 @@ export class InventoryRecommendationRepository
 	async create(entity: InventoryRecommendation): Promise<void> {
 		await this.invRecDao.insert({
 			coverage_days: entity.coverageDays,
+			status: entity.status.value,
 			created_at: entity.createdAt,
 			forecast_id: entity.forecastId,
 			id: entity.id,
@@ -63,6 +66,7 @@ export class InventoryRecommendationRepository
 			dto.forecastId,
 			dto.supplierId,
 			new LeadTime(dto.leadtime),
+			new InventoryStatus(dto.status),
 			dto.runsOutAt,
 			dto.restockAt,
 			dto.restockAmount,
