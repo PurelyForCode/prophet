@@ -17,7 +17,7 @@ export class PermissionQueryDao {
 		)
 			.join("permission as p", "p.id", "ap.permission_id")
 			.select("p.name", "p.id")
-			.where("ap.id", "=", accountId)
+			.where("ap.account_id", "=", accountId)
 		return rows as { name: string; id: EntityId }[]
 	}
 
