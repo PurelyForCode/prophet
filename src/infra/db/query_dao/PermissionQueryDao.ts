@@ -1,7 +1,6 @@
 import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
 import { PermissionDatabaseTable } from "../types/tables/PermissionDatabaseTable.js"
-import { Entity } from "../../../core/interfaces/Entity.js"
 
 export type PermissionQueryDto = {
 	id: EntityId
@@ -18,6 +17,7 @@ export class PermissionQueryDao {
 		)
 			.join("permission as p", "p.id", "ap.permission_id")
 			.select("p.name", "p.id")
+			.where("ap.id", "=", accountId)
 		return rows as { name: string; id: EntityId }[]
 	}
 

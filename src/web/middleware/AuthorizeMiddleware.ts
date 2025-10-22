@@ -26,9 +26,7 @@ export const authorize =
 			account.role !== "staff manager"
 		) {
 			const userPermissions = account.permissions
-
 			const userPermissionNames = userPermissions!.map((p) => p.name)
-
 			const hasAllPermissions = requiredPermissions.every((perm) =>
 				userPermissionNames.includes(perm),
 			)

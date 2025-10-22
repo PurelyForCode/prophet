@@ -5,6 +5,7 @@ import { EntityId } from "../../../../core/types/EntityId.js"
 import { DeliveryStatus } from "../../../../domain/delivery_management/entities/delivery/value_objects/DeliveryStatus.js"
 import { DeliveryItem } from "../../../../domain/delivery_management/entities/delivery_item/DeliveryItem.js"
 import { DeliveryItemQuantity } from "../../../../domain/delivery_management/entities/delivery_item/value_objects/DeliveryItemQuantity.js"
+import { DeliveryCompletedEvent } from "../../../../domain/delivery_management/events/DeliveryCompletedEvent.js"
 import { SupplierNotFoundException } from "../../../../domain/delivery_management/exceptions/SupplierNotFoundException.js"
 import { DeliveryManager } from "../../../../domain/delivery_management/services/DeliveryManager.js"
 
@@ -24,6 +25,7 @@ export class CreateDeliveryUsecase {
 	constructor(
 		private readonly uow: IUnitOfWork,
 		private readonly idGenerator: IIdGenerator,
+		private readonly eventBus: IEventBus,
 	) {}
 	async call(input: CreateDeliveryInput) {
 		const supplierRepo = this.uow.getSupplierRepository()
@@ -52,6 +54,13 @@ export class CreateDeliveryUsecase {
 				delivery.addItem(deliveryItem)
 			}
 		}
+		if (status.value === "completed") {
+			delivery.addDomainEvent(
+				new DeliveryCompletedEvent({ deliveryId: delivery.id }),
+			)
+		}
+
 		await this.uow.save(delivery)
+		await this.eventBus.dispatchAggregateEvents(delivery, this.uow)
 	}
 }

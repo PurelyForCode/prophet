@@ -17,6 +17,17 @@ export class InventoryRecommendationRepository
 		this.invRecDao = new InventoryRecommendationDao(knex)
 	}
 
+	async findByProductId(
+		id: EntityId,
+	): Promise<InventoryRecommendation | null> {
+		const dto = await this.invRecDao.findByProductId(id)
+		if (!dto) {
+			return null
+		} else {
+			return this.mapToEntity(dto)
+		}
+	}
+
 	async delete(entity: InventoryRecommendation): Promise<void> {
 		await this.invRecDao.delete(entity.id)
 	}

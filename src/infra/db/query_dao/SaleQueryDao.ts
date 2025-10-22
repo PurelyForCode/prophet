@@ -49,7 +49,6 @@ export class SaleQueryDao extends BaseQueryDao {
 	): Promise<(SaleQueryDto | SummedSaleQueryDto)[]> {
 		const builder = this.knex<SaleDatabaseTable>(`${this.tableName} as s`)
 
-		// --- SUMMED MODE ---
 		if (filters?.summed) {
 			builder
 				.select("s.date")
@@ -59,14 +58,12 @@ export class SaleQueryDao extends BaseQueryDao {
 			builder.select("s.*")
 		}
 
-		// --- ARCHIVE FILTER ---
 		if (filters?.archived) {
 			builder.whereNotNull("s.deleted_at")
 		} else {
 			builder.whereNull("s.deleted_at")
 		}
 
-		// --- OTHER FILTERS ---
 		if (filters?.productId) {
 			builder.where("s.product_id", "=", filters.productId)
 		}
@@ -74,14 +71,12 @@ export class SaleQueryDao extends BaseQueryDao {
 			builder.where("s.date", "=", filters.date)
 		}
 
-		// --- PAGINATION ---
 		if (pagination?.limit) builder.limit(pagination.limit)
 		else builder.limit(defaultPagination.limit)
 
 		if (pagination?.offset) builder.offset(pagination.offset)
 		else builder.offset(defaultPagination.offset)
 
-		// --- SORT ---
 		if (sort) {
 			sortQuery(builder, sort, this.saleSortFieldMap)
 		} else {
@@ -89,8 +84,6 @@ export class SaleQueryDao extends BaseQueryDao {
 		}
 
 		const rows = await builder
-
-		// --- MAP RESULTS ---
 		if (filters?.summed) {
 			return rows.map((row: any) => ({
 				date: row.date,

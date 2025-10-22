@@ -4,6 +4,8 @@ import {
 	EntityAction,
 } from "../../../../core/interfaces/AggregateRoot.js"
 import { EntityId } from "../../../../core/types/EntityId.js"
+import { DeliveryCompletedEvent } from "../../events/DeliveryCompletedEvent.js"
+import { DeliveryIsNotCompletedAnymoreEvent } from "../../events/DeliveryIsNotCompletedAnymoreEvent.js"
 import { DeliveryItemNotFoundException } from "../../exceptions/DeliveryItemNotFoundException.js"
 import { DeliveryStatusIsNotAppropriateForCurrentAction } from "../../exceptions/DeliveryStatusIsNotAppropriateForCurrentAction.js"
 import { DuplicateDeliveryItemProductInDeliveryException } from "../../exceptions/DuplicateDeliveryItemInDeliveryException.js"
@@ -25,6 +27,10 @@ export class Delivery extends AggregateRoot {
 	private updatedAt: Date
 	private deletedAt: Date | null
 	private items: Map<EntityId, DeliveryItem>
+
+	getItems() {
+		return this.items
+	}
 
 	private constructor(params: {
 		id: EntityId
@@ -79,23 +85,43 @@ export class Delivery extends AggregateRoot {
 
 	changeStatus(status: DeliveryStatus, date?: Date) {
 		this.throwIfArchived()
-
+		const originalStatus = this.status.value
 		this.setStatus(status)
 
 		switch (status.value) {
 			case "completed":
 				this.setCompletedAt(date ?? new Date())
 				this.setCancelledAt(null)
+				if (originalStatus !== "completed") {
+					this.addDomainEvent(
+						new DeliveryCompletedEvent({ deliveryId: this.id }),
+					)
+				}
 				break
 
 			case "cancelled":
 				this.setCancelledAt(date ?? new Date())
 				this.setCompletedAt(null)
+
+				if (originalStatus === "completed") {
+					this.addDomainEvent(
+						new DeliveryIsNotCompletedAnymoreEvent({
+							deliveryId: this.id,
+						}),
+					)
+				}
 				break
 
 			case "delivering":
 				this.setCompletedAt(null)
 				this.setCancelledAt(null)
+				if (originalStatus === "completed") {
+					this.addDomainEvent(
+						new DeliveryIsNotCompletedAnymoreEvent({
+							deliveryId: this.id,
+						}),
+					)
+				}
 				break
 
 			default:

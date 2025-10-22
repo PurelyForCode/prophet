@@ -4,6 +4,8 @@ import { Sale, SaleUpdateableFields } from "../entities/sale/Sale.js"
 import { SaleQuantity } from "../entities/sale/value_objects/SaleQuantity.js"
 import { SaleStatus } from "../entities/sale/value_objects/SaleStatus.js"
 import { FirstSaleCreatedForDate } from "../events/SaleCreatedEvent.js"
+import { SaleQuantityDecremented } from "../events/SaleQuantityDecremented.js"
+import { SaleQuantityIncremented } from "../events/SaleQuantityIncremented.js"
 import { ISaleRepository } from "../repositories/ISaleRepository.js"
 
 export class SaleService {
@@ -26,6 +28,14 @@ export class SaleService {
 		if (!(await saleRepo.doesSaleExistInDate(sale.getDate()))) {
 			sale.addDomainEvent(
 				new FirstSaleCreatedForDate(sale.getProductId(), sale.id),
+			)
+		}
+		if (sale.getStatus().value === "completed") {
+			sale.addDomainEvent(
+				new SaleQuantityIncremented(
+					sale.getProductId(),
+					sale.getQuantity().value,
+				),
 			)
 		}
 		return sale
@@ -53,5 +63,11 @@ export class SaleService {
 
 	archiveSale(sale: Sale) {
 		sale.archive()
+		sale.addDomainEvent(
+			new SaleQuantityDecremented(
+				sale.getProductId(),
+				sale.getQuantity().value,
+			),
+		)
 	}
 }

@@ -31,6 +31,8 @@ import { IPermissionRepository } from "../../domain/account_management/repositor
 import { PermissionRepository } from "../db/repositories/PermissionRepository.js"
 import { IAccountPermissionRepository } from "../../domain/account_management/repositories/IAccountPermissionRepository.js"
 import { AccountPermissionRepository } from "../db/repositories/AccountPermissionRepository.js"
+import { IInventoryRecommendationRepository } from "../../domain/inventory_recommendation/repositories/IInventoryRecommendationRepository.js"
+import { InventoryRecommendationRepository } from "../db/repositories/InventoryRecommendationRepository.js"
 
 export class UnitOfWork implements IUnitOfWork {
 	public trx: Knex.Transaction | null = null
@@ -38,6 +40,13 @@ export class UnitOfWork implements IUnitOfWork {
 		private readonly knex: Knex,
 		private readonly repositoryFactory: RepositoryFactory,
 	) {}
+	getInventoryRecommendationRepository(): IInventoryRecommendationRepository {
+		if (this.trx) {
+			return new InventoryRecommendationRepository(this.trx)
+		} else {
+			return new InventoryRecommendationRepository(this.knex)
+		}
+	}
 
 	getAccountPermissionRepository(): IAccountPermissionRepository {
 		if (this.trx) {

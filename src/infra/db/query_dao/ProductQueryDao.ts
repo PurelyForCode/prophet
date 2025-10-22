@@ -116,14 +116,14 @@ export class ProductQueryDao extends BaseQueryDao {
 			if (include) {
 				if (include.sales) {
 					const saleQueryDto = new SaleQueryDao(this.knex)
-					sales = await saleQueryDto.query(
+					sales = (await saleQueryDto.query(
 						undefined,
 						{
 							productId: row.id,
 							archived: isArchived,
 						},
 						["-date"],
-					)
+					)) as SaleQueryDto[]
 				}
 				if (include.settings) {
 					setting = {
@@ -164,14 +164,14 @@ export class ProductQueryDao extends BaseQueryDao {
 			const isArchived = row.deleted_at !== null
 			if (include.sales) {
 				const saleQueryDto = new SaleQueryDao(this.knex)
-				sales = await saleQueryDto.query(
+				sales = (await saleQueryDto.query(
 					undefined,
 					{
 						productId: row.id,
 						archived: isArchived,
 					},
 					undefined,
-				)
+				)) as SaleQueryDto[]
 			}
 			if (include.settings) {
 				setting = {
@@ -215,14 +215,14 @@ export class ProductQueryDao extends BaseQueryDao {
 			const isArchived = row.deleted_at !== null
 			if (include.sales) {
 				const saleQueryDto = new SaleQueryDao(this.knex)
-				sales = await saleQueryDto.query(
+				sales = (await saleQueryDto.query(
 					undefined,
 					{
 						productId: row.id,
 						archived: isArchived,
 					},
 					undefined,
-				)
+				)) as SaleQueryDto[]
 			}
 			if (include.settings) {
 				setting = {

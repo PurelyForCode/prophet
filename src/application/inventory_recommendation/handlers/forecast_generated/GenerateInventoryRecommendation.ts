@@ -8,7 +8,7 @@ import { InventoryRecommendationGenerator } from "../../../../domain/inventory_r
 import { ProductNotFoundException } from "../../../../domain/product_management/exceptions/ProductNotFoundException.js"
 import { idGenerator } from "../../../../infra/utils/IdGenerator.js"
 
-export class GenerateInventoryRecommendationDomainHandler
+export class GenerateInventoryRecommendationHandler
 	implements DomainEventHandler
 {
 	eventName: string = ForecastDomainEventList.FORECAST_GENERATED
@@ -54,8 +54,14 @@ export class GenerateInventoryRecommendationDomainHandler
 				defaultSupplier,
 				14,
 			)
+		const invRepo = uow.getInventoryRecommendationRepository()
+		let invRec = await invRepo.findByProductId(forecast.productId)
 
 		if (inventoryRecommendation) {
+			if (invRec) {
+				invRec.delete()
+				await uow.save(invRec)
+			}
 			await uow.save(inventoryRecommendation)
 		}
 	}

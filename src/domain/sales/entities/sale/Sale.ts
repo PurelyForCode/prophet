@@ -1,3 +1,4 @@
+import { original } from "immer"
 import { InvalidEntityCreated } from "../../../../core/exceptions/InvalidEntityCreated.js"
 import { ResourceIsArchivedException } from "../../../../core/exceptions/ResourceIsArchivedException.js"
 import { ValueException } from "../../../../core/exceptions/ValueException.js"
@@ -7,6 +8,8 @@ import {
 } from "../../../../core/interfaces/AggregateRoot.js"
 import { EntityId } from "../../../../core/types/EntityId.js"
 import { SaleArchivedEvent } from "../../events/SaleArchivedEvent.js"
+import { SaleQuantityDecremented } from "../../events/SaleQuantityDecremented.js"
+import { SaleQuantityIncremented } from "../../events/SaleQuantityIncremented.js"
 import { SaleQuantity } from "./value_objects/SaleQuantity.js"
 import { SaleStatus } from "./value_objects/SaleStatus.js"
 
@@ -43,6 +46,21 @@ export class Sale extends AggregateRoot {
 	}
 	setQuantity(value: SaleQuantity) {
 		this.throwIfArchived()
+		if (this.quantity.value < value.value) {
+			this.addDomainEvent(
+				new SaleQuantityIncremented(
+					this.productId,
+					value.value - this.quantity.value,
+				),
+			)
+		} else if (this.quantity.value > value.value) {
+			this.addDomainEvent(
+				new SaleQuantityDecremented(
+					this.productId,
+					this.quantity.value - value.value,
+				),
+			)
+		}
 		this.quantity = value
 	}
 
@@ -50,6 +68,30 @@ export class Sale extends AggregateRoot {
 		return this.status
 	}
 	setStatus(value: SaleStatus) {
+		const originalStatus = this.status.value
+		if (
+			(originalStatus === "cancelled" ||
+				originalStatus === "in progress") &&
+			value.value === "completed"
+		) {
+			this.addDomainEvent(
+				new SaleQuantityIncremented(
+					this.productId,
+					this.quantity.value,
+				),
+			)
+		} else if (
+			originalStatus === "completed" &&
+			(this.status.value === "cancelled" ||
+				this.status.value === "in progress")
+		) {
+			this.addDomainEvent(
+				new SaleQuantityDecremented(
+					this.productId,
+					this.quantity.value,
+				),
+			)
+		}
 		this.throwIfArchived()
 		this.status = value
 	}

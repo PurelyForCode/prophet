@@ -26,6 +26,7 @@ import {
 } from "../../infra/db/query_dao/DeliveryItemQueryDao.js"
 import { DeliveryItemNotFoundException } from "../../domain/delivery_management/exceptions/DeliveryItemNotFoundException.js"
 import { ArchiveDeliveryUsecase } from "../../application/delivery_management/delivery/archive_delivery/Usecase.js"
+import { domainEventBus } from "../../infra/events/EventBusConfiguration.js"
 
 const app = new Hono()
 
@@ -105,7 +106,11 @@ app.post(
 	),
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const usecase = new CreateDeliveryUsecase(uow, idGenerator)
+		const usecase = new CreateDeliveryUsecase(
+			uow,
+			idGenerator,
+			domainEventBus,
+		)
 		const body = c.req.valid("json")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
@@ -144,7 +149,7 @@ app.patch(
 	),
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const usecase = new UpdateDeliveryUsecase(uow)
+		const usecase = new UpdateDeliveryUsecase(uow, domainEventBus)
 		const body = c.req.valid("json")
 		const params = c.req.valid("param")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {

@@ -169,6 +169,7 @@ export class DeliveryQueryDao extends BaseQueryDao {
 				)
 				.join("product as p", "p.id", "i.product_id")
 				.where("i.delivery_id", "=", row.id)
+				.whereNull("p.deleted_at")
 			deliveries.push(this.mapToQueryDto(row, items))
 		}
 		return deliveries
@@ -208,6 +209,7 @@ export class DeliveryQueryDao extends BaseQueryDao {
 			.join("product", "delivery_item.product_id", "product.id")
 			.join("supplier", "delivery.supplier_id", "supplier.id")
 			.where("delivery.id", "=", id)
+			.whereNull("product.deleted_at")
 
 		const rows = await builder
 

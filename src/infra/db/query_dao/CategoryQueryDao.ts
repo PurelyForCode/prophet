@@ -96,7 +96,7 @@ export class CategoryQueryDao extends BaseQueryDao {
 					const groupQueryDao = new ProductGroupQueryDao(this.knex)
 					groups = await groupQueryDao.query(
 						undefined,
-						{ categoryId: row.id },
+						{ categoryId: row.id, archived: false },
 						undefined,
 						[],
 					)

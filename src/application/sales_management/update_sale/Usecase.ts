@@ -1,3 +1,4 @@
+import { IEventBus } from "../../../core/interfaces/IDomainEventBus.js"
 import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js"
 import { Usecase } from "../../../core/interfaces/Usecase.js"
 import { EntityId } from "../../../core/types/EntityId.js"
@@ -22,7 +23,10 @@ type UpdateSaleInput = {
 }
 
 export class UpdateSaleUsecase implements Usecase<UpdateSaleInput> {
-	constructor(private readonly uow: IUnitOfWork) {}
+	constructor(
+		private readonly uow: IUnitOfWork,
+		private readonly eventBus: IEventBus,
+	) {}
 	async call(input: UpdateSaleInput) {
 		const groupRepo = this.uow.getProductGroupRepository()
 		const productRepo = this.uow.getProductRepository()
@@ -68,5 +72,6 @@ export class UpdateSaleUsecase implements Usecase<UpdateSaleInput> {
 			sale,
 		)
 		await this.uow.save(sale)
+		await this.eventBus.dispatchAggregateEvents(sale, this.uow)
 	}
 }

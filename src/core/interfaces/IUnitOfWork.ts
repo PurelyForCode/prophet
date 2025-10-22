@@ -13,6 +13,7 @@ import { IProphetModelRepository } from "../../domain/forecasting/repositories/I
 import { IAccountRepository } from "../../domain/account_management/repositories/IAccountRepository.js"
 import { IPermissionRepository } from "../../domain/account_management/repositories/IPermissionRepository.js"
 import { IAccountPermissionRepository } from "../../domain/account_management/repositories/IAccountPermissionRepository.js"
+import { IInventoryRecommendationRepository } from "../../domain/inventory_recommendation/repositories/IInventoryRecommendationRepository.js"
 
 export enum IsolationLevel {
 	READ_COMMITTED = "READ COMMITTED",
@@ -36,6 +37,7 @@ export interface IUnitOfWork {
 	getAccountRepository(): IAccountRepository
 	getPermissionRepository(): IPermissionRepository
 	getAccountPermissionRepository(): IAccountPermissionRepository
+	getInventoryRecommendationRepository(): IInventoryRecommendationRepository
 
 	transaction(
 		config?: { isolationLevel: IsolationLevel } | undefined,

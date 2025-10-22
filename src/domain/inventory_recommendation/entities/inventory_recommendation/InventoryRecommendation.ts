@@ -1,15 +1,12 @@
-import { AggregateRoot } from "../../../../core/interfaces/AggregateRoot.js"
+import {
+	AggregateRoot,
+	EntityAction,
+} from "../../../../core/interfaces/AggregateRoot.js"
 import { EntityId } from "../../../../core/types/EntityId.js"
 import { LeadTime } from "../../../delivery_management/entities/supplier/value_objects/LeadTime.js"
 import { InventoryStatus } from "./value_objects/InventoryStatus.js"
 
 export class InventoryRecommendation extends AggregateRoot {
-	public get status(): InventoryStatus {
-		return this._status
-	}
-	public set status(value: InventoryStatus) {
-		this._status = value
-	}
 	private constructor(
 		id: EntityId,
 		private _forecastId: EntityId,
@@ -52,6 +49,10 @@ export class InventoryRecommendation extends AggregateRoot {
 			createdAt,
 			updatedAt,
 		)
+	}
+
+	public delete() {
+		this.addTrackedEntity(this, EntityAction.deleted)
 	}
 
 	public get forecastId(): EntityId {
@@ -107,5 +108,11 @@ export class InventoryRecommendation extends AggregateRoot {
 	}
 	public set updatedAt(value: Date) {
 		this._updatedAt = value
+	}
+	public get status(): InventoryStatus {
+		return this._status
+	}
+	public set status(value: InventoryStatus) {
+		this._status = value
 	}
 }

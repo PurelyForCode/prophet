@@ -129,6 +129,7 @@ export class SupplierQueryDao extends BaseQueryDao {
 						"ps.is_default as is_default",
 					)
 					.where("ps.supplier_id", "=", row.id)
+					.whereNull("p.deleted_at")
 			}
 			suppliers.push(this.mapToQueryDTO(row, products))
 		}
@@ -136,9 +137,9 @@ export class SupplierQueryDao extends BaseQueryDao {
 	}
 
 	async queryById(id: EntityId, include: SupplierQueryInclude) {
-		const builder = this.knex<
-			SupplierDatabaseTable & SuppliedProductJoinedTable
-		>(`${this.tableName} as s`)
+		const supplierRow = await this.knex<SupplierDatabaseTable>(
+			`${this.tableName} as s`,
+		)
 			.select(
 				"s.id",
 				"s.account_id",
@@ -149,69 +150,42 @@ export class SupplierQueryDao extends BaseQueryDao {
 				"s.deleted_at",
 			)
 			.where("s.id", "=", id)
-		if (include) {
-			if (include.products) {
-				builder.leftJoin(
-					"product_supplier as ps",
-					"ps.supplier_id",
-					"s.id",
+			.first()
+
+		if (!supplierRow) return null
+
+		let products: {
+			id: EntityId
+			name: string
+			min_orderable: number
+			max_orderable: number
+			is_default: boolean
+		}[] = []
+		if (include?.products) {
+			const productRows = await this.knex("product_supplier as ps")
+				.join("product as p", "p.id", "ps.product_id")
+				.select(
+					"p.id as id",
+					"p.name as name",
+					"ps.min_orderable as min_orderable",
+					"ps.max_orderable as max_orderable",
+					"ps.is_default as is_default",
 				)
-				builder.leftJoin("product as p", "p.id", "ps.product_id")
-				builder.select(
-					"p.id as product_id",
-					"p.name as product_name",
-					"ps.min_orderable as product_min_orderable",
-					"ps.max_orderable as product_max_orderable",
-					"ps.is_default as product_is_default",
-				)
-			}
-		}
-		const rows = await builder
+				.where("ps.supplier_id", "=", id)
+				.whereNull("p.deleted_at")
 
-		if (!rows[0]) {
-			return null
+			if (productRows.length > 0) {
+				products = productRows.map((p) => ({
+					id: p.id,
+					name: p.name,
+					min_orderable: p.min_orderable,
+					max_orderable: p.max_orderable,
+					is_default: p.is_default,
+				}))
+			}
 		}
 
-		if (include) {
-			if (include.products) {
-				const suppliers = this.groupWithProducts(rows)
-				return suppliers[0]
-			}
-		} else {
-			return this.mapToQueryDTO(rows[0], undefined)
-		}
-	}
-
-	private groupWithProducts(
-		rows: (SupplierDatabaseTable & SuppliedProductJoinedTable)[],
-	): SupplierQueryDto[] {
-		const supplierMap = new Map<EntityId, SupplierQueryDto>()
-		for (const row of rows) {
-			let supplier = supplierMap.get(row.id)
-			if (!supplier) {
-				supplier = {
-					id: row.id,
-					accountId: row.account_id,
-					createdAt: row.created_at,
-					deletedAt: row.deleted_at,
-					leadTime: row.lead_time,
-					name: row.name,
-					updatedAt: row.updated_at,
-					products: [],
-				}
-				supplierMap.set(row.id, supplier)
-			}
-			if (row.product_id) {
-				supplier.products!.push({
-					id: row.product_id,
-					maxOrderable: row.product_max_orderable,
-					minOrderable: row.product_min_orderable,
-					name: row.product_name,
-					isDefault: row.product_is_default,
-				})
-			}
-		}
-		return Array.from(supplierMap.values())
+		return this.mapToQueryDTO(supplierRow, products)
 	}
 
 	private mapToQueryDTO(

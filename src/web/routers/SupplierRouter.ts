@@ -233,6 +233,7 @@ app.patch(
 			.object({
 				min: z.number().int().positive(),
 				max: z.number().int().positive(),
+				isDefault: z.boolean(),
 			})
 			.partial(),
 	),
@@ -246,6 +247,7 @@ app.patch(
 				fields: {
 					max: body.max,
 					min: body.min,
+					isDefault: body.isDefault,
 				},
 				productId: params.productId,
 				supplierId: params.supplierId,

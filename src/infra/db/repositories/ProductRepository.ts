@@ -1,6 +1,5 @@
 import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
-import { IProductRepository } from "../../../domain/product_management/repositories/IProductRepository.js"
 import { Product } from "../../../domain/product_management/entities/product/Product.js"
 import { ProductName } from "../../../domain/product_management/entities/product/value_objects/ProductName.js"
 import { ProductSetting } from "../../../domain/product_management/entities/product/value_objects/ProductSetting.js"
@@ -10,6 +9,7 @@ import { idGenerator } from "../../utils/IdGenerator.js"
 import { ProductDao, ProductDto } from "../dao/ProductDao.js"
 import { ProductSettingDAO } from "../dao/ProductSettingDao.js"
 import { SaleCount } from "../../../domain/product_management/entities/product/value_objects/SaleCount.js"
+import { IProductRepository } from "../../../domain/product_management/repositories/IProductRepository.js"
 
 export class ProductRepository implements IProductRepository {
 	private productDao: ProductDao

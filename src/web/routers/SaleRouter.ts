@@ -202,7 +202,7 @@ app.patch(
 		const params = c.req.valid("param")
 		const body = c.req.valid("json")
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
-		const usecase = new UpdateSaleUsecase(uow)
+		const usecase = new UpdateSaleUsecase(uow, domainEventBus)
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				saleId: params.saleId,

@@ -5,7 +5,6 @@ import {
 } from "../../../../core/interfaces/AggregateRoot.js"
 import { EntityCollection } from "../../../../core/types/EntityCollection.js"
 import { EntityId } from "../../../../core/types/EntityId.js"
-import { DefaultProductSupplierChangedDomainEvent } from "../../events/DefaultProductSupplierChangedDomainEvent.js"
 import { ProductIsAlreadySuppliedException } from "../../exceptions/ProductIsAlreadySuppliedException.js"
 import { SuppliedProductNotFound } from "../../exceptions/SuppliedProductNotFound.js"
 import { SuppliedProduct } from "../supplied_product/SuppliedProduct.js"
@@ -104,26 +103,10 @@ export class Supplier extends AggregateRoot {
 			throw new SuppliedProductNotFound()
 		}
 
-		if (fields.max) toBeUpdated.setMax(fields.max)
-		if (fields.min) toBeUpdated.setMin(fields.min)
-
-		if (fields.isDefault !== undefined) {
-			const wasDefault = toBeUpdated.getIsDefault()
-			const willBeDefault = fields.isDefault
-
-			if (!wasDefault && willBeDefault) {
-				toBeUpdated.setIsDefault(true)
-
-				this.addDomainEvent(
-					new DefaultProductSupplierChangedDomainEvent({
-						newDefaultSupplierId: this.id,
-						productId: toBeUpdated.getProductId(),
-					}),
-				)
-			} else if (wasDefault && !willBeDefault) {
-				toBeUpdated.setIsDefault(false)
-			}
-		}
+		if (fields.max !== undefined) toBeUpdated.setMax(fields.max)
+		if (fields.min !== undefined) toBeUpdated.setMin(fields.min)
+		if (fields.isDefault !== undefined)
+			toBeUpdated.setIsDefault(fields.isDefault)
 
 		if (toBeUpdated.getMax().value <= toBeUpdated.getMin().value) {
 			throw new ValueException(
