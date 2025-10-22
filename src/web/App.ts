@@ -17,12 +17,21 @@ import authenticationRouter from "./routers/AuthenticationRouter.js"
 
 const environment = process.env.ENVIRONMENT ?? "dev"
 
+const frontendDomain = process.env.FRONTEND_DOMAIN
+
 const app = new Hono()
 
 app.use(
 	"/*",
 	cors({
-		origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+		origin: (origin) => {
+			// Allow your frontend explicitly
+			const allowedOrigins = ["http://localhost:3000", frontendDomain]
+			if (origin && allowedOrigins.includes(origin)) {
+				return origin
+			}
+			return "http://localhost:3000" // fallback for dev
+		},
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"],
 		exposeHeaders: ["Content-Length"],
@@ -40,7 +49,7 @@ const sessionOptions: SessionOptions =
 				cookieOptions: {
 					httpOnly: true,
 					secure: true,
-					sameSite: "Lax",
+					sameSite: "none",
 					path: "/",
 					maxAge: 60 * 60 * 24 * 7,
 				},
@@ -52,7 +61,7 @@ const sessionOptions: SessionOptions =
 				cookieOptions: {
 					httpOnly: true,
 					secure: false,
-					sameSite: "Lax",
+					sameSite: "none",
 					path: "/",
 					maxAge: 60 * 60 * 24,
 				},
