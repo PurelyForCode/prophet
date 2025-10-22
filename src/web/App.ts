@@ -92,4 +92,5 @@ app.route("/suppliers", supplierRouter)
 app.route("/deliveries", deliveryRouter)
 app.route("/categories", categoryRouter)
 app.route("/sales", saleRouter)
+
 export default app
