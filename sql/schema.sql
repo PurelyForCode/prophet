@@ -4,7 +4,7 @@ CREATE TABLE session (
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
-CREATE TYPE outbox_status AS ENUM ('pending', 'sent', 'failed');schema
+CREATE TYPE outbox_status AS ENUM ('pending', 'sent', 'failed');
 
 CREATE TABLE global_settings (
 	id SERIAL PRIMARY KEY,

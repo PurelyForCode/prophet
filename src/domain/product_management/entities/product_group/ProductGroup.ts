@@ -176,13 +176,11 @@ export class ProductGroup extends AggregateRoot {
 			throw new ProductNotFoundException()
 		}
 		product.deletedAt = new Date()
-		// TODO: THIS PROBABLY NEEDS TO HAVE AN EVENT
 		this.addTrackedEntity(product, EntityAction.updated)
 	}
 
 	removeVariant(productId: EntityId) {
 		const removed = this.products.get(productId)
-
 		if (!removed) {
 			throw new ProductNotFoundException()
 		}
@@ -191,11 +189,10 @@ export class ProductGroup extends AggregateRoot {
 	}
 
 	archive() {
-		const products = this.products.values()
-		products.forEach((product) => {
+		for (const product of this.products.values()) {
 			this.archiveVariant(product.id)
 			this.addTrackedEntity(product, EntityAction.updated)
-		})
+		}
 		this.deletedAt = new Date()
 		this.addTrackedEntity(this, EntityAction.updated)
 	}
@@ -222,10 +219,10 @@ export class ProductGroup extends AggregateRoot {
 
 	unarchive() {
 		this.deletedAt = null
-		this.products.forEach((product) => {
+		for (const product of this.products.values()) {
 			this.unarchiveVariant(product.id)
 			this.addTrackedEntity(product, EntityAction.updated)
-		})
+		}
 		this.addTrackedEntity(this, EntityAction.updated)
 	}
 
