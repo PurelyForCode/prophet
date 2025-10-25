@@ -23,7 +23,9 @@ export type CategoryQueryInclude =
 	  }>
 	| undefined
 
-export type CategoryFilters = Partial<{ name: string }> | undefined
+export type CategoryFilters =
+	| Partial<{ name: string; archived: boolean }>
+	| undefined
 
 export type CategoryQueryDto = {
 	id: EntityId
@@ -57,9 +59,13 @@ export class CategoryQueryDao extends BaseQueryDao {
 	) {
 		const builder = this.knex<CategoryDatabaseTable>(
 			`${this.tableName} as c`,
-		)
-			.select("c.*")
-			.whereNotNull("c.deleted_at")
+		).select("c.*")
+
+		if (filters?.archived) {
+			builder.whereNull("c.deleted_at")
+		} else {
+			builder.whereNotNull("c.deleted_at")
+		}
 
 		if (pagination) {
 			if (pagination.limit) {

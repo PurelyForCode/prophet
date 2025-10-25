@@ -58,7 +58,11 @@ export class SaleQueryDao extends BaseQueryDao {
 			builder.select("s.*")
 		}
 
-		builder.whereNull("s.deleted_at")
+		if (filters?.archived) {
+			builder.whereNotNull("s.deleted_at")
+		} else {
+			builder.whereNull("s.deleted_at")
+		}
 
 		if (filters?.productId) {
 			builder.where("s.product_id", "=", filters.productId)

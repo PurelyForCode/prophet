@@ -27,6 +27,7 @@ type AccountQueryInclude =
 type AccountQueryFilter =
 	| Partial<{
 			role: string
+			archived: boolean
 	  }>
 	| undefined
 
@@ -63,6 +64,11 @@ export class AccountQueryDao {
 			builder.offset(defaultPagination.offset)
 		}
 
+		if (filters?.archived) {
+			builder.whereNotNull("deleted_at")
+		} else {
+			builder.whereNull("deleted_at")
+		}
 		if (filters) {
 			if (filters.role) {
 				builder.where("role", "=", filters.role)
