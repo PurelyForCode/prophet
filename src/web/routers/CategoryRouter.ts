@@ -18,7 +18,6 @@ import {
 } from "../../infra/db/query_dao/CategoryQueryDao.js"
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
 import { sortStringSchema } from "../validation/SortStringSchema.js"
-import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 import { CategoryNotFoundException } from "../../domain/product_management/exceptions/CategoryNotFoundException.js"
 import { fakeId } from "../../fakeId.js"
 import { RemoveProductInCategoryUsecase } from "../../application/product_management/category/remove_product/Usecase.js"
