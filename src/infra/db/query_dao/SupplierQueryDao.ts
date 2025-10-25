@@ -14,8 +14,10 @@ export type SuppliedProductJoinedTable = {
 }
 
 export type SuppliedProductQueryDto = {
-	id: EntityId
-	name: string
+	productId: EntityId
+	groupId: EntityId
+	productName: string
+	groupName: string
 	minOrderable: number
 	maxOrderable: number
 	isDefault: boolean
@@ -116,15 +118,21 @@ export class SupplierQueryDao extends BaseQueryDao {
 			let products = undefined
 			if (include && include.products) {
 				products = await this.knex<{
+					product_id: EntityId
+					group_id: EntityId
 					min_orderable: number
 					max_orderable: number
-					name: string
-					id: EntityId
+					group_name: string
+					product_name: string
+					is_default: boolean
 				}>("product_supplier as ps")
 					.join("product as p", "p.id", "ps.product_id")
+					.join("product_group as g", "g.id", "p.group_id")
 					.select(
-						"p.id as id",
-						"p.name as name",
+						"p.id as product_id",
+						"g.id as group_id",
+						"p.name as product_name",
+						"g.name as group_name",
 						"ps.min_orderable as min_orderable",
 						"ps.max_orderable as max_orderable",
 						"ps.is_default as is_default",
@@ -155,35 +163,32 @@ export class SupplierQueryDao extends BaseQueryDao {
 
 		if (!supplierRow) return null
 
-		let products: {
-			id: EntityId
-			name: string
-			min_orderable: number
-			max_orderable: number
-			is_default: boolean
-		}[] = []
+		let products:
+			| {
+					product_id: EntityId
+					group_id: EntityId
+					min_orderable: number
+					max_orderable: number
+					group_name: string
+					product_name: string
+					is_default: boolean
+			  }[]
+			| undefined = undefined
 		if (include?.products) {
-			const productRows = await this.knex("product_supplier as ps")
+			products = await this.knex("product_supplier as ps")
 				.join("product as p", "p.id", "ps.product_id")
+				.join("product_group as g", "g.id", "p.group_id")
 				.select(
-					"p.id as id",
-					"p.name as name",
+					"p.id as product_id",
+					"g.id as group_id",
+					"p.name as product_name",
+					"g.name as group_name",
 					"ps.min_orderable as min_orderable",
 					"ps.max_orderable as max_orderable",
 					"ps.is_default as is_default",
 				)
 				.where("ps.supplier_id", "=", id)
 				.whereNull("p.deleted_at")
-
-			if (productRows.length > 0) {
-				products = productRows.map((p) => ({
-					id: p.id,
-					name: p.name,
-					min_orderable: p.min_orderable,
-					max_orderable: p.max_orderable,
-					is_default: p.is_default,
-				}))
-			}
 		}
 
 		return this.mapToQueryDTO(supplierRow, products)
@@ -193,10 +198,12 @@ export class SupplierQueryDao extends BaseQueryDao {
 		row: SupplierDatabaseTable,
 		products:
 			| {
-					id: EntityId
-					name: string
+					product_id: EntityId
+					group_id: EntityId
 					min_orderable: number
 					max_orderable: number
+					group_name: string
+					product_name: string
 					is_default: boolean
 			  }[]
 			| undefined,
@@ -205,8 +212,10 @@ export class SupplierQueryDao extends BaseQueryDao {
 		if (products) {
 			formattedProducts = products.map((product) => {
 				return {
-					id: product.id,
-					name: product.name,
+					productId: product.product_id,
+					groupId: product.group_id,
+					groupName: product.group_name,
+					productName: product.product_name,
 					maxOrderable: product.max_orderable,
 					minOrderable: product.min_orderable,
 					isDefault: product.is_default,
@@ -224,4 +233,5 @@ export class SupplierQueryDao extends BaseQueryDao {
 			products: formattedProducts,
 		}
 	}
+	product_group
 }
