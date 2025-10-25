@@ -43,16 +43,15 @@ export class CreateDeliveryUsecase {
 			id: id,
 			status: status,
 		})
-		// check suppliers if they supply these items
+		const productRepo = this.uow.getProductRepository()
+		const suppliedProductRepo = this.uow.getSuppliedProductRepository()
 		if (input.items) {
 			for (const item of input.items) {
 				const id = this.idGenerator.generate()
-				const suppliedProductRepo =
-					this.uow.getSuppliedProductRepository()
-				const productRepo = this.uow.getProductRepository()
 				if (!(await productRepo.findById(item.productId))) {
 					throw new ProductNotFoundException()
 				}
+
 				const isSupplied = await suppliedProductRepo.isProductSupplied(
 					item.productId,
 					supplier.id,
