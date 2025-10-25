@@ -21,12 +21,12 @@ export class InventoryRecommendationDao {
 
 	constructor(private readonly knex: Knex) {}
 
-	async findByProductId(id: EntityId) {
+	async findByForecastId(id: EntityId) {
 		const row = await this.knex<InventoryRecommendationDatabaseTable>(
 			this.tableName,
 		)
 			.select("*")
-			.where("product_id", "=", id)
+			.where("forecast_id", "=", id)
 			.first()
 
 		if (!row) {
@@ -35,6 +35,7 @@ export class InventoryRecommendationDao {
 			return this.mapToDTO(row)
 		}
 	}
+
 	async findById(id: EntityId) {
 		const row = await this.knex<InventoryRecommendationDatabaseTable>(
 			this.tableName,

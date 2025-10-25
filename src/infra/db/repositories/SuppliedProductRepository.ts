@@ -16,6 +16,16 @@ export class SuppliedProductRepository implements ISuppliedProductRepository {
 		this.suppliedProductDAO = new SuppliedProductDAO(knex)
 	}
 
+	async isProductSupplied(
+		productId: EntityId,
+		supplierId: EntityId,
+	): Promise<boolean> {
+		return await this.suppliedProductDAO.isProductSupplied(
+			productId,
+			supplierId,
+		)
+	}
+
 	async doesProductHaveDefaultSupplier(
 		productId: EntityId,
 	): Promise<boolean> {

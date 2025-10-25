@@ -27,7 +27,6 @@ type AccountQueryInclude =
 type AccountQueryFilter =
 	| Partial<{
 			role: string
-			archived: boolean
 	  }>
 	| undefined
 
@@ -48,9 +47,10 @@ export class AccountQueryDao {
 		include: AccountQueryInclude,
 		sort: Sort<AccountSortableFields>,
 	) {
-		const builder = this.knex<AccountDatabaseTable>(this.tableName).select(
-			"*",
-		)
+		const builder = this.knex<AccountDatabaseTable>(this.tableName)
+			.select("*")
+			.whereNotNull("deleted_at")
+
 		if (pagination) {
 			if (pagination.limit) {
 				builder.limit(pagination.limit)
@@ -61,12 +61,6 @@ export class AccountQueryDao {
 		} else {
 			builder.limit(defaultPagination.limit)
 			builder.offset(defaultPagination.offset)
-		}
-
-		if (filters && filters.archived) {
-			builder.whereNotNull("deleted_at")
-		} else {
-			builder.whereNull("deleted_at")
 		}
 
 		if (filters) {

@@ -6,8 +6,10 @@ import { DeliveryStatus } from "../../../../domain/delivery_management/entities/
 import { DeliveryItem } from "../../../../domain/delivery_management/entities/delivery_item/DeliveryItem.js"
 import { DeliveryItemQuantity } from "../../../../domain/delivery_management/entities/delivery_item/value_objects/DeliveryItemQuantity.js"
 import { DeliveryCompletedEvent } from "../../../../domain/delivery_management/events/DeliveryCompletedEvent.js"
+import { ProductIsNotSuppliedBySupplierException } from "../../../../domain/delivery_management/exceptions/ProductIsNotSuppliedBySupplierException.js"
 import { SupplierNotFoundException } from "../../../../domain/delivery_management/exceptions/SupplierNotFoundException.js"
 import { DeliveryManager } from "../../../../domain/delivery_management/services/DeliveryManager.js"
+import { ProductNotFoundException } from "../../../../domain/product_management/exceptions/ProductNotFoundException.js"
 
 export type CreateDeliveryInput = {
 	accountId: EntityId
@@ -41,9 +43,23 @@ export class CreateDeliveryUsecase {
 			id: id,
 			status: status,
 		})
+		// check suppliers if they supply these items
 		if (input.items) {
 			for (const item of input.items) {
 				const id = this.idGenerator.generate()
+				const suppliedProductRepo =
+					this.uow.getSuppliedProductRepository()
+				const productRepo = this.uow.getProductRepository()
+				if (!(await productRepo.findById(item.productId))) {
+					throw new ProductNotFoundException()
+				}
+				const isSupplied = await suppliedProductRepo.isProductSupplied(
+					item.productId,
+					supplier.id,
+				)
+				if (!isSupplied) {
+					throw new ProductIsNotSuppliedBySupplierException()
+				}
 				const quantity = new DeliveryItemQuantity(item.quantity)
 				const deliveryItem = DeliveryItem.create({
 					id: id,

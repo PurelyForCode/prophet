@@ -4,7 +4,7 @@ import { InventoryRecommendation } from "../entities/inventory_recommendation/In
 
 export interface IInventoryRecommendationRepository
 	extends IRepository<InventoryRecommendation> {
-	findByProductId(
+	findByForecastId(
 		productId: EntityId,
 	): Promise<null | InventoryRecommendation>
 }

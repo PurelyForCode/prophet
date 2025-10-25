@@ -49,7 +49,10 @@ app.get(
 		const supplierQueryDao = new SupplierQueryDao(knexInstance)
 		const query = c.req.valid("query")
 		const result = await supplierQueryDao.query(
-			{ limit: query.limit, offset: query.offset },
+			{
+				limit: query.limit,
+				offset: query.offset,
+			},
 			{
 				name: query.name,
 				productId: query.productId,

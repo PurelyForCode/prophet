@@ -23,9 +23,7 @@ export type CategoryQueryInclude =
 	  }>
 	| undefined
 
-export type CategoryFilters =
-	| Partial<{ name: string; archived: boolean }>
-	| undefined
+export type CategoryFilters = Partial<{ name: string }> | undefined
 
 export type CategoryQueryDto = {
 	id: EntityId
@@ -59,7 +57,9 @@ export class CategoryQueryDao extends BaseQueryDao {
 	) {
 		const builder = this.knex<CategoryDatabaseTable>(
 			`${this.tableName} as c`,
-		).select("c.*")
+		)
+			.select("c.*")
+			.whereNotNull("c.deleted_at")
 
 		if (pagination) {
 			if (pagination.limit) {
@@ -71,12 +71,6 @@ export class CategoryQueryDao extends BaseQueryDao {
 		} else {
 			builder.limit(defaultPagination.limit)
 			builder.offset(defaultPagination.offset)
-		}
-
-		if (filters && filters.archived === true) {
-			builder.whereNotNull("c.deleted_at")
-		} else {
-			builder.whereNull("c.deleted_at")
 		}
 
 		if (filters) {
@@ -96,7 +90,7 @@ export class CategoryQueryDao extends BaseQueryDao {
 					const groupQueryDao = new ProductGroupQueryDao(this.knex)
 					groups = await groupQueryDao.query(
 						undefined,
-						{ categoryId: row.id, archived: false },
+						{ categoryId: row.id },
 						undefined,
 						[],
 					)

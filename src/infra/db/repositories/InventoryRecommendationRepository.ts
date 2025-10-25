@@ -17,10 +17,10 @@ export class InventoryRecommendationRepository
 		this.invRecDao = new InventoryRecommendationDao(knex)
 	}
 
-	async findByProductId(
+	async findByForecastId(
 		id: EntityId,
 	): Promise<InventoryRecommendation | null> {
-		const dto = await this.invRecDao.findByProductId(id)
+		const dto = await this.invRecDao.findByForecastId(id)
 		if (!dto) {
 			return null
 		} else {

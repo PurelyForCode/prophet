@@ -15,6 +15,20 @@ export class SuppliedProductDAO {
 	private tableName = "product_supplier"
 	constructor(private readonly knex: Knex) {}
 
+	async isProductSupplied(
+		productId: EntityId,
+		supplierId: EntityId,
+	): Promise<boolean> {
+		const row = await this.knex<SuppliedProductDatabaseTable>(
+			this.tableName,
+		)
+			.select("*")
+			.where("supplier_id", supplierId)
+			.where("product_id", productId)
+			.first()
+		return row !== undefined
+	}
+
 	async doesProductHaveDefaultSupplier(productId: EntityId) {
 		const defaultSupplier = await this.knex<SuppliedProductDatabaseTable>(
 			this.tableName,

@@ -55,7 +55,7 @@ export class GenerateInventoryRecommendationHandler
 				14,
 			)
 		const invRepo = uow.getInventoryRecommendationRepository()
-		let invRec = await invRepo.findByProductId(forecast.productId)
+		let invRec = await invRepo.findByForecastId(forecast.productId)
 
 		if (inventoryRecommendation) {
 			if (invRec) {

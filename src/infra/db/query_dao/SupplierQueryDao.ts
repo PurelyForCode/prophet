@@ -33,6 +33,7 @@ export type SupplierQueryDto = {
 }
 
 export type SupplierIncludeFields = "products"
+
 export type SupplierQueryInclude =
 	| Partial<{
 			products: boolean
