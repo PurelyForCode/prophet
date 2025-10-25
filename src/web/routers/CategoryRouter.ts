@@ -33,7 +33,6 @@ app.get(
 			.object({
 				offset: z.coerce.number().nonnegative(),
 				limit: z.coerce.number().positive(),
-				archived: booleanStringSchema,
 				name: z.string().max(100).min(1),
 				include: includeStringSchema(
 					new Set<CategoryIncludeField>(["groups"]),
@@ -53,7 +52,6 @@ app.get(
 				offset: query.offset,
 			},
 			{
-				archived: query.archived,
 				name: query.name,
 			},
 			query.include,

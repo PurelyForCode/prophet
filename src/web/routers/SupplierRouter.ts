@@ -17,10 +17,10 @@ import {
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
 import { sortStringSchema } from "../validation/SortStringSchema.js"
 import { z } from "zod"
-import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 import { CreateSuppliedProductUsecase } from "../../application/delivery_management/supplier/supply_product/usecase.js"
 import { RemoveSuppliedProductUsecase } from "../../application/delivery_management/supplier/remove_product/usecase.js"
 import { UpdateSuppliedProductUsecase } from "../../application/delivery_management/supplier/update_supplied_product/usecase.js"
+import { SupplierNotFoundException } from "../../domain/delivery_management/exceptions/SupplierNotFoundException.js"
 
 const app = new Hono()
 
@@ -31,7 +31,6 @@ app.get(
 		z
 			.object({
 				name: z.string().min(1).max(100),
-				archived: booleanStringSchema,
 				offset: z.coerce.number().int().nonnegative(),
 				limit: z.coerce.number().int().positive(),
 				productId: z.uuidv7(),
@@ -56,7 +55,6 @@ app.get(
 			{
 				name: query.name,
 				productId: query.productId,
-				archived: query.archived,
 			},
 			query.sort,
 			query.include,
@@ -93,6 +91,9 @@ app.get(
 			params.supplierId,
 			query.include,
 		)
+		if (!result) {
+			throw new SupplierNotFoundException()
+		}
 		return c.json({
 			data: result,
 		})

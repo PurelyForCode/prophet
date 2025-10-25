@@ -8,6 +8,7 @@ import {
 	SaleSortableField,
 } from "../../infra/db/query_dao/SaleQueryDao.js"
 import { knexInstance } from "../../config/Knex.js"
+import { SaleNotFoundException } from "../../domain/sales/exceptions/SaleNotFoundException.js"
 
 const app = new Hono()
 
@@ -19,7 +20,6 @@ app.get(
 			.object({
 				offset: z.coerce.number().int().nonnegative(),
 				limit: z.coerce.number().int().positive(),
-				archived: booleanStringSchema,
 				sort: sortStringSchema(
 					new Set<SaleSortableField>(["quantity", "status", "date"]),
 				),
@@ -37,7 +37,6 @@ app.get(
 				limit: query.limit,
 			},
 			{
-				archived: query.archived,
 				date: query.date,
 				summed: query.summed,
 			},
@@ -56,10 +55,25 @@ app.get(
 			saleId: z.uuidv7(),
 		}),
 	),
+
+	zValidator(
+		"query",
+		z
+			.object({
+				summed: booleanStringSchema,
+			})
+			.partial(),
+	),
 	async (c) => {
 		const params = c.req.valid("param")
+		const query = c.req.valid("query")
 		const saleQueryDto = new SaleQueryDao(knexInstance)
-		const sales = await saleQueryDto.queryById(params.saleId, undefined)
+		const sales = await saleQueryDto.queryById(params.saleId, {
+			summed: query.summed,
+		})
+		if (!sales) {
+			throw new SaleNotFoundException()
+		}
 
 		return c.json({ data: sales })
 	},

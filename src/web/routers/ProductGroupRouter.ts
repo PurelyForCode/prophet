@@ -44,7 +44,6 @@ app.get(
 				limit: z.coerce.number().int().positive(),
 				offset: z.coerce.number().int().nonnegative(),
 				name: z.string().min(1).max(100),
-				archived: booleanStringSchema,
 				categoryId: z.uuidv7(),
 			})
 			.partial(),
@@ -62,7 +61,6 @@ app.get(
 		const groups = await groupQueryDao.query(
 			{ limit: query.limit, offset: query.offset },
 			{
-				archived: query.archived,
 				categoryId: query.categoryId,
 				name: query.name,
 			},

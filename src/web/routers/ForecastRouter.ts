@@ -149,15 +149,14 @@ app.get(
 			throw new ProductNotFoundException()
 		}
 
-		if (!(await fQueryDao.exists(params.forecastId))) {
-			throw new ForecastNotFoundException()
-		}
-
 		const query = c.req.valid("query")
 		const forecast = await fQueryDao.queryById(
 			params.forecastId,
 			query.include,
 		)
+		if (!forecast) {
+			throw new ForecastNotFoundException()
+		}
 		return c.json({
 			data: forecast,
 		})

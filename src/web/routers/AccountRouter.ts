@@ -24,6 +24,7 @@ import { ArchiveAccountUsecase } from "../../application/account_management/arch
 import { UpdateAccountUsecase } from "../../application/account_management/update_account/Usecase.js"
 import { ChangePasswordUsecase } from "../../application/account_management/change_password/Usecase.js"
 import { Password } from "../../domain/account_management/entities/account/value_objects/Password.js"
+import { AccountNotFoundException } from "../../domain/account_management/exceptions/AccountNotFoundException.js"
 
 const app = new Hono()
 
@@ -100,6 +101,9 @@ app.get(
 			params.accountId,
 			query.include,
 		)
+		if (!data) {
+			throw new AccountNotFoundException()
+		}
 		return c.json({ data })
 	},
 )

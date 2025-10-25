@@ -38,7 +38,6 @@ app.get(
 			.object({
 				offset: z.coerce.number().nonnegative(),
 				limit: z.coerce.number().positive(),
-				archived: booleanStringSchema,
 				status: z.enum<DeliveryStatusValue[]>([
 					"completed",
 					"cancelled",
@@ -59,7 +58,6 @@ app.get(
 				offset: query.offset,
 			},
 			{
-				archived: query.archived,
 				status: query.status,
 			},
 			query.sort,

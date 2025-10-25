@@ -40,7 +40,6 @@ app.get(
 			.object({
 				offset: z.coerce.number().int().nonnegative(),
 				limit: z.coerce.number().int().positive(),
-				archived: booleanStringSchema,
 				summed: booleanStringSchema,
 				date: z.coerce.date(),
 				sort: sortStringSchema(
@@ -71,7 +70,6 @@ app.get(
 				limit: query.limit,
 			},
 			{
-				archived: query.archived,
 				productId: params.productId,
 				summed: query.summed,
 				date: query.date,

@@ -37,7 +37,6 @@ app.get(
 			.object({
 				limit: z.coerce.number().int().positive(),
 				offset: z.coerce.number().int().nonnegative(),
-				archived: booleanStringSchema,
 				name: z.string().min(1).max(100),
 				include: includeStringSchema(
 					new Set<ProductIncludeField>(["sales", "settings"]),
@@ -71,7 +70,6 @@ app.get(
 				offset: query.offset,
 			},
 			{
-				archived: query.archived,
 				groupId: params.groupId,
 				name: query.name,
 			},

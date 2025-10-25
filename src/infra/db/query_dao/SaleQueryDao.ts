@@ -58,11 +58,7 @@ export class SaleQueryDao extends BaseQueryDao {
 			builder.select("s.*")
 		}
 
-		if (filters?.archived) {
-			builder.whereNotNull("s.deleted_at")
-		} else {
-			builder.whereNull("s.deleted_at")
-		}
+		builder.whereNull("s.deleted_at")
 
 		if (filters?.productId) {
 			builder.where("s.product_id", "=", filters.productId)
@@ -103,6 +99,13 @@ export class SaleQueryDao extends BaseQueryDao {
 			.where("s.id", "=", id)
 			.first()
 
+		if (filters && filters.summed) {
+			builder
+				.select("s.date")
+				.sum<{ quantity: number }>("s.quantity as quantity")
+				.groupBy("s.date")
+		}
+
 		if (filters) {
 			if (filters.productId) {
 				builder.where("s.product_id", "=", filters.productId)
@@ -110,7 +113,11 @@ export class SaleQueryDao extends BaseQueryDao {
 		}
 
 		const row = await builder
+
 		if (row) {
+			if (filters?.summed) {
+				return row
+			}
 			return this.mapToQueryDTO(row)
 		} else {
 			return null
