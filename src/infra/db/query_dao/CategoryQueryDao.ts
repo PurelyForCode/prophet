@@ -85,14 +85,22 @@ export class CategoryQueryDao extends BaseQueryDao {
 
 		if (filters) {
 			if (filters.name) {
-				builder.where("c.name", "%", filters.name)
+				builder
+					.whereRaw("(c.name % ? OR c.name ILIKE ?)", [
+						filters.name,
+						`%${filters.name}%`,
+					])
+					.orderByRaw("similarity(c.name, ?) DESC", [filters.name])
 			}
 		}
 
-		console.log(builder.toQuery())
-		sortQuery(builder, sort, this.categorySortFieldMap)
+		if (sort) {
+			sortQuery(builder, sort, this.categorySortFieldMap)
+		} else {
+			sortQuery(builder, ["name"], this.categorySortFieldMap)
+		}
+
 		const rows = await builder
-		console.log(rows)
 		let categories: CategoryQueryDto[] = []
 		for (const row of rows) {
 			let groups: ProductGroupQueryDto[] | undefined = undefined

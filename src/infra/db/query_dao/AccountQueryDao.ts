@@ -28,6 +28,7 @@ type AccountQueryFilter =
 	| Partial<{
 			role: string
 			archived: boolean
+			username: string
 	  }>
 	| undefined
 

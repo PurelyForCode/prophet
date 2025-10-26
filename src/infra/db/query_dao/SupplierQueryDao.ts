@@ -91,7 +91,12 @@ export class SupplierQueryDao extends BaseQueryDao {
 
 		if (filter) {
 			if (filter.name) {
-				builder.where("s.name", "%", filter.name)
+				builder
+					.whereRaw("(s.name % ? OR s.name ILIKE ?)", [
+						filter.name,
+						`%${filter.name}%`,
+					])
+					.orderByRaw("similarity(s.name, ?) DESC", [filter.name])
 			}
 		}
 

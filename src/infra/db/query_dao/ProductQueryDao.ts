@@ -88,7 +88,12 @@ export class ProductQueryDao extends BaseQueryDao {
 
 		if (filters) {
 			if (filters.name) {
-				builder.where("p.name", "%", filters.name)
+				builder
+					.whereRaw("(p.name % ? OR p.name ILIKE ?)", [
+						filters.name,
+						`%${filters.name}%`,
+					])
+					.orderByRaw("similarity(p.name, ?) DESC", [filters.name])
 			}
 
 			if (filters.groupId) {
