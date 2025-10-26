@@ -62,17 +62,21 @@ export class CategoryQueryDao extends BaseQueryDao {
 		).select("c.*")
 
 		if (filters?.archived) {
-			builder.whereNull("c.deleted_at")
-		} else {
 			builder.whereNotNull("c.deleted_at")
+		} else {
+			builder.whereNull("c.deleted_at")
 		}
 
 		if (pagination) {
 			if (pagination.limit) {
 				builder.limit(pagination.limit)
+			} else {
+				builder.limit(defaultPagination.limit)
 			}
 			if (pagination.offset) {
-				builder.limit(pagination.offset)
+				builder.offset(pagination.offset)
+			} else {
+				builder.offset(defaultPagination.offset)
 			}
 		} else {
 			builder.limit(defaultPagination.limit)
@@ -85,9 +89,10 @@ export class CategoryQueryDao extends BaseQueryDao {
 			}
 		}
 
+		console.log(builder.toQuery())
 		sortQuery(builder, sort, this.categorySortFieldMap)
-
 		const rows = await builder
+		console.log(rows)
 		let categories: CategoryQueryDto[] = []
 		for (const row of rows) {
 			let groups: ProductGroupQueryDto[] | undefined = undefined
