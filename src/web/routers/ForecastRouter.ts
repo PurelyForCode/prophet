@@ -22,6 +22,7 @@ import { ProductGroupNotFoundException } from "../../domain/product_management/e
 import { ProductNotFoundException } from "../../domain/product_management/exceptions/ProductNotFoundException.js"
 import { ForecastNotFoundException } from "../../domain/forecasting/exceptions/ForecastNotFoundException.js"
 import z from "zod"
+import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
 
@@ -31,6 +32,7 @@ app.get("/", (c) => {
 
 app.post(
 	"/",
+	authorize(["MANAGE_FORECASTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -71,6 +73,7 @@ app.post(
 
 app.get(
 	"/",
+	authorize(["MANAGE_FORECASTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -122,6 +125,7 @@ app.get(
 
 app.get(
 	"/:forecastId",
+	authorize(["MANAGE_FORECASTS"]),
 	zValidator(
 		"param",
 		z.object({

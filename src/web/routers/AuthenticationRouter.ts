@@ -7,6 +7,10 @@ import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js"
 import { PasswordUtility } from "../../infra/utils/PasswordUtility.js"
 import { LoginUsecase } from "../../application/account_management/login/Usecase.js"
 import { Session } from "hono-sessions"
+import { authorize } from "../middleware/AuthorizeMiddleware.js"
+import { PermissionQueryDao } from "../../infra/db/query_dao/PermissionQueryDao.js"
+import { AccountQueryDao } from "../../infra/db/query_dao/AccountQueryDao.js"
+import { AccountNotFoundException } from "../../domain/account_management/exceptions/AccountNotFoundException.js"
 
 type SessionDataTypes = {
 	accountId: string
@@ -41,5 +45,24 @@ app.post(
 		return c.json({ message: "Login successful" })
 	},
 )
+
+app.get("/session", async (c) => {
+	const session = c.get("session") as Session
+	const accountId = session?.get("accountId")
+	if (!accountId) {
+		return c.json({ error: "Unauthorized" }, 401)
+	}
+
+	const accountQueryDao = new AccountQueryDao(knexInstance)
+	const account = await accountQueryDao.queryById(accountId, {
+		permissions: true,
+	})
+	if (!account) {
+		throw new AccountNotFoundException()
+	}
+	return c.json({
+		data: account,
+	})
+})
 
 export default app

@@ -25,6 +25,7 @@ import { UpdateAccountUsecase } from "../../application/account_management/updat
 import { ChangePasswordUsecase } from "../../application/account_management/change_password/Usecase.js"
 import { Password } from "../../domain/account_management/entities/account/value_objects/Password.js"
 import { AccountNotFoundException } from "../../domain/account_management/exceptions/AccountNotFoundException.js"
+import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
 
@@ -38,6 +39,7 @@ app.get("/permissions", async (c) => {
 
 app.get(
 	"/",
+	authorize(["MANAGE_ACCOUNTS"]),
 	zValidator(
 		"query",
 		z
@@ -77,6 +79,7 @@ app.get(
 
 app.get(
 	"/:accountId",
+	authorize(["MANAGE_ACCOUNTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -110,6 +113,7 @@ app.get(
 
 app.post(
 	"/",
+	authorize(["MANAGE_ACCOUNTS"]),
 	zValidator(
 		"json",
 		z.object({
@@ -142,6 +146,7 @@ app.post(
 
 app.delete(
 	"/:accountId",
+	authorize(["MANAGE_ACCOUNTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -161,6 +166,7 @@ app.delete(
 
 app.patch(
 	"/:accountId",
+	authorize(["MANAGE_ACCOUNTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -192,6 +198,7 @@ app.patch(
 
 app.patch(
 	"/:accountId/password",
+	authorize(["MANAGE_ACCOUNTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -225,6 +232,7 @@ app.patch(
 
 app.post(
 	"/:accountId/permissions",
+	authorize(["MANAGE_ACCOUNTS"]),
 	zValidator(
 		"json",
 		z.object({
@@ -239,7 +247,6 @@ app.post(
 		const params = c.req.valid("param")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
-				actorId: fakeId,
 				granteeId: params.accountId,
 				permissionId: body.permissionId,
 			})
@@ -253,6 +260,7 @@ app.post(
 
 app.delete(
 	"/:accountId/permissions/:permissionId",
+	authorize(["MANAGE_ACCOUNTS"]),
 	zValidator(
 		"param",
 		z.object({ accountId: z.uuidv7(), permissionId: z.uuidv7() }),

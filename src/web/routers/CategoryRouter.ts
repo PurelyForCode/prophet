@@ -21,11 +21,14 @@ import { sortStringSchema } from "../validation/SortStringSchema.js"
 import { CategoryNotFoundException } from "../../domain/product_management/exceptions/CategoryNotFoundException.js"
 import { fakeId } from "../../fakeId.js"
 import { RemoveProductInCategoryUsecase } from "../../application/product_management/category/remove_product/Usecase.js"
+import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
 
 app.get(
 	"/",
+
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"query",
 		z
@@ -62,6 +65,7 @@ app.get(
 
 app.get(
 	"/:categoryId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"query",
 		z
@@ -95,6 +99,7 @@ app.get(
 
 app.post(
 	"/",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"json",
 		z.object({
@@ -118,6 +123,7 @@ app.post(
 
 app.patch(
 	"/:categoryId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"json",
 		z.object({
@@ -147,6 +153,7 @@ app.patch(
 
 app.delete(
 	"/:categoryId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -166,6 +173,7 @@ app.delete(
 
 app.post(
 	"/:categoryId/groups",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"json",
 		z.object({
@@ -195,6 +203,7 @@ app.post(
 
 app.delete(
 	"/:categoryId/groups/:groupId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({

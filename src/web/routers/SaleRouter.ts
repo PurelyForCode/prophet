@@ -22,11 +22,14 @@ import { ProductQueryDao } from "../../infra/db/query_dao/ProductQueryDao.js"
 import { ProductGroupNotFoundException } from "../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
 import { ProductNotFoundException } from "../../domain/product_management/exceptions/ProductNotFoundException.js"
 import { domainEventBus } from "../../infra/events/EventBusConfiguration.js"
+import { AuthorizationException } from "../../domain/account_management/exceptions/AuthorizationException.js"
+import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
 
 app.get(
 	"/",
+	authorize(["MANAGE_SALES"]),
 	zValidator(
 		"param",
 		z.object({
@@ -83,6 +86,7 @@ app.get(
 
 app.get(
 	"/:saleId",
+	authorize(["MANAGE_SALES"]),
 	zValidator(
 		"param",
 		z.object({
@@ -118,6 +122,7 @@ app.get(
 
 app.post(
 	"/",
+	authorize(["MANAGE_SALES"]),
 	zValidator(
 		"json",
 		z.object({
@@ -153,6 +158,7 @@ app.post(
 )
 app.delete(
 	"/:saleId",
+	authorize(["MANAGE_SALES"]),
 	zValidator(
 		"param",
 		z.object({
@@ -178,6 +184,7 @@ app.delete(
 )
 app.patch(
 	"/:saleId",
+	authorize(["MANAGE_SALES"]),
 	zValidator(
 		"json",
 		z

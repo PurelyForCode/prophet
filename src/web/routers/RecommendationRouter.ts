@@ -13,11 +13,13 @@ import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js"
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js"
 import { idGenerator } from "../../infra/utils/IdGenerator.js"
 import { CreateInventoryRecommendationUsecase } from "../../application/inventory_recommendation/create_inventory_recommendation/Usecase.js"
+import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
 
 app.get(
 	"/",
+	authorize(["MANAGE_RECOMMENDATIONS"]),
 	zValidator(
 		"query",
 		z
@@ -56,6 +58,7 @@ app.get(
 
 app.post(
 	"/",
+	authorize(["MANAGE_RECOMMENDATIONS"]),
 	zValidator("json", z.object({ forecastId: z.uuidv7() })),
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)

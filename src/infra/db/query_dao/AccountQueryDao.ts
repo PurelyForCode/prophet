@@ -49,9 +49,9 @@ export class AccountQueryDao {
 		include: AccountQueryInclude,
 		sort: Sort<AccountSortableFields>,
 	) {
-		const builder = this.knex<AccountDatabaseTable>(this.tableName)
-			.select("*")
-			.whereNotNull("deleted_at")
+		const builder = this.knex<AccountDatabaseTable>(this.tableName).select(
+			"*",
+		)
 
 		if (pagination) {
 			if (pagination.limit) {
@@ -127,12 +127,12 @@ export class AccountQueryDao {
 		permissions: PermissionQueryDto[] | undefined,
 	): AccountQueryDto {
 		return {
-			createdAt: row.created_at,
-			deletedAt: row.deleted_at,
 			id: row.id,
 			username: row.username,
 			role: row.role,
+			createdAt: row.created_at,
 			updatedAt: row.updated_at,
+			deletedAt: row.deleted_at,
 			permissions,
 		}
 	}

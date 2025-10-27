@@ -26,11 +26,13 @@ import { ProductNotFoundException } from "../../domain/product_management/except
 import { ProductGroupQueryDao } from "../../infra/db/query_dao/ProductGroupQueryDao.js"
 import { ProductGroupNotFoundException } from "../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
 import forecastRouter from "./ForecastRouter.js"
+import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
 
 app.get(
 	"/",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"query",
 		z
@@ -82,6 +84,8 @@ app.get(
 
 app.get(
 	"/:productId",
+
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -123,6 +127,8 @@ app.get(
 
 app.post(
 	"/",
+
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"json",
 		z.object({
@@ -160,6 +166,8 @@ app.post(
 
 app.delete(
 	"/:productId",
+
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -182,6 +190,8 @@ app.delete(
 )
 app.patch(
 	"/:productId",
+
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -223,6 +233,7 @@ app.patch(
 
 app.post(
 	"/:productId/unarchive",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"json",
 		z.object({

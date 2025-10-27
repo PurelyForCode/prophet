@@ -8,13 +8,21 @@ type PermissionTable = {
 	updated_at: Date
 }
 
+export type PermissionValues =
+	| "MANAGE_RECOMMENDATIONS"
+	| "MANAGE_PRODUCTS"
+	| "MANAGE_FORECASTS"
+	| "MANAGE_SALES"
+	| "MANAGE_ACCOUNTS"
+	| "ADMIN_ACCESS"
+
 const permissionNames = [
-	"MANAGE_INVENTORY",
-	"MANAGE_DELIVERIES",
+	"MANAGE_RECOMMENDATIONS",
 	"MANAGE_PRODUCTS",
 	"MANAGE_FORECASTS",
 	"MANAGE_SALES",
-	"ACCESS_DEBUG",
+	"MANAGE_ACCOUNTS",
+	"ADMIN_ACCESS",
 ]
 
 export async function createPermissions() {

@@ -21,11 +21,13 @@ import { CreateSuppliedProductUsecase } from "../../application/delivery_managem
 import { RemoveSuppliedProductUsecase } from "../../application/delivery_management/supplier/remove_product/usecase.js"
 import { UpdateSuppliedProductUsecase } from "../../application/delivery_management/supplier/update_supplied_product/usecase.js"
 import { SupplierNotFoundException } from "../../domain/delivery_management/exceptions/SupplierNotFoundException.js"
+import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
 
 app.get(
 	"/",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"query",
 		z
@@ -67,6 +69,7 @@ app.get(
 
 app.get(
 	"/:supplierId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -102,6 +105,7 @@ app.get(
 
 app.post(
 	"/",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"json",
 		z.object({
@@ -130,6 +134,7 @@ app.post(
 
 app.patch(
 	"/:supplierId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -166,6 +171,7 @@ app.patch(
 
 app.post(
 	"/:supplierId/products",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -200,6 +206,7 @@ app.post(
 
 app.delete(
 	"/:supplierId/products/:productId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -224,6 +231,7 @@ app.delete(
 
 app.patch(
 	"/:supplierId/products/:productId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({

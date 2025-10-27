@@ -16,7 +16,6 @@ import recommendationRouter from "./routers/RecommendationRouter.js"
 import authenticationRouter from "./routers/AuthenticationRouter.js"
 
 const environment = process.env.ENVIRONMENT ?? "dev"
-
 const frontendDomain = process.env.FRONTEND_DOMAIN
 
 const app = new Hono()
@@ -49,7 +48,7 @@ const sessionOptions: SessionOptions =
 				cookieOptions: {
 					httpOnly: true,
 					secure: true,
-					sameSite: "none",
+					sameSite: "lax",
 					path: "/",
 					maxAge: 60 * 60 * 24 * 7,
 				},
@@ -61,7 +60,7 @@ const sessionOptions: SessionOptions =
 				cookieOptions: {
 					httpOnly: true,
 					secure: false,
-					sameSite: "none",
+					sameSite: "lax",
 					path: "/",
 					maxAge: 60 * 60 * 24,
 				},
@@ -69,7 +68,7 @@ const sessionOptions: SessionOptions =
 				sessionCookieName: "session",
 			}
 
-app.use("/auth/*", sessionMiddleware(sessionOptions))
+app.use("/*", sessionMiddleware(sessionOptions))
 
 app.onError((err, c) => {
 	if (err instanceof ApplicationException) {

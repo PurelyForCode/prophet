@@ -27,11 +27,13 @@ import {
 import { DeliveryItemNotFoundException } from "../../domain/delivery_management/exceptions/DeliveryItemNotFoundException.js"
 import { ArchiveDeliveryUsecase } from "../../application/delivery_management/delivery/archive_delivery/Usecase.js"
 import { domainEventBus } from "../../infra/events/EventBusConfiguration.js"
+import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
 
 app.get(
 	"/",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"query",
 		z
@@ -68,6 +70,7 @@ app.get(
 
 app.get(
 	"/:deliveryId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -87,6 +90,7 @@ app.get(
 
 app.post(
 	"/",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"json",
 		z.object({
@@ -127,6 +131,7 @@ app.post(
 
 app.patch(
 	"/:deliveryId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"json",
 		z
@@ -170,6 +175,7 @@ app.patch(
 
 app.delete(
 	"/:deliveryId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -193,6 +199,7 @@ app.delete(
 
 app.get(
 	"/:deliveryId/items",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -229,6 +236,7 @@ app.get(
 
 app.get(
 	"/:deliveryId/items/:itemId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({
@@ -254,6 +262,7 @@ app.get(
 
 app.post(
 	"/:deliveryId/items",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"json",
 		z.object({
@@ -291,6 +300,7 @@ app.post(
 
 app.patch(
 	"/:deliveryId/items/:itemId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"json",
 		z.object({
@@ -324,6 +334,7 @@ app.patch(
 
 app.delete(
 	"/:deliveryId/items/:itemId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"param",
 		z.object({

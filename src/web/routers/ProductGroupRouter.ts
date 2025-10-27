@@ -19,15 +19,17 @@ import { CreateProductGroupUsecase } from "../../application/product_management/
 import { idGenerator } from "../../infra/utils/IdGenerator.js"
 import { fakeId } from "../../fakeId.js"
 import { ArchiveProductGroupUsecase } from "../../application/product_management/product_group/archive_product_group/usecase.js"
-import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 import productRouter from "./ProductRouter.js"
 import { CategoryQueryDao } from "../../infra/db/query_dao/CategoryQueryDao.js"
 import { CategoryNotFoundException } from "../../domain/product_management/exceptions/CategoryNotFoundException.js"
+import { AuthorizationException } from "../../domain/account_management/exceptions/AuthorizationException.js"
+import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
 
 app.get(
 	"/",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"query",
 		z
@@ -73,6 +75,8 @@ app.get(
 
 app.get(
 	"/:groupId",
+
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"query",
 		z
@@ -109,6 +113,8 @@ app.get(
 
 app.post(
 	"/",
+
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"json",
 		z.object({
@@ -138,6 +144,8 @@ app.post(
 
 app.delete(
 	"/:groupId",
+
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator("param", z.object({ groupId: z.uuidv7() })),
 	async (c) => {
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
@@ -157,6 +165,7 @@ app.delete(
 
 app.patch(
 	"/:groupId",
+	authorize(["MANAGE_PRODUCTS"]),
 	zValidator("param", z.object({ groupId: z.uuidv7() })),
 	zValidator(
 		"json",

@@ -9,11 +9,13 @@ import {
 } from "../../infra/db/query_dao/SaleQueryDao.js"
 import { knexInstance } from "../../config/Knex.js"
 import { SaleNotFoundException } from "../../domain/sales/exceptions/SaleNotFoundException.js"
+import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
 
 app.get(
 	"/",
+	authorize(["MANAGE_SALES"]),
 	zValidator(
 		"query",
 		z
@@ -49,6 +51,7 @@ app.get(
 
 app.get(
 	"/:saleId",
+	authorize(["MANAGE_SALES"]),
 	zValidator(
 		"param",
 		z.object({
