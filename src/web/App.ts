@@ -68,7 +68,7 @@ const sessionOptions: SessionOptions =
 				sessionCookieName: "session",
 			}
 
-app.use("/*", sessionMiddleware(sessionOptions))
+// app.use("/", sessionMiddleware(sessionOptions))
 
 app.onError((err, c) => {
 	if (err instanceof ApplicationException) {

@@ -8,6 +8,8 @@ import { PermissionValues } from "../../application/presetup/CreatePermissions.j
 export const authorize =
 	(requiredPermissions: PermissionValues[] = []) =>
 	async (c: Context, next: Next) => {
+		await next()
+
 		const session = c.get("session") as Session
 		const accountId = session?.get("accountId")
 
