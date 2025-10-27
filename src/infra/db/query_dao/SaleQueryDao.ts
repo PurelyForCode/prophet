@@ -15,6 +15,7 @@ export type SaleQueryFilter = Partial<{
 	archived: boolean
 	summed: boolean
 	date: Date
+	status: string
 }>
 
 export type SaleSortableField = "quantity" | "status" | "date"
@@ -69,6 +70,9 @@ export class SaleQueryDao extends BaseQueryDao {
 		}
 		if (filters?.date) {
 			builder.where("s.date", "=", filters.date)
+		}
+		if (filters?.status) {
+			builder.where("s.status", "=", filters.status)
 		}
 
 		if (pagination?.limit) builder.limit(pagination.limit)

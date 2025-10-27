@@ -1,13 +1,13 @@
 import { ValueException } from "../../../../../core/exceptions/ValueException.js"
 
-export type SaleStatusValues = "completed" | "in progress" | "cancelled"
+export type SaleStatusValues = "completed" | "pending" | "cancelled"
 
 export class SaleStatus {
 	public readonly value: SaleStatusValues
 	constructor(value: string) {
 		if (
 			value === "completed" ||
-			value === "in progress" ||
+			value === "pending" ||
 			value === "cancelled"
 		) {
 			this.value = value

@@ -101,7 +101,7 @@ export class DeliveryDAO {
 		>("delivery as d")
 			.select("d.scheduled_arrival_date", "i.product_id", "i.quantity")
 			.join("delivery_item as i", "i.delivery_id", "d.id")
-			.where("d.status", "=", "delivering")
+			.where("d.status", "=", "pending")
 			.where("i.product_id", "=", productId)
 		let productDeliveries = []
 		for (const row of rows) {

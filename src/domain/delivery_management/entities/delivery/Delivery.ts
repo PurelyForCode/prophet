@@ -112,7 +112,7 @@ export class Delivery extends AggregateRoot {
 				}
 				break
 
-			case "delivering":
+			case "pending":
 				this.setCompletedAt(null)
 				this.setCancelledAt(null)
 				if (originalStatus === "completed") {

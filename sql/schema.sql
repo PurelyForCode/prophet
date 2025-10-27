@@ -124,7 +124,7 @@ CREATE TABLE product_setting(
     updated_at TIMESTAMPTZ NOT NULL
 );
 
-CREATE TYPE sale_status AS ENUM ('completed', 'in_progress', 'cancelled');
+CREATE TYPE sale_status AS ENUM ('completed', 'pending', 'cancelled');
 
 CREATE TABLE sale (
     id UUID PRIMARY KEY,
@@ -159,7 +159,7 @@ CREATE TABLE product_supplier (
 
 CREATE TYPE delivery_status AS ENUM (
     'completed',
-    'delivering',
+    'pending',
     'cancelled'
 );
 
@@ -167,7 +167,7 @@ CREATE TABLE delivery (
     id UUID PRIMARY KEY,
     supplier_id UUID NOT NULL REFERENCES supplier(id) ON DELETE CASCADE ON UPDATE CASCADE,
     account_id UUID NOT NULL REFERENCES account(id) ON DELETE SET NULL ON UPDATE CASCADE,
-    status delivery_status NOT NULL DEFAULT 'delivering',
+    status delivery_status NOT NULL DEFAULT 'pending',
     completed_at TIMESTAMPTZ,
     requested_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     cancelled_at TIMESTAMPTZ,

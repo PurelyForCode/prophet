@@ -1,4 +1,3 @@
-import { original } from "immer"
 import { InvalidEntityCreated } from "../../../../core/exceptions/InvalidEntityCreated.js"
 import { ResourceIsArchivedException } from "../../../../core/exceptions/ResourceIsArchivedException.js"
 import { ValueException } from "../../../../core/exceptions/ValueException.js"
@@ -70,8 +69,7 @@ export class Sale extends AggregateRoot {
 	setStatus(value: SaleStatus) {
 		const originalStatus = this.status.value
 		if (
-			(originalStatus === "cancelled" ||
-				originalStatus === "in progress") &&
+			(originalStatus === "cancelled" || originalStatus === "pending") &&
 			value.value === "completed"
 		) {
 			this.addDomainEvent(
@@ -83,7 +81,7 @@ export class Sale extends AggregateRoot {
 		} else if (
 			originalStatus === "completed" &&
 			(this.status.value === "cancelled" ||
-				this.status.value === "in progress")
+				this.status.value === "pending")
 		) {
 			this.addDomainEvent(
 				new SaleQuantityDecremented(

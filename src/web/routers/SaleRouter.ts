@@ -22,8 +22,8 @@ import { ProductQueryDao } from "../../infra/db/query_dao/ProductQueryDao.js"
 import { ProductGroupNotFoundException } from "../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
 import { ProductNotFoundException } from "../../domain/product_management/exceptions/ProductNotFoundException.js"
 import { domainEventBus } from "../../infra/events/EventBusConfiguration.js"
-import { AuthorizationException } from "../../domain/account_management/exceptions/AuthorizationException.js"
 import { authorize } from "../middleware/AuthorizeMiddleware.js"
+import { SaleStatusValues } from "../../domain/sales/entities/sale/value_objects/SaleStatus.js"
 
 const app = new Hono()
 
@@ -48,6 +48,11 @@ app.get(
 				sort: sortStringSchema(
 					new Set<SaleSortableField>(["quantity", "status", "date"]),
 				),
+				status: z.enum<SaleStatusValues[]>([
+					"completed",
+					"pending",
+					"cancelled",
+				]),
 			})
 			.partial(),
 	),
@@ -76,6 +81,7 @@ app.get(
 				productId: params.productId,
 				summed: query.summed,
 				date: query.date,
+				status: query.status,
 			},
 			query.sort,
 		)
@@ -128,7 +134,11 @@ app.post(
 		z.object({
 			date: z.coerce.date(),
 			quantity: z.number().int().min(1),
-			status: z.enum(["completed", "in progress", "cancelled"]),
+			status: z.enum<SaleStatusValues[]>([
+				"completed",
+				"pending",
+				"cancelled",
+			]),
 		}),
 	),
 	zValidator(
@@ -191,7 +201,11 @@ app.patch(
 			.object({
 				date: z.coerce.date(),
 				quantity: z.number().int().min(1),
-				status: z.enum(["completed", "in progress", "cancelled"]),
+				status: z.enum<SaleStatusValues[]>([
+					"completed",
+					"pending",
+					"cancelled",
+				]),
 			})
 			.partial(),
 	),

@@ -43,7 +43,7 @@ app.get(
 				status: z.enum<DeliveryStatusValue[]>([
 					"completed",
 					"cancelled",
-					"delivering",
+					"pending",
 				]),
 				sort: sortStringSchema(
 					new Set<DeliverySortableFields>(["scheduledArrivalDate"]),
@@ -102,7 +102,11 @@ app.post(
 					}),
 				)
 				.optional(),
-			status: z.enum(["completed", "delivering", "cancelled"]),
+			status: z.enum<DeliveryStatusValue[]>([
+				"completed",
+				"pending",
+				"cancelled",
+			]),
 			supplierId: z.uuidv7(),
 		}),
 	),
@@ -136,7 +140,11 @@ app.patch(
 		"json",
 		z
 			.object({
-				status: z.enum(["completed", "delivering", "cancelled"]),
+				status: z.enum<DeliveryStatusValue[]>([
+					"completed",
+					"pending",
+					"cancelled",
+				]),
 				cancelledAt: z.coerce.date(),
 				completedAt: z.coerce.date(),
 				requestedAt: z.coerce.date(),

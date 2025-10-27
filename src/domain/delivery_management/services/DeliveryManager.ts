@@ -34,6 +34,7 @@ export class DeliveryManager {
 		delivery.addTrackedEntity(delivery, EntityAction.created)
 		return delivery
 	}
+
 	archiveDelivery(delivery: Delivery) {
 		delivery.archive()
 		delivery.addTrackedEntity(delivery, EntityAction.updated)

@@ -10,6 +10,7 @@ import {
 import { knexInstance } from "../../config/Knex.js"
 import { SaleNotFoundException } from "../../domain/sales/exceptions/SaleNotFoundException.js"
 import { authorize } from "../middleware/AuthorizeMiddleware.js"
+import { SaleStatusValues } from "../../domain/sales/entities/sale/value_objects/SaleStatus.js"
 
 const app = new Hono()
 
@@ -27,6 +28,11 @@ app.get(
 				),
 				date: z.coerce.date(),
 				summed: booleanStringSchema,
+				status: z.enum<SaleStatusValues[]>([
+					"completed",
+					"pending",
+					"cancelled",
+				]),
 			})
 			.partial(),
 	),
@@ -41,6 +47,7 @@ app.get(
 			{
 				date: query.date,
 				summed: query.summed,
+				status: query.status,
 			},
 			query.sort,
 		)
