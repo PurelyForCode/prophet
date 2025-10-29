@@ -14,6 +14,12 @@ import { SaleStatusValues } from "../../domain/sales/entities/sale/value_objects
 
 const app = new Hono()
 
+app.get("/count", async (c) => {
+	const saleQueryDao = new SaleQueryDao(knexInstance)
+	const count = await saleQueryDao.count()
+	return c.json({ data: count })
+})
+
 app.get(
 	"/",
 	authorize(["MANAGE_SALES"]),

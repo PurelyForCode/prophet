@@ -28,6 +28,34 @@ import { SaleStatusValues } from "../../domain/sales/entities/sale/value_objects
 const app = new Hono()
 
 app.get(
+	"/count",
+	zValidator(
+		"param",
+		z.object({
+			productId: z.uuidv7(),
+			groupId: z.uuidv7(),
+		}),
+	),
+	async (c) => {
+		const params = c.req.valid("param")
+		const groupQueryDao = new ProductGroupQueryDao(knexInstance)
+		const productQueryDao = new ProductQueryDao(knexInstance)
+
+		const groupExists = await groupQueryDao.exists(params.groupId)
+		if (!groupExists) {
+			throw new ProductGroupNotFoundException()
+		}
+		const productExists = await productQueryDao.exists(params.productId)
+		if (!productExists) {
+			throw new ProductNotFoundException()
+		}
+		const saleQueryDao = new SaleQueryDao(knexInstance)
+		const count = await saleQueryDao.count(params.productId)
+		return c.json({ data: count })
+	},
+)
+
+app.get(
 	"/",
 	authorize(["MANAGE_SALES"]),
 	zValidator(

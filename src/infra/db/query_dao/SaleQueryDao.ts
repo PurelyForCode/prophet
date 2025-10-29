@@ -43,6 +43,19 @@ export class SaleQueryDao extends BaseQueryDao {
 		status: "s.status",
 	}
 
+	async count(productId?: EntityId): Promise<number> {
+		const result = await this.knex<{ count: string }>(this.tableName)
+			.count<{ count: string }>("id as count")
+			.whereNull("deleted_at")
+			.modify((qb) => {
+				if (productId) {
+					qb.where("product_id", productId)
+				}
+			})
+
+		return Number(result[0].count)
+	}
+
 	async query(
 		pagination: Pagination,
 		filters: SaleQueryFilter | undefined,

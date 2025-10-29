@@ -65,6 +65,13 @@ export class SupplierQueryDao extends BaseQueryDao {
 		leadTime: "s.lead_time",
 	}
 
+	async count(): Promise<number> {
+		const result = await this.knex(this.tableName)
+			.count<{ count: string }[]>("id as count")
+			.whereNull("deleted_at")
+		return Number(result[0].count)
+	}
+
 	async query(
 		pagination: Pagination,
 		filter: SupplierQueryFilter,

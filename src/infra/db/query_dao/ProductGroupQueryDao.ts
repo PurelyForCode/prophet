@@ -54,6 +54,12 @@ export class ProductGroupQueryDao extends BaseQueryDao {
 		createdAt: "product_group.created_at",
 	}
 
+	async count(): Promise<number> {
+		const result = await this.knex(this.tableName)
+			.count<{ count: string }[]>("id as count")
+			.whereNull("deleted_at")
+		return Number(result[0].count)
+	}
 	async query(
 		pagination: Pagination,
 		filters: ProductGroupQueryFilters,

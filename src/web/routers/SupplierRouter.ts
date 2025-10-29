@@ -25,6 +25,12 @@ import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
 
+app.get("/count", async (c) => {
+	const saleQueryDao = new SupplierQueryDao(knexInstance)
+	const count = await saleQueryDao.count()
+	return c.json({ data: count })
+})
+
 app.get(
 	"/",
 	authorize(["MANAGE_PRODUCTS"]),

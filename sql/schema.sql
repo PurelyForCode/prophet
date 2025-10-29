@@ -187,7 +187,7 @@ CREATE TABLE delivery_item (
 CREATE TABLE croston_model (
     id UUID PRIMARY KEY,
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
-    model_version INTEGER NOT NULL DEFAULT 1,
+	name VARCHAR(100) NOT NULL,
     trained_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
@@ -199,7 +199,7 @@ CREATE TABLE croston_model_setting (
     optimizer_method TEXT, -- if alpha was optimized
     initial_demand NUMERIC,
     initial_interval NUMERIC,
-    period INTEGER, -- e.g., forecast granularity in days/weeks
+    period INTEGER,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
@@ -210,6 +210,7 @@ CREATE TABLE croston_model_setting (
 CREATE TABLE prophet_model (
     id UUID PRIMARY KEY,
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	name VARCHAR(100) NOT NULL,
     file_path TEXT,           -- null when model is not activated
     active BOOLEAN NOT NULL DEFAULT TRUE,
     trained_at TIMESTAMPTZ
@@ -313,7 +314,7 @@ CREATE TABLE forecast(
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE ON UPDATE CASCADE,
     account_id UUID NOT NULL REFERENCES account(id) ON DELETE SET NULL ON UPDATE CASCADE,
 	prophet_model_id UUID REFERENCES prophet_model(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	croston_model_id UUID REFERENCES prophet_model(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	croston_model_id UUID REFERENCES croston_model(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	model_type model_type NOT NULL,
     data_depth INT NOT NULL DEFAULT(100),
     forecast_start_date DATE NOT NULL,
