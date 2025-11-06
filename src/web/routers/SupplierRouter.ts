@@ -22,6 +22,7 @@ import { RemoveSuppliedProductUsecase } from "../../application/delivery_managem
 import { UpdateSuppliedProductUsecase } from "../../application/delivery_management/supplier/update_supplied_product/usecase.js"
 import { SupplierNotFoundException } from "../../domain/delivery_management/exceptions/SupplierNotFoundException.js"
 import { authorize } from "../middleware/AuthorizeMiddleware.js"
+import { DeleteSupplierUsecase } from "../../application/delivery_management/supplier/delete_supplier/Usecase.js"
 
 const app = new Hono()
 
@@ -171,6 +172,27 @@ app.patch(
 		c.status(201)
 		return c.json({
 			message: "Successfully updated supplier",
+		})
+	},
+)
+
+app.delete(
+	"/:supplierId",
+	zValidator(
+		"param",
+		z.object({
+			supplierId: z.uuidv7(),
+		}),
+	),
+	async (c) => {
+		const uow = new UnitOfWork(knexInstance, repositoryFactory)
+		const usecase = new DeleteSupplierUsecase(uow)
+		const params = c.req.valid("param")
+		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+			await usecase.call({ supplierId: params.supplierId })
+		})
+		return c.json({
+			message: "Successfully archived supplier",
 		})
 	},
 )
