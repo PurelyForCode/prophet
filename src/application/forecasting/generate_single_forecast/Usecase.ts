@@ -37,20 +37,24 @@ export class GenerateSingleForecastUsecase {
 			this.uow,
 			IsolationLevel.READ_COMMITTED,
 			async () => {
-				const prophetModelRepo = this.uow.getProphetModelRepository()
 				const productRepo = this.uow.getProductRepository()
 				const product = await productRepo.findById(input.productId)
+				// check if product exists
 				if (!product) {
 					throw new ProductNotFoundException()
 				}
+				// check if product has enough sales
 				if (product.saleCount.value <= 30) {
 					throw new ProductDoesNotHaveEnoughSalesException()
 				}
 				let crostonModelId = null
 				let prophetModelId = null
+
+				const prophetModelRepo = this.uow.getProphetModelRepository()
 				const hasModel = await prophetModelRepo.doesProductHaveModel(
 					product.id,
 				)
+
 				if (product.settings.classification === "fast" && !hasModel) {
 					const prophetModelManager = new ProphetModelManager()
 					const prophetModel = prophetModelManager.createProphetModel(
@@ -59,7 +63,6 @@ export class GenerateSingleForecastUsecase {
 					)
 					prophetModelId = prophetModel.id
 					await this.uow.save(prophetModel)
-					console.log("usecase saved")
 				} else if (
 					product.settings.classification === "slow" &&
 					hasModel

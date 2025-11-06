@@ -16,16 +16,17 @@ import { domainEventBus } from "../src/infra/events/EventBusConfiguration.js"
 import { IsolationLevel } from "../src/core/interfaces/IUnitOfWork.js"
 import { fakeId } from "../src/fakeId.js"
 
-const productId = "0199c7d3-6473-75d9-abd5-8fa1bc2cf175"
 const groupId = "0199c7d3-6473-75d9-abd5-88e78d9ccf56"
+const fastProductId = "0199c7d3-6473-75d9-abd5-8fa1bc2cf175"
+const slowProductId = "019a2e46-972b-7409-89c5-400930266009"
 
 async function main() {
 	await resetPrototype(knexInstance)
 	const now = new Date()
 	await createPrototypeProducts(
 		groupId,
-		productId,
-		"test",
+		fastProductId,
+		"fast product",
 		ProductSetting.defaultConfiguration(now),
 	)
 
@@ -33,7 +34,7 @@ async function main() {
 		{
 			accountId: fakeId,
 			groupId,
-			productId,
+			productId: fastProductId,
 			startDate: new Date(), // note: month index starts at 0, so 10 = November
 			patterns: [
 				// --- Year 1 ---
@@ -77,7 +78,48 @@ async function main() {
 			)
 		},
 	)
+	await createPrototypeProducts(
+		groupId,
+		slowProductId,
+		"slow product",
+		new ProductSetting(95, "dynamic", "slow", 95, now),
+	)
 
+	await generateSalesData(
+		{
+			accountId: fakeId,
+			groupId,
+			productId: slowProductId,
+			startDate: new Date(),
+			patterns: [
+				{
+					name: "Year 1",
+					days: 365,
+					pattern: new StablePattern(50, 5),
+				},
+				{
+					name: "Year 2",
+					days: 365,
+					pattern: new StablePattern(50, 5),
+				},
+			],
+		},
+		async (input) => {
+			const uow = new UnitOfWork(knexInstance, repositoryFactory)
+			const usecase = new CreateSaleUsecase(
+				uow,
+				idGenerator,
+				domainEventBus,
+			)
+			await runInTransaction(
+				uow,
+				IsolationLevel.READ_COMMITTED,
+				async () => {
+					await usecase.call(input)
+				},
+			)
+		},
+	)
 	await knexInstance.destroy()
 }
 

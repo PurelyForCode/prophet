@@ -15,7 +15,6 @@ export class ProphetSeasonality extends Entity {
 		private _fourierOrder: FourierOrder,
 		private _priorScale: PriorScale,
 		private _mode: ForecastingEffect,
-		private _conditionName?: string,
 	) {
 		super(id)
 	}
@@ -28,7 +27,6 @@ export class ProphetSeasonality extends Entity {
 		fourierOrder: FourierOrder
 		priorScale?: PriorScale
 		mode?: ForecastingEffect
-		conditionName?: string
 	}): ProphetSeasonality {
 		return new ProphetSeasonality(
 			props.id,
@@ -38,16 +36,9 @@ export class ProphetSeasonality extends Entity {
 			props.fourierOrder,
 			props.priorScale ?? new PriorScale(10.0),
 			props.mode ?? new ForecastingEffect("additive"),
-			props.conditionName,
 		)
 	}
 
-	public get conditionName(): string | undefined {
-		return this._conditionName
-	}
-	public set conditionName(value: string | undefined) {
-		this._conditionName = value
-	}
 	public get mode(): ForecastingEffect {
 		return this._mode
 	}

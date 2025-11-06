@@ -1,22 +1,19 @@
-import { Knex } from "knex";
-import { EntityId } from "../../core/types/EntityId.js";
-import { ProductDAO, ProductQueryDTO } from "./ProductDAO.js";
-import { CategoryDatabaseTable } from "../types/db/tables/CategoryDatabaseTable.js";
-
+import { Knex } from "knex"
+import { EntityId } from "../../../core/types/EntityId.js"
+import { CategoryDatabaseTable } from "../types/tables/CategoryDatabaseTable.js"
 
 export type CategoryDTO = {
-	id: EntityId;
-	accountId: EntityId;
-	name: string;
-	createdAt: Date;
-	updatedAt: Date;
-	deletedAt: Date | null;
-};
-
+	id: EntityId
+	accountId: EntityId
+	name: string
+	createdAt: Date
+	updatedAt: Date
+	deletedAt: Date | null
+}
 
 export class CategoryDAO {
-	private tableName = "product_category";
-	constructor(private readonly knex: Knex) { }
+	private tableName = "product_category"
+	constructor(private readonly knex: Knex) {}
 
 	async insert(table: CategoryDatabaseTable) {
 		await this.knex<CategoryDatabaseTable>(this.tableName).insert({
@@ -26,7 +23,7 @@ export class CategoryDAO {
 			created_at: table.created_at,
 			updated_at: table.updated_at,
 			deleted_at: table.deleted_at,
-		});
+		})
 	}
 
 	async update(table: CategoryDatabaseTable) {
@@ -39,24 +36,24 @@ export class CategoryDAO {
 				updated_at: table.updated_at,
 				deleted_at: table.deleted_at,
 			})
-			.where("id", "=", table.id);
+			.where("id", "=", table.id)
 	}
 
 	async delete(id: EntityId) {
 		await this.knex<CategoryDatabaseTable>(this.tableName)
 			.delete()
-			.where("id", "=", id);
+			.where("id", "=", id)
 	}
 
 	async findById(id: EntityId) {
 		const row = await this.knex<CategoryDatabaseTable>(this.tableName)
 			.select("*")
 			.where("id", "=", id)
-			.first();
+			.first()
 		if (!row) {
-			return null;
+			return null
 		} else {
-			return this.mapToDTO(row);
+			return this.mapToDTO(row)
 		}
 	}
 
@@ -64,14 +61,13 @@ export class CategoryDAO {
 		const row = await this.knex<CategoryDatabaseTable>(this.tableName)
 			.select("*")
 			.where("name", "=", name)
-			.first();
+			.first()
 		if (!row) {
-			return null;
+			return null
 		} else {
-			return this.mapToDTO(row);
+			return this.mapToDTO(row)
 		}
 	}
-
 
 	mapToDTO(row: CategoryDatabaseTable): CategoryDTO {
 		return {
@@ -81,6 +77,6 @@ export class CategoryDAO {
 			id: row.id,
 			name: row.name,
 			updatedAt: row.updated_at,
-		};
+		}
 	}
 }

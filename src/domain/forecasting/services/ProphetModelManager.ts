@@ -10,6 +10,9 @@ export class ProphetModelManager {
 			null,
 			false,
 			null,
+			new Map(),
+			new Map(),
+			new Map(),
 		)
 		prophetModel.addTrackedEntity(prophetModel, EntityAction.created)
 		return prophetModel

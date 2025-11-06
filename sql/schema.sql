@@ -185,25 +185,13 @@ CREATE TABLE delivery_item (
 );
 
 CREATE TABLE croston_model (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
-	name VARCHAR(100) NOT NULL,
-    trained_at TIMESTAMPTZ DEFAULT now() NOT NULL
+    name VARCHAR(100) NOT NULL,
+    trained_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
-
-CREATE TABLE croston_model_setting (
-    id UUID PRIMARY KEY,
-    croston_model_id UUID NOT NULL REFERENCES croston_model(id) ON DELETE CASCADE,
-    alpha NUMERIC(5,4) NOT NULL DEFAULT 0.1, -- smoothing factor
-    variant TEXT NOT NULL DEFAULT 'classic', -- 'classic', 'sba', 'optimized'
-    optimizer_method TEXT, -- if alpha was optimized
-    initial_demand NUMERIC,
-    initial_interval NUMERIC,
-    period INTEGER,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
-);
-
-
 -- =========================================================
 -- Model versioning and file tracking
 -- =========================================================
@@ -261,11 +249,10 @@ CREATE TABLE prophet_setting_season (
     model_setting_id UUID NOT NULL REFERENCES prophet_model_setting(id) ON DELETE CASCADE,
 
     name TEXT NOT NULL,
-    period_days NUMERIC NOT NULL,      -- seasonal period in days
-    fourier_order INTEGER NOT NULL,    -- number of Fourier terms
-    prior_scale NUMERIC(12,6),         -- optional per-seasonality prior scale
-    mode TEXT,                         -- 'additive' or 'multiplicative'
-    condition_name TEXT                -- for conditional seasonalities
+    period_days NUMERIC NOT NULL,      
+    fourier_order INTEGER NOT NULL,
+    prior_scale NUMERIC(12,6),         
+    mode TEXT							
 );
 
 
@@ -291,21 +278,6 @@ CREATE TABLE prophet_setting_holiday (
     lower_window INTEGER NOT NULL DEFAULT 0,
     upper_window INTEGER NOT NULL DEFAULT 0
 );
-
-
--- =========================================================
--- Extra regressors
--- =========================================================
-CREATE TABLE prophet_setting_regressor (
-    id UUID PRIMARY KEY,
-    model_setting_id UUID NOT NULL REFERENCES prophet_model_setting(id) ON DELETE CASCADE,
-
-    regressor_name TEXT NOT NULL,
-    prior_scale NUMERIC(12,6),
-    standardize BOOLEAN DEFAULT TRUE,
-    mode TEXT CHECK (mode IN ('additive', 'multiplicative'))
-);
-
 
 CREATE TYPE model_type AS ENUM ('prophet', 'croston'); 
 
