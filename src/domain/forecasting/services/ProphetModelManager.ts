@@ -3,12 +3,16 @@ import { EntityId } from "../../../core/types/EntityId.js"
 import { ProphetModel } from "../entities/prophet_model/ProphetModel.js"
 
 export class ProphetModelManager {
-	createProphetModel(id: EntityId, productId: EntityId): ProphetModel {
+	createProphetModel(
+		id: EntityId,
+		productId: EntityId,
+		isActive: boolean,
+	): ProphetModel {
 		const prophetModel = ProphetModel.create(
 			id,
 			productId,
 			null,
-			false,
+			isActive,
 			null,
 			new Map(),
 			new Map(),
@@ -16,5 +20,8 @@ export class ProphetModelManager {
 		)
 		prophetModel.addTrackedEntity(prophetModel, EntityAction.created)
 		return prophetModel
+	}
+	archiveProphetModel(model: ProphetModel) {
+		model.archive
 	}
 }

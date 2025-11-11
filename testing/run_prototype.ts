@@ -16,15 +16,17 @@ import { domainEventBus } from "../src/infra/events/EventBusConfiguration.js"
 import { IsolationLevel } from "../src/core/interfaces/IUnitOfWork.js"
 import { fakeId } from "../src/fakeId.js"
 
-const groupId = "0199c7d3-6473-75d9-abd5-88e78d9ccf56"
+const fastGroupId = "0199c7d3-6473-75d9-abd5-88e78d9ccf56"
+const slowGroupId = "0199c7d3-6473-75d9-abd5-88e78d9ccf58"
 const fastProductId = "0199c7d3-6473-75d9-abd5-8fa1bc2cf175"
 const slowProductId = "019a2e46-972b-7409-89c5-400930266009"
 
 async function main() {
 	await resetPrototype(knexInstance)
 	const now = new Date()
+
 	await createPrototypeProducts(
-		groupId,
+		fastGroupId,
 		fastProductId,
 		"fast product",
 		ProductSetting.defaultConfiguration(now),
@@ -33,7 +35,7 @@ async function main() {
 	await generateSalesData(
 		{
 			accountId: fakeId,
-			groupId,
+			groupId: fastGroupId,
 			productId: fastProductId,
 			startDate: new Date(), // note: month index starts at 0, so 10 = November
 			patterns: [
@@ -79,7 +81,7 @@ async function main() {
 		},
 	)
 	await createPrototypeProducts(
-		groupId,
+		slowGroupId,
 		slowProductId,
 		"slow product",
 		new ProductSetting(95, "dynamic", "slow", 95, now),
@@ -88,7 +90,7 @@ async function main() {
 	await generateSalesData(
 		{
 			accountId: fakeId,
-			groupId,
+			groupId: slowGroupId,
 			productId: slowProductId,
 			startDate: new Date(),
 			patterns: [

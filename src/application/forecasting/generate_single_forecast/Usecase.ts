@@ -51,7 +51,7 @@ export class GenerateSingleForecastUsecase {
 				let prophetModelId = null
 
 				const prophetModelRepo = this.uow.getProphetModelRepository()
-				const hasModel = await prophetModelRepo.doesProductHaveModel(
+				const hasModel = await prophetModelRepo.doesProductHaveActiveModel(
 					product.id,
 				)
 

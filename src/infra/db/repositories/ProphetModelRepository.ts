@@ -34,8 +34,8 @@ export class ProphetModelRepository implements IProphetModelRepository {
 		this.prophetChangepointDao = new ProphetChangepointDao(knex)
 	}
 
-	async doesProductHaveModel(productId: EntityId): Promise<boolean> {
-		return await this.prophetModelDao.doesProductHaveModel(productId)
+	async doesProductHaveActiveModel(productId: EntityId): Promise<boolean> {
+		return await this.prophetModelDao.doesProductHaveActiveModel(productId)
 	}
 
 	async delete(entity: ProphetModel): Promise<void> {
@@ -45,7 +45,7 @@ export class ProphetModelRepository implements IProphetModelRepository {
 		for (const holiday of holidays.values()) {
 			await this.prophetHolidayDao.delete(holiday.id)
 		}
-		const seasons = entity.seasons
+		const seasons = entity.seasonality
 		for (const season of seasons.values()) {
 			await this.prophetSeasonDao.delete(season.id)
 		}
@@ -76,7 +76,7 @@ export class ProphetModelRepository implements IProphetModelRepository {
 				model_setting_id: holiday.modelSettingId,
 			})
 		}
-		const seasons = entity.seasons
+		const seasons = entity.seasonality
 		for (const season of seasons.values()) {
 			await this.prophetSeasonDao.update({
 				fourier_order: season.fourierOrder.value,
@@ -118,7 +118,7 @@ export class ProphetModelRepository implements IProphetModelRepository {
 				model_setting_id: holiday.modelSettingId,
 			})
 		}
-		const seasons = entity.seasons
+		const seasons = entity.seasonality
 		for (const season of seasons.values()) {
 			await this.prophetSeasonDao.insert({
 				fourier_order: season.fourierOrder.value,

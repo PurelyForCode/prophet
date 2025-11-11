@@ -3,5 +3,5 @@ import { EntityId } from "../../../core/types/EntityId.js"
 import { ProphetModel } from "../entities/prophet_model/ProphetModel.js"
 
 export interface IProphetModelRepository extends IRepository<ProphetModel> {
-	doesProductHaveModel(productId: EntityId): Promise<boolean>
+	doesProductHaveActiveModel(productId: EntityId): Promise<boolean>
 }

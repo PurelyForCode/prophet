@@ -14,14 +14,13 @@ export class ProphetModelDAO {
 	private tableName = "prophet_model"
 	constructor(private readonly knex: Knex) {}
 
-	async doesProductHaveModel(productId: EntityId) {
+	async doesProductHaveActiveModel(productId: EntityId) {
 		const exists = await this.knex<ProphetModelDatabaseTable>(
 			this.tableName,
 		)
 			.select("id")
 			.where("product_id", "=", productId)
 			.where("active", true)
-			.whereNotNull("trained_at")
 			.first()
 
 		if (exists) {

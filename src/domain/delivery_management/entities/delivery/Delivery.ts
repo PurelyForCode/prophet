@@ -28,10 +28,6 @@ export class Delivery extends AggregateRoot {
 	private deletedAt: Date | null
 	private items: Map<EntityId, DeliveryItem>
 
-	getItems() {
-		return this.items
-	}
-
 	private constructor(params: {
 		id: EntityId
 		supplierId: EntityId
@@ -241,5 +237,8 @@ export class Delivery extends AggregateRoot {
 	}
 	setScheduledArrivalDate(value: Date) {
 		this.scheduledArrivalDate = value
+	}
+	getItems() {
+		return this.items
 	}
 }
