@@ -1,7 +1,6 @@
 import { IIdGenerator } from "../../../core/interfaces/IIdGenerator.js"
 import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js"
 import { Usecase } from "../../../core/interfaces/Usecase.js"
-import { ProphetModel } from "../../../domain/forecasting/entities/prophet_model/ProphetModel.js"
 import { ProphetModelManager } from "../../../domain/forecasting/services/ProphetModelManager.js"
 
 type CreateProphetModelInput = {
@@ -18,7 +17,7 @@ type CreateProphetModelInput = {
 		periodDays: number
 		fourierOrder: number
 		priorScale: number
-		mode: number
+		mode: string
 	}[]
 }
 

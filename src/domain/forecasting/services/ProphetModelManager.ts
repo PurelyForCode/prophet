@@ -21,7 +21,7 @@ export class ProphetModelManager {
 		prophetModel.addTrackedEntity(prophetModel, EntityAction.created)
 		return prophetModel
 	}
-	archiveProphetModel(model: ProphetModel) {
-		model.archive
+	deleteProphetModel(model: ProphetModel) {
+		model.delete()
 	}
 }

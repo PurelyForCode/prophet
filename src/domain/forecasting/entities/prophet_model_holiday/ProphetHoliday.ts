@@ -7,7 +7,7 @@ export class ProphetHoliday extends Entity {
 		id: EntityId,
 		private _modelSettingId_1: EntityId,
 		private _name: StandardName,
-		private _date: Date,
+		private _date: Date[],
 		private _lowerWindow: number,
 		private _upperWindow: number,
 	) {
@@ -18,7 +18,7 @@ export class ProphetHoliday extends Entity {
 		id: EntityId
 		modelSettingId: EntityId
 		name: StandardName
-		date: Date
+		date: Date[]
 		lowerWindow?: number
 		upperWindow?: number
 	}): ProphetHoliday {
@@ -44,10 +44,10 @@ export class ProphetHoliday extends Entity {
 	public set lowerWindow(value: number) {
 		this._lowerWindow = value
 	}
-	public get date(): Date {
+	public get date(): Date[] {
 		return this._date
 	}
-	public set date(value: Date) {
+	public set date(value: Date[]) {
 		this._date = value
 	}
 	public get name(): StandardName {
