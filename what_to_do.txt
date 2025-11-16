@@ -1,0 +1,14 @@
+GUIDE
+
+Domain folder =  contains all the core classes
+Infra folder = contains db, api, and interface implementations
+Application Folder = contains the features, uses the classes from domain and infra
+Web Folder = Routers
+
+
+Missing Features 
+1. Croston Model Customization
+2. Prophet Model Customization (Do this in python, javascript side is done)
+3. Self evaluating of forecasts
+4. excel implementation
+5. session logout
