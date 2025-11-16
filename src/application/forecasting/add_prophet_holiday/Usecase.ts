@@ -4,8 +4,11 @@ import { Usecase } from "../../../core/interfaces/Usecase.js"
 import { StandardName } from "../../../core/value_objects/StandardName.js"
 import { ProphetHoliday } from "../../../domain/forecasting/entities/prophet_model_holiday/ProphetHoliday.js"
 import { ProphetModelNotFoundException } from "../../../domain/forecasting/exceptions/ProphetModelNotFoundException.js"
+import { ProductGroupNotFoundException } from "../../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
+import { ProductNotFoundException } from "../../../domain/product_management/exceptions/ProductNotFoundException.js"
 
 type AddProphetHolidayInput = {
+	groupId: string
 	productId: string
 	prophetModelId: string
 	holidays: {
@@ -25,6 +28,15 @@ export class AddProphetHolidayUsecase
 	) {}
 	async call(input: AddProphetHolidayInput) {
 		const prophetModelRepo = this.uow.getProphetModelRepository()
+		const groupRepo = this.uow.getProductGroupRepository()
+		const group = await groupRepo.findById(input.groupId)
+		if (!group) {
+			throw new ProductGroupNotFoundException()
+		}
+		const product = group.getVariant(input.productId)
+		if (!product) {
+			throw new ProductNotFoundException()
+		}
 		const prophetModel = await prophetModelRepo.findById(
 			input.prophetModelId,
 		)

@@ -21,7 +21,6 @@ import {
 } from "../../infra/db/query_dao/ProductQueryDao.js"
 import { sortStringSchema } from "../validation/SortStringSchema.js"
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
-import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 import { ProductNotFoundException } from "../../domain/product_management/exceptions/ProductNotFoundException.js"
 import { ProductGroupQueryDao } from "../../infra/db/query_dao/ProductGroupQueryDao.js"
 import { ProductGroupNotFoundException } from "../../domain/product_management/exceptions/ProductGroupNotFoundException.js"

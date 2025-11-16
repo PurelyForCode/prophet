@@ -136,12 +136,12 @@ export class ProductGroup extends AggregateRoot {
 		return product
 	}
 
-	getReadOnlyVariant(productId: EntityId): null | Readonly<Product> {
+	getVariant(productId: EntityId): null | Product {
 		const product = this.products.get(productId)
 		if (!product) {
 			return null
 		}
-		return freeze({ ...product }, true) as Readonly<Product>
+		return product
 	}
 
 	updateVariant(productId: EntityId, fields: UpdateProductFields) {

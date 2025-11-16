@@ -36,7 +36,7 @@ export class UpdateProductUsecase implements Usecase<any, any> {
 		const now = new Date()
 		let updatedSettings = undefined
 		if (input.fields.settings) {
-			const product = group.getReadOnlyVariant(input.productId)
+			const product = group.getVariant(input.productId)
 			if (!product) {
 				throw new ProductNotFoundException()
 			}

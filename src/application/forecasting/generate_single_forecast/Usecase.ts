@@ -15,8 +15,10 @@ import { runInTransaction } from "../../../infra/utils/UnitOfWork.js"
 import { ForecastManager } from "../../../domain/forecasting/services/ForecastManager.js"
 import { DataDepth } from "../../../domain/forecasting/entities/forecast/value_objects/DataDepth.js"
 import { ModelType } from "../../../domain/forecasting/entities/forecast/value_objects/ModelType.js"
+import { ProductGroupNotFoundException } from "../../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
 
 export type GenerateSingleForecastInput = {
+	groupId: EntityId
 	productId: EntityId
 	accountId: EntityId
 	forecastStartDate: Date
@@ -37,9 +39,12 @@ export class GenerateSingleForecastUsecase {
 			this.uow,
 			IsolationLevel.READ_COMMITTED,
 			async () => {
-				const productRepo = this.uow.getProductRepository()
-				const product = await productRepo.findById(input.productId)
-				// check if product exists
+				const groupRepo = this.uow.getProductGroupRepository()
+				const group = await groupRepo.findById(input.groupId)
+				if (!group) {
+					throw new ProductGroupNotFoundException()
+				}
+				const product = group.getVariant(input.productId)
 				if (!product) {
 					throw new ProductNotFoundException()
 				}
@@ -51,15 +56,17 @@ export class GenerateSingleForecastUsecase {
 				let prophetModelId = null
 
 				const prophetModelRepo = this.uow.getProphetModelRepository()
-				const hasModel = await prophetModelRepo.doesProductHaveActiveModel(
-					product.id,
-				)
+				const hasModel =
+					await prophetModelRepo.doesProductHaveActiveModel(
+						product.id,
+					)
 
 				if (product.settings.classification === "fast" && !hasModel) {
 					const prophetModelManager = new ProphetModelManager()
 					const prophetModel = prophetModelManager.createProphetModel(
 						this.idGenerator.generate(),
 						product.id,
+						true,
 					)
 					prophetModelId = prophetModel.id
 					await this.uow.save(prophetModel)

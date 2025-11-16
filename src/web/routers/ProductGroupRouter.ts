@@ -22,7 +22,6 @@ import { ArchiveProductGroupUsecase } from "../../application/product_management
 import productRouter from "./ProductRouter.js"
 import { CategoryQueryDao } from "../../infra/db/query_dao/CategoryQueryDao.js"
 import { CategoryNotFoundException } from "../../domain/product_management/exceptions/CategoryNotFoundException.js"
-import { AuthorizationException } from "../../domain/account_management/exceptions/AuthorizationException.js"
 import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
 const app = new Hono()
@@ -81,7 +80,6 @@ app.get(
 
 app.get(
 	"/:groupId",
-
 	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"query",
