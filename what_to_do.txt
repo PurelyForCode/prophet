@@ -5,10 +5,52 @@ Infra folder = contains db, api, and interface implementations
 Application Folder = contains the features, uses the classes from domain and infra
 Web Folder = Routers
 
+Terminology Guide
+1. Router - basic routers
+2. Usecase - Represents a single feature
+3. Entity - Something with identity
+4. Value Object - Represents a value (no identity)
+5. DAO - Data access object, talks to the database
+6. QueryDAO - Data access object but only does reads
+7. Repository - Repository is used in application layer to access database
+
+
+Important Classes
+1. UnitOfWork - Handles transactions
+2. DomainEventBus - Handles domain events
+
 
 Missing Features 
 1. Croston Model Customization
 2. Prophet Model Customization (Do this in python, javascript side is done)
-3. Self evaluating of forecasts
+3. accuracy self evaluation of forecasts
 4. excel implementation
 5. session logout
+
+
+Croston Model Customization (Read statsforecast documentation on github)
+
+Prophet Model Customization (Read facebook prophet documentation for python, self explanatory)
+
+Accuracy Self Evaluation Of Forecasts
+1. Generate a forecast
+2. Compare it with the actual sales that happened during that forecast
+3. Calculate Mean Average Error
+
+Excel Implementation
+
+Product
+1. Make a template for product and product group
+2. Extract the data into excel
+3. When the user imports the excel into the browser application
+4. figure out any changed products
+5. Remove deleted products
+6. Create new ones
+
+Sales
+1. Make a template for sales per product
+2. Extract the data into excel
+3. When the user imports the excel into the browser application
+4. figure out any changed sales
+5. Remove deleted sales
+6. Create new sales
