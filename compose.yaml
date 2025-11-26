@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:17.6
+    container_name: postgres_db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+      - ./sql:/sql
+    ports:
+      - "5432:5432"
+
+volumes:
+  db_data:
