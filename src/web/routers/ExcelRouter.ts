@@ -8,6 +8,7 @@ import { ExportProductsTemplateUsecase } from "../../application/excel/export_pr
 import { ExportSalesTemplateUsecase } from "../../application/excel/export_sales_template/Usecase.js"
 import { ImportProductsUsecase } from "../../application/excel/import_products/Usecase.js"
 import { ImportSalesUsecase } from "../../application/excel/import_sales/Usecase.js"
+import { fakeId } from "../../fakeId.js"
 
 const app = new Hono()
 
@@ -52,9 +53,7 @@ app.get("/sales/export", async (c) => {
 })
 
 app.post("/products/import", async (c) => {
-	// Get account ID from session or request
-	// For now, using a default account ID - should be from session in production
-	const accountId = c.req.header("X-Account-Id") || "test-account-id"
+	const accountId = fakeId
 
 	const body = await c.req.parseBody()
 	const file = body["file"]
@@ -82,8 +81,7 @@ app.post("/products/import", async (c) => {
 })
 
 app.post("/sales/import", async (c) => {
-	// Get account ID from session or request
-	const accountId = c.req.header("X-Account-Id") || "test-account-id"
+	const accountId = fakeId
 
 	const body = await c.req.parseBody()
 	const file = body["file"]
