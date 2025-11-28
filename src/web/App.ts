@@ -18,20 +18,16 @@ import excelRouter from "./routers/ExcelRouter.js"
 
 const environment = process.env.ENVIRONMENT ?? "dev"
 const frontendDomain = process.env.FRONTEND_DOMAIN
+if (!frontendDomain) {
+	throw new Error("")
+}
 
 const app = new Hono()
 
 app.use(
 	"/*",
 	cors({
-		origin: (origin) => {
-			// Allow your frontend explicitly
-			const allowedOrigins = ["http://localhost:3000", frontendDomain]
-			if (origin && allowedOrigins.includes(origin)) {
-				return origin
-			}
-			return "http://localhost:3000" // fallback for dev
-		},
+		origin: frontendDomain,
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"],
 		exposeHeaders: ["Content-Length"],
@@ -45,31 +41,31 @@ const postgresqlSessionStore = new PostgresqlSessionStore(knexInstance)
 const sessionOptions: SessionOptions =
 	environment === "prod"
 		? {
-				store: postgresqlSessionStore,
-				cookieOptions: {
-					httpOnly: true,
-					secure: true,
-					sameSite: "lax",
-					path: "/",
-					maxAge: 60 * 60 * 24 * 7,
-				},
-				autoExtendExpiration: true,
-				sessionCookieName: "session",
-			}
+			store: postgresqlSessionStore,
+			cookieOptions: {
+				httpOnly: true,
+				secure: true,
+				sameSite: "lax",
+				path: "/",
+				maxAge: 60 * 60 * 24 * 7,
+			},
+			autoExtendExpiration: true,
+			sessionCookieName: "session",
+		}
 		: {
-				store: postgresqlSessionStore,
-				cookieOptions: {
-					httpOnly: true,
-					secure: false,
-					sameSite: "lax",
-					path: "/",
-					maxAge: 60 * 60 * 24,
-				},
-				autoExtendExpiration: true,
-				sessionCookieName: "session",
-			}
+			store: postgresqlSessionStore,
+			cookieOptions: {
+				httpOnly: true,
+				secure: false,
+				sameSite: "lax",
+				path: "/",
+				maxAge: 60 * 60 * 24,
+			},
+			autoExtendExpiration: true,
+			sessionCookieName: "session",
+		}
 
-app.use("/auth/*", sessionMiddleware(sessionOptions))
+app.use("/*", sessionMiddleware(sessionOptions))
 
 app.onError((err, c) => {
 	if (err instanceof ApplicationException) {
