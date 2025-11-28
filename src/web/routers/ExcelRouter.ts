@@ -48,6 +48,10 @@ app.get("/sales/export",
 			dateRangeStart: query.dateRangeStart
 		})
 
+		if (!buffer) {
+			return c.json({ message: "No sales found in range" })
+		}
+
 		const filename = `sales_${new Date().toISOString().split("T")[0]}.xlsx`
 
 		c.header(

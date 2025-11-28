@@ -14,16 +14,15 @@ type ExportSalesTemplateInput = {
 }
 
 export class ExportSalesTemplateUsecase
-	implements Usecase<ExportSalesTemplateInput, ExcelJS.Buffer> {
+	implements Usecase<ExportSalesTemplateInput, ExcelJS.Buffer | null> {
 	constructor(
 		private readonly knex: Knex,
 	) { }
 
-	async call(input: ExportSalesTemplateInput): Promise<ExcelJS.Buffer> {
+	async call(input: ExportSalesTemplateInput): Promise<ExcelJS.Buffer | null> {
 		const saleQueryDao = new SaleQueryDao(this.knex)
 		const groupQueryDao = new ProductGroupQueryDao(this.knex)
 		const productQueryDao = new ProductQueryDao(this.knex)
-
 
 		const now = new Date
 		const defaultStart = new Date(now)
@@ -31,9 +30,6 @@ export class ExportSalesTemplateUsecase
 
 		const dateRangeStart = input.dateRangeStart ?? defaultStart
 		const dateRangeEnd = input.dateRangeEnd ?? now
-
-		console.log(dateRangeStart)
-		console.log(dateRangeEnd)
 
 		// Fetch sales (not summed, so we get SaleQueryDto[])
 		const sales = (await saleQueryDao.queryExcel(
@@ -53,6 +49,9 @@ export class ExportSalesTemplateUsecase
 			date: Date
 			deletedAt: Date | null
 		}>
+		if (sales.length === 0) {
+			return null
+		}
 
 		// Fetch products for the sales
 		const productMap = new Map<string, ProductQueryDto>()
