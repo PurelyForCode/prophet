@@ -14,8 +14,9 @@ export type SaleQueryFilter = Partial<{
 	productId: EntityId
 	archived: boolean
 	summed: boolean
-	date: Date
 	status: string
+	dateRangeStart: Date
+	dateRangeEnd: Date
 }>
 
 export type SaleSortableField = "quantity" | "status" | "date"
@@ -81,8 +82,10 @@ export class SaleQueryDao extends BaseQueryDao {
 		if (filters?.productId) {
 			builder.where("s.product_id", "=", filters.productId)
 		}
-		if (filters?.date) {
-			builder.where("s.date", "=", filters.date)
+		if (filters?.dateRangeStart && filters?.dateRangeEnd === undefined) {
+			builder.where("s.date", "=", filters.dateRangeStart)
+		} else if (filters?.dateRangeStart && filters?.dateRangeEnd) {
+			builder.whereBetween("s.date", [filters.dateRangeStart, filters.dateRangeEnd])
 		}
 		if (filters?.status) {
 			builder.where("s.status", "=", filters.status)
@@ -108,6 +111,38 @@ export class SaleQueryDao extends BaseQueryDao {
 			}))
 		}
 
+		return rows.map((row: SaleDatabaseTable) => this.mapToQueryDTO(row))
+	}
+
+	async queryExcel(
+		filters: {
+			archived: boolean
+			dateRangeStart: Date
+			dateRangeEnd: Date
+		} | undefined,
+		sort: Sort<SaleSortableField>,
+	): Promise<(SaleQueryDto | SummedSaleQueryDto)[]> {
+		const builder = this.knex<SaleDatabaseTable>(`${this.tableName} as s`)
+
+		if (filters?.archived) {
+			builder.whereNotNull("s.deleted_at")
+		} else {
+			builder.whereNull("s.deleted_at")
+		}
+
+		if (filters?.dateRangeStart && filters?.dateRangeEnd === undefined) {
+			builder.where("s.date", "=", filters.dateRangeStart)
+		} else if (filters?.dateRangeStart && filters?.dateRangeEnd) {
+			builder.whereBetween("s.date", [filters.dateRangeStart, filters.dateRangeEnd])
+		}
+
+		if (sort) {
+			sortQuery(builder, sort, this.saleSortFieldMap)
+		} else {
+			sortQuery(builder, ["-date"], this.saleSortFieldMap)
+		}
+
+		const rows = await builder
 		return rows.map((row: SaleDatabaseTable) => this.mapToQueryDTO(row))
 	}
 

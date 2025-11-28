@@ -14,9 +14,7 @@ const app = new Hono()
 
 app.get("/products/export", async (c) => {
 	const includeArchived = c.req.query("include_archived") === "true"
-	const uow = new UnitOfWork(knexInstance, repositoryFactory)
-
-	const usecase = new ExportProductsTemplateUsecase(knexInstance, uow)
+	const usecase = new ExportProductsTemplateUsecase(knexInstance)
 	const buffer = await usecase.call({ includeArchived })
 
 	const filename = `products_${new Date().toISOString().split("T")[0]}.xlsx`

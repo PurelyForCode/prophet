@@ -108,7 +108,8 @@ app.get(
 			{
 				productId: params.productId,
 				summed: query.summed,
-				date: query.date,
+				dateRangeStart: query.date,
+				dateRangeEnd: undefined,
 				status: query.status,
 			},
 			query.sort,

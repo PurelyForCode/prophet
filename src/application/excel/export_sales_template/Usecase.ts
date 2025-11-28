@@ -2,33 +2,46 @@ import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js"
 import { Usecase } from "../../../core/interfaces/Usecase.js"
 import ExcelJS from "exceljs"
 import { SaleQueryDao } from "../../../infra/db/query_dao/SaleQueryDao.js"
-import { ProductQueryDao } from "../../../infra/db/query_dao/ProductQueryDao.js"
+import { ProductQueryDao, ProductQueryDto } from "../../../infra/db/query_dao/ProductQueryDao.js"
 import { Knex } from "knex"
 import { EntityId } from "../../../core/types/EntityId.js"
+import { ProductGroupQueryDao, ProductGroupQueryDto } from "../../../infra/db/query_dao/ProductGroupQueryDao.js"
 
 type ExportSalesTemplateInput = {
 	productId?: EntityId
 	includeArchived?: boolean
+	dateRangeStart?: Date,
+	dateRangeEnd?: Date,
 }
 
 export class ExportSalesTemplateUsecase
-	implements Usecase<ExportSalesTemplateInput, ExcelJS.Buffer>
-{
+	implements Usecase<ExportSalesTemplateInput, ExcelJS.Buffer> {
 	constructor(
 		private readonly knex: Knex,
-		private readonly uow: IUnitOfWork,
-	) {}
+	) { }
 
 	async call(input: ExportSalesTemplateInput): Promise<ExcelJS.Buffer> {
 		const saleQueryDao = new SaleQueryDao(this.knex)
+		const groupQueryDao = new ProductGroupQueryDao(this.knex)
 		const productQueryDao = new ProductQueryDao(this.knex)
 
+
+		const now = new Date
+		const defaultStart = new Date(now)
+		defaultStart.setFullYear(defaultStart.getFullYear() - 1)
+
+		const dateRangeStart = input.dateRangeStart ?? defaultStart
+		const dateRangeEnd = input.dateRangeEnd ?? now
+
+		console.log(dateRangeStart)
+		console.log(dateRangeEnd)
+
 		// Fetch sales (not summed, so we get SaleQueryDto[])
-		const sales = (await saleQueryDao.query(
-			{ limit: 10000, offset: 0 },
+		const sales = (await saleQueryDao.queryExcel(
 			{
-				productId: input.productId,
 				archived: input.includeArchived ?? false,
+				dateRangeEnd: dateRangeEnd,
+				dateRangeStart: dateRangeStart
 			},
 			["-date"],
 		)) as Array<{
@@ -41,15 +54,24 @@ export class ExportSalesTemplateUsecase
 		}>
 
 		// Fetch products for the sales
-		const productIds = [...new Set(sales.map((s) => s.productId))]
-		const products = await Promise.all(
-			productIds.map((id) =>
-				productQueryDao.queryById(id, { settings: false }),
-			),
-		)
-		const productMap = new Map(
-			products.filter((p) => p !== null).map((p) => [p!.id, p!]),
-		)
+		const productMap = new Map<string, ProductQueryDto>()
+		const productIds = new Set(sales.map((s) => s.productId))
+
+		for (const id of productIds) {
+			const product = await productQueryDao.queryById(id, { settings: false })
+			if (product) {
+				productMap.set(product.id, product)
+			}
+		}
+
+		const groupMap = new Map<string, ProductGroupQueryDto>()
+		const groupIds = new Set(productMap.values().map(val => val.groupId))
+		for (const id of groupIds) {
+			const group = await groupQueryDao.queryById(id, { productSales: false, productSettings: false })
+			if (group) {
+				groupMap.set(group.id, group)
+			}
+		}
 
 		// Create workbook and worksheet
 		const workbook = new ExcelJS.Workbook()
@@ -58,8 +80,10 @@ export class ExportSalesTemplateUsecase
 		// Define columns
 		worksheet.columns = [
 			{ header: "Sale ID", key: "saleId", width: 40 },
-			{ header: "Product ID", key: "productId", width: 40 },
-			{ header: "Product Name", key: "productName", width: 30 },
+			{ header: "Product ID", key: "groupId", width: 40 },
+			{ header: "Variant ID", key: "productId", width: 40 },
+			{ header: "Product Name", key: "productGroupName", width: 30 },
+			{ header: "Variant", key: "productName", width: 30 },
 			{ header: "Quantity", key: "quantity", width: 12 },
 			{ header: "Status", key: "status", width: 15 },
 			{ header: "Date", key: "date", width: 15 },
@@ -77,14 +101,24 @@ export class ExportSalesTemplateUsecase
 		// Add data rows
 		for (const sale of sales) {
 			const product = productMap.get(sale.productId)
+			if (!product) {
+				throw new Error()
+			}
+			const group = groupMap.get(product.groupId)
+			if (!group) {
+				throw new Error()
+			}
+
 			worksheet.addRow({
 				saleId: sale.id,
+				groupId: group.id,
 				productId: sale.productId,
+				productGroupName: group.name,
 				productName: product?.name || "Unknown",
 				quantity: sale.quantity,
 				status: sale.status,
 				date: sale.date,
-				archived: sale.deletedAt ? "TRUE" : "FALSE",
+				archived: sale.deletedAt ? true : false,
 			})
 		}
 
@@ -128,7 +162,7 @@ export class ExportSalesTemplateUsecase
 			wrapText: true,
 			vertical: "top",
 		}
-
+		console.log("new")
 		return await workbook.xlsx.writeBuffer()
 	}
 }

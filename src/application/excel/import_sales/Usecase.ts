@@ -25,14 +25,13 @@ type ImportResult = {
 }
 
 export class ImportSalesUsecase
-	implements Usecase<ImportSalesInput, ImportResult>
-{
+	implements Usecase<ImportSalesInput, ImportResult> {
 	constructor(
 		private readonly knex: Knex,
 		private readonly uow: IUnitOfWork,
 		private readonly idGenerator: IIdGenerator,
 		private readonly eventBus: IEventBus,
-	) {}
+	) { }
 
 	async call(input: ImportSalesInput): Promise<ImportResult> {
 		const workbook = new ExcelJS.Workbook()
@@ -58,16 +57,16 @@ export class ImportSalesUsecase
 			const row = worksheet.getRow(rowNumber)
 
 			try {
-				const saleId = row.getCell("saleId").value?.toString().trim() || ""
+				const saleId = row.getCell(1).value?.toString().trim() || ""
+				const groupId =
+					row.getCell(2).value?.toString().trim() || ""
 				const productId =
-					row.getCell("productId").value?.toString().trim() || ""
-				const quantity = Number(row.getCell("quantity").value) || 0
-				const status = row.getCell("status").value?.toString().trim() || ""
-				const dateValue = row.getCell("date").value
-				const archived =
-					row.getCell("archived").value?.toString().trim() === "TRUE"
+					row.getCell(3).value?.toString().trim() || ""
+				const quantity = Number(row.getCell(6).value) || 0
+				const status = row.getCell(7).value?.toString().trim() || ""
+				const dateValue = row.getCell(8).value
+				const archived = row.getCell(9).value
 
-				// Parse date
 				let date: Date
 				if (dateValue instanceof Date) {
 					date = dateValue
@@ -124,7 +123,7 @@ export class ImportSalesUsecase
 							this.idGenerator,
 							this.eventBus,
 						)
-						
+
 						await runInTransaction(
 							this.uow,
 							IsolationLevel.READ_COMMITTED,
