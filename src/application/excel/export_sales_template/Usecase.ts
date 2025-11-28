@@ -1,4 +1,3 @@
-import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js"
 import { Usecase } from "../../../core/interfaces/Usecase.js"
 import ExcelJS from "exceljs"
 import { SaleQueryDao } from "../../../infra/db/query_dao/SaleQueryDao.js"
@@ -39,10 +38,12 @@ export class ExportSalesTemplateUsecase
 		// Fetch sales (not summed, so we get SaleQueryDto[])
 		const sales = (await saleQueryDao.queryExcel(
 			{
+				productId: input.productId,
 				archived: input.includeArchived ?? false,
 				dateRangeEnd: dateRangeEnd,
 				dateRangeStart: dateRangeStart
 			},
+
 			["-date"],
 		)) as Array<{
 			id: string

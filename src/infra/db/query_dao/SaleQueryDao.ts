@@ -115,11 +115,12 @@ export class SaleQueryDao extends BaseQueryDao {
 	}
 
 	async queryExcel(
-		filters: {
+		filters: Partial<{
 			archived: boolean
+			productId: EntityId
 			dateRangeStart: Date
 			dateRangeEnd: Date
-		} | undefined,
+		}> | undefined,
 		sort: Sort<SaleSortableField>,
 	): Promise<(SaleQueryDto | SummedSaleQueryDto)[]> {
 		const builder = this.knex<SaleDatabaseTable>(`${this.tableName} as s`)
@@ -128,6 +129,10 @@ export class SaleQueryDao extends BaseQueryDao {
 			builder.whereNotNull("s.deleted_at")
 		} else {
 			builder.whereNull("s.deleted_at")
+		}
+
+		if (filters?.productId) {
+			builder.where("s.product_id", filters.productId)
 		}
 
 		if (filters?.dateRangeStart && filters?.dateRangeEnd === undefined) {

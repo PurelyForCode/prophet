@@ -9,6 +9,9 @@ import { ExportSalesTemplateUsecase } from "../../application/excel/export_sales
 import { ImportProductsUsecase } from "../../application/excel/import_products/Usecase.js"
 import { ImportSalesUsecase } from "../../application/excel/import_sales/Usecase.js"
 import { fakeId } from "../../fakeId.js"
+import { zValidator } from "@hono/zod-validator"
+import z from "zod"
+import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
 
 const app = new Hono()
 
@@ -28,27 +31,33 @@ app.get("/products/export", async (c) => {
 	return c.body(buffer)
 })
 
-app.get("/sales/export", async (c) => {
-	const productId = c.req.query("product_id")
-	const includeArchived = c.req.query("include_archived") === "true"
-	const uow = new UnitOfWork(knexInstance, repositoryFactory)
+app.get("/sales/export",
+	zValidator("query", z.object({
+		dateRangeStart: z.coerce.date(),
+		dateRangeEnd: z.coerce.date(),
+		archived: booleanStringSchema,
+		productId: z.uuidv7(),
+	}).partial()),
+	async (c) => {
+		const usecase = new ExportSalesTemplateUsecase(knexInstance)
+		const query = c.req.valid("query")
+		const buffer = await usecase.call({
+			productId: query.productId,
+			includeArchived: query.archived,
+			dateRangeEnd: query.dateRangeEnd,
+			dateRangeStart: query.dateRangeStart
+		})
 
-	const usecase = new ExportSalesTemplateUsecase(knexInstance, uow)
-	const buffer = await usecase.call({
-		productId: productId || undefined,
-		includeArchived,
+		const filename = `sales_${new Date().toISOString().split("T")[0]}.xlsx`
+
+		c.header(
+			"Content-Type",
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		)
+		c.header("Content-Disposition", `attachment; filename="${filename}"`)
+
+		return c.body(buffer)
 	})
-
-	const filename = `sales_${new Date().toISOString().split("T")[0]}.xlsx`
-
-	c.header(
-		"Content-Type",
-		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-	)
-	c.header("Content-Disposition", `attachment; filename="${filename}"`)
-
-	return c.body(buffer)
-})
 
 app.post("/products/import", async (c) => {
 	const accountId = fakeId
