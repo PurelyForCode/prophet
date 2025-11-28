@@ -3,11 +3,9 @@ import ExcelJS from "exceljs"
 import { SaleQueryDao } from "../../../infra/db/query_dao/SaleQueryDao.js"
 import { ProductQueryDao, ProductQueryDto } from "../../../infra/db/query_dao/ProductQueryDao.js"
 import { Knex } from "knex"
-import { EntityId } from "../../../core/types/EntityId.js"
 import { ProductGroupQueryDao, ProductGroupQueryDto } from "../../../infra/db/query_dao/ProductGroupQueryDao.js"
 
 type ExportSalesTemplateInput = {
-	productId?: EntityId
 	includeArchived?: boolean
 	dateRangeStart?: Date,
 	dateRangeEnd?: Date,
@@ -31,24 +29,14 @@ export class ExportSalesTemplateUsecase
 		const dateRangeStart = input.dateRangeStart ?? defaultStart
 		const dateRangeEnd = input.dateRangeEnd ?? now
 
-		// Fetch sales (not summed, so we get SaleQueryDto[])
-		const sales = (await saleQueryDao.queryExcel(
+		const sales = await saleQueryDao.queryExcel(
 			{
-				productId: input.productId,
 				archived: input.includeArchived ?? false,
 				dateRangeEnd: dateRangeEnd,
 				dateRangeStart: dateRangeStart
 			},
-
 			["-date"],
-		)) as Array<{
-			id: string
-			productId: string
-			quantity: number
-			status: string
-			date: Date
-			deletedAt: Date | null
-		}>
+		)
 		if (sales.length === 0) {
 			return null
 		}

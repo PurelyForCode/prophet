@@ -122,7 +122,7 @@ export class SaleQueryDao extends BaseQueryDao {
 			dateRangeEnd: Date
 		}> | undefined,
 		sort: Sort<SaleSortableField>,
-	): Promise<(SaleQueryDto | SummedSaleQueryDto)[]> {
+	): Promise<SaleQueryDto[]> {
 		const builder = this.knex<SaleDatabaseTable>(`${this.tableName} as s`)
 
 		if (filters?.archived) {

@@ -36,13 +36,11 @@ app.get("/sales/export",
 		dateRangeStart: z.coerce.date(),
 		dateRangeEnd: z.coerce.date(),
 		archived: booleanStringSchema,
-		productId: z.uuidv7(),
 	}).partial()),
 	async (c) => {
 		const usecase = new ExportSalesTemplateUsecase(knexInstance)
 		const query = c.req.valid("query")
 		const buffer = await usecase.call({
-			productId: query.productId,
 			includeArchived: query.archived,
 			dateRangeEnd: query.dateRangeEnd,
 			dateRangeStart: query.dateRangeStart
