@@ -31,14 +31,13 @@ type ImportResult = {
 }
 
 export class ImportProductsUsecase
-	implements Usecase<ImportProductsInput, ImportResult>
-{
+	implements Usecase<ImportProductsInput, ImportResult> {
 	constructor(
 		private readonly knex: Knex,
 		private readonly uow: IUnitOfWork,
 		private readonly idGenerator: IIdGenerator,
 		private readonly eventBus: IEventBus,
-	) {}
+	) { }
 
 	async call(input: ImportProductsInput): Promise<ImportResult> {
 		const workbook = new ExcelJS.Workbook()
@@ -70,24 +69,22 @@ export class ImportProductsUsecase
 			const row = worksheet.getRow(rowNumber)
 
 			try {
-				const groupId = row.getCell("groupId").value?.toString().trim() || ""
+				const groupId = row.getCell(1).value?.toString().trim() || ""
 				const groupName =
-					row.getCell("groupName").value?.toString().trim() || ""
+					row.getCell(2).value?.toString().trim() || ""
 				const productId =
-					row.getCell("productId").value?.toString().trim() || ""
+					row.getCell(3).value?.toString().trim() || ""
 				const productName =
-					row.getCell("productName").value?.toString().trim() || ""
-				const stock = Number(row.getCell("stock").value) || 0
-				const safetyStock = Number(row.getCell("safetyStock").value) || 0
+					row.getCell(4).value?.toString().trim() || ""
+				const stock = Number(row.getCell(5).value) || 0
+				const safetyStock = Number(row.getCell(6).value) || 0
 				const safetyStockMethod =
-					row.getCell("safetyStockMethod").value?.toString().trim() || ""
-				const serviceLevel = Number(row.getCell("serviceLevel").value) || 95
-				const fillRate = Number(row.getCell("fillRate").value) || 98
+					row.getCell(7).value?.toString().trim() || ""
+				const serviceLevel = Number(row.getCell(8).value) || 95
+				const fillRate = Number(row.getCell(9).value) || 98
 				const classification =
-					row.getCell("classification").value?.toString().trim() || "fast"
-				const archived =
-					row.getCell("archived").value?.toString().trim() === "TRUE"
-
+					row.getCell(10).value?.toString().trim() || "fast"
+				const archived = row.getCell(11)
 				// Skip empty rows
 				if (!groupName && !productName) {
 					continue
@@ -114,7 +111,7 @@ export class ImportProductsUsecase
 									this.uow,
 									this.idGenerator,
 								)
-							
+
 							await runInTransaction(
 								this.uow,
 								IsolationLevel.READ_COMMITTED,
@@ -127,7 +124,7 @@ export class ImportProductsUsecase
 									})
 								},
 							)
-							
+
 							// Get the created group ID by querying
 							const createdGroups = await productGroupQueryDao.query(
 								{ limit: 1, offset: 0 },
@@ -213,7 +210,7 @@ export class ImportProductsUsecase
 								this.eventBus,
 								this.idGenerator,
 							)
-							
+
 							await runInTransaction(
 								this.uow,
 								IsolationLevel.READ_COMMITTED,
@@ -263,7 +260,7 @@ export class ImportProductsUsecase
 							existingProduct.setting?.classification !== classification ||
 							existingProduct.setting?.fillRate !== fillRate ||
 							existingProduct.setting?.safetyStockCalculationMethod !==
-								safetyStockMethod ||
+							safetyStockMethod ||
 							existingProduct.setting?.serviceLevel !== serviceLevel
 
 						if (needsUpdate || (archived && !existingProduct.deletedAt)) {
@@ -291,6 +288,7 @@ export class ImportProductsUsecase
 												fields: {
 													name: productName,
 													safetyStock,
+													stock,
 													settings: {
 														classification: classification as
 															| "fast"
@@ -298,9 +296,9 @@ export class ImportProductsUsecase
 														fillRate,
 														safetyStockCalculationMethod:
 															safetyStockMethod as
-																| "manual"
-																| "dynamic"
-																| "historical",
+															| "manual"
+															| "dynamic"
+															| "historical",
 														serviceLevel,
 													},
 												},
@@ -326,7 +324,6 @@ export class ImportProductsUsecase
 				})
 			}
 		}
-
 		return result
 	}
 }

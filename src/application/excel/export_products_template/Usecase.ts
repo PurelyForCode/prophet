@@ -1,4 +1,3 @@
-import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js"
 import { Usecase } from "../../../core/interfaces/Usecase.js"
 import ExcelJS from "exceljs"
 import { ProductQueryDao } from "../../../infra/db/query_dao/ProductQueryDao.js"
@@ -10,12 +9,10 @@ type ExportProductsTemplateInput = {
 }
 
 export class ExportProductsTemplateUsecase
-	implements Usecase<ExportProductsTemplateInput, ExcelJS.Buffer>
-{
+	implements Usecase<ExportProductsTemplateInput, ExcelJS.Buffer> {
 	constructor(
 		private readonly knex: Knex,
-		private readonly uow: IUnitOfWork,
-	) {}
+	) { }
 
 	async call(input: ExportProductsTemplateInput): Promise<ExcelJS.Buffer> {
 		const productQueryDao = new ProductQueryDao(this.knex)
@@ -94,7 +91,7 @@ export class ExportProductsTemplateUsecase
 					serviceLevel: "",
 					fillRate: "",
 					classification: "",
-					archived: group.deletedAt ? "TRUE" : "FALSE",
+					archived: group.deletedAt ? true : false,
 				})
 			} else {
 				for (const product of groupProducts) {

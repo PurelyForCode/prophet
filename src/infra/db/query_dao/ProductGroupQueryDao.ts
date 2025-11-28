@@ -26,17 +26,17 @@ export type ProductGroupIncludeFields = "productSales" | "productSettings"
 
 export type ProductGroupQueryInclude =
 	| Partial<{
-			productSales: boolean
-			productSettings: boolean
-	  }>
+		productSales: boolean
+		productSettings: boolean
+	}>
 	| undefined
 
 export type ProductGroupQueryFilters =
 	| Partial<{
-			name: string
-			archived: boolean
-			categoryId: EntityId
-	  }>
+		name: string
+		archived: boolean
+		categoryId: EntityId
+	}>
 	| undefined
 
 export type ProductGroupSortableFields = "name" | "createdAt"
@@ -50,9 +50,9 @@ export class ProductGroupQueryDao extends BaseQueryDao {
 		ProductGroupSortableFields,
 		string
 	> = {
-		name: "product_group.name",
-		createdAt: "product_group.created_at",
-	}
+			name: "product_group.name",
+			createdAt: "product_group.created_at",
+		}
 
 	async count(): Promise<number> {
 		const result = await this.knex(this.tableName)
@@ -60,6 +60,7 @@ export class ProductGroupQueryDao extends BaseQueryDao {
 			.whereNull("deleted_at")
 		return Number(result[0].count)
 	}
+
 	async query(
 		pagination: Pagination,
 		filters: ProductGroupQueryFilters,
