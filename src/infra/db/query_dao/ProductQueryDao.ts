@@ -29,17 +29,17 @@ export type ProductIncludeField = "sales" | "settings"
 
 export type ProductQueryInclude =
 	| Partial<{
-			sales: boolean
-			settings: boolean
-	  }>
+		sales: boolean
+		settings: boolean
+	}>
 	| undefined
 
 export type ProductQueryFilters =
 	| Partial<{
-			name: string
-			archived: boolean
-			groupId: EntityId
-	  }>
+		name: string
+		archived: boolean
+		groupId: EntityId
+	}>
 	| undefined
 
 export type ProductTable = ProductDatabaseTable &
@@ -54,9 +54,85 @@ export class ProductQueryDao extends BaseQueryDao {
 		ProductSortableFields,
 		string
 	> = {
-		name: "p.name",
-		stock: "p.stock",
+			name: "p.name",
+			stock: "p.stock",
+		}
+
+	async queryExcel(
+		filters: ProductQueryFilters,
+		include: ProductQueryInclude,
+		sort: Sort<ProductSortableFields>,
+	) {
+		const builder = this.knex<
+			ProductDatabaseTable & JoinedProductSettingTableColumns
+		>(`${this.tableName} as p`).select("p.*")
+
+		if (filters && filters.archived) {
+			builder.whereNotNull("p.deleted_at")
+		} else {
+			builder.whereNull("p.deleted_at")
+		}
+
+		if (filters) {
+			if (filters.name) {
+				builder
+					.whereRaw("(p.name % ? OR p.name ILIKE ?)", [
+						filters.name,
+						`%${filters.name}%`,
+					])
+					.orderByRaw("similarity(p.name, ?) DESC", [filters.name])
+			}
+
+			if (filters.groupId) {
+				builder.where("p.group_id", "=", filters.groupId)
+			}
+		}
+
+		if (include && include.settings) {
+			this.joinSettings(builder)
+		}
+
+		if (sort) {
+			sortQuery(builder, sort, this.productSortFieldMap)
+		} else {
+			sortQuery(builder, ["name"], this.productSortFieldMap)
+		}
+		const rows = (await builder) as (ProductDatabaseTable &
+			JoinedProductSettingTableColumns)[]
+		let products: ProductQueryDto[] = []
+		for (const row of rows) {
+			const isArchived = row.deleted_at !== null
+			let sales: SaleQueryDto[] | undefined = undefined
+			let setting: JoinedProductSettingTableColumns | undefined =
+				undefined
+			if (include) {
+				if (include.sales) {
+					const saleQueryDto = new SaleQueryDao(this.knex)
+					sales = (await saleQueryDto.query(
+						undefined,
+						{
+							productId: row.id,
+							archived: isArchived,
+						},
+						["-date"],
+					)) as SaleQueryDto[]
+				}
+				if (include.settings) {
+					setting = {
+						setting_classification: row.setting_classification,
+						setting_fill_rate: row.setting_fill_rate,
+						setting_safety_stock_calculation_method:
+							row.setting_safety_stock_calculation_method,
+						setting_service_level: row.setting_service_level,
+						setting_updated_at: row.setting_updated_at,
+					}
+				}
+			}
+			products.push(this.mapToQueryDTO(row, setting, sales))
+		}
+		return products
 	}
+
 
 	async query(
 		pagination: Pagination,
@@ -148,10 +224,10 @@ export class ProductQueryDao extends BaseQueryDao {
 
 	async queryById(id: EntityId, include: ProductQueryInclude) {
 		const builder = this.knex<
-			ProductDatabaseTable & JoinedProductSettingTableColumns
-		>(this.tableName)
-			.select("*")
-			.where("id", "=", id)
+			ProductDatabaseTable & JoinedProductSettingTableColumns>
+			(`${this.tableName} as p`)
+			.select("p.*")
+			.where("p.id", "=", id)
 			.first()
 
 		if (include && include.settings) {

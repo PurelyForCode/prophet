@@ -1,6 +1,6 @@
 import { IUnitOfWork } from "../../../core/interfaces/IUnitOfWork.js"
 import { Usecase } from "../../../core/interfaces/Usecase.js"
-import ExcelJS from "exceljs"
+import ExcelJS, { CellFormulaValue, FormulaType } from "exceljs"
 import { CreateSaleUsecase } from "../../sales_management/create_sale/Usecase.js"
 import { UpdateSaleUsecase } from "../../sales_management/update_sale/Usecase.js"
 import { ArchiveSaleUsecase } from "../../sales_management/archive_sale/Usecase.js"
@@ -62,10 +62,47 @@ export class ImportSalesUsecase
 					row.getCell(2).value?.toString().trim() || ""
 				const productId =
 					row.getCell(3).value?.toString().trim() || ""
-				const quantity = Number(row.getCell(6).value) || 0
+				let quantity = row.getCell(6).value
 				const status = row.getCell(7).value?.toString().trim() || ""
 				const dateValue = row.getCell(8).value
-				const archived = row.getCell(9).value
+				let archived = row.getCell(9).value
+
+				if (saleId) {
+					if (!quantity || !status || !dateValue || !archived === null) {
+						result.errors.push({
+							row: rowNumber,
+							message:
+								"Incomplete sale row data in existing sale",
+						})
+					}
+				} else {
+					if (!quantity || !status || !dateValue || !archived === null) {
+						result.errors.push({
+							row: rowNumber,
+							message:
+								"Incomplete sale row data in new sale",
+						})
+					}
+				}
+				if (!(Number.isInteger(quantity) && Number(quantity) > 0)) {
+					result.errors.push({
+						row: rowNumber,
+						message:
+							"Quantity field can only be a whole number greater than 0",
+					})
+					continue
+				}
+
+				if (!(Number.isInteger(archived) && (Number(archived) === 0 || Number(archived) === 1))) {
+					result.errors.push({
+						row: rowNumber,
+						message:
+							"Archived field can only be 0 or 1. 0=FALSE and 1=TRUE",
+					})
+					continue
+				}
+				quantity = Number(quantity)
+				archived = Number(archived)
 
 				let date: Date
 				if (dateValue instanceof Date) {
@@ -116,13 +153,16 @@ export class ImportSalesUsecase
 				}
 
 				if (!saleId) {
-					// New sale - create it
 					try {
 						const createSaleUsecase = new CreateSaleUsecase(
 							this.uow,
 							this.idGenerator,
 							this.eventBus,
 						)
+						let deletedAt: undefined | Date
+						if (archived === 1) {
+							deletedAt = new Date()
+						}
 
 						await runInTransaction(
 							this.uow,
@@ -135,6 +175,7 @@ export class ImportSalesUsecase
 									quantity,
 									status: status as "completed" | "pending" | "cancelled",
 									date,
+									deletedAt
 								})
 								result.salesCreated++
 							},
@@ -165,13 +206,15 @@ export class ImportSalesUsecase
 						existingSale.status !== status ||
 						existingSale.date.getTime() !== date.getTime()
 
-					if (needsUpdate || (archived && !existingSale.deletedAt)) {
+					const shouldArchive = archived === 1 && !existingSale.deletedAt
+
+					if (needsUpdate || shouldArchive) {
 						try {
 							await runInTransaction(
 								this.uow,
 								IsolationLevel.READ_COMMITTED,
 								async () => {
-									if (archived && !existingSale.deletedAt) {
+									if (shouldArchive) {
 										const archiveUsecase = new ArchiveSaleUsecase(
 											this.uow,
 											this.eventBus,
@@ -220,7 +263,6 @@ export class ImportSalesUsecase
 				})
 			}
 		}
-
 		return result
 	}
 }

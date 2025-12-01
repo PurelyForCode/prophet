@@ -27,7 +27,13 @@ export class ExportSalesTemplateUsecase
 		defaultStart.setFullYear(defaultStart.getFullYear() - 1)
 
 		const dateRangeStart = input.dateRangeStart ?? defaultStart
-		const dateRangeEnd = input.dateRangeEnd ?? now
+		let dateRangeEnd
+		if (input.dateRangeEnd) {
+			dateRangeEnd = input.dateRangeEnd
+		} else {
+			const latestSale = await saleQueryDao.getLatest()
+			dateRangeEnd = latestSale ? latestSale.date : now
+		}
 
 		const sales = await saleQueryDao.queryExcel(
 			{
@@ -106,9 +112,11 @@ export class ExportSalesTemplateUsecase
 				quantity: sale.quantity,
 				status: sale.status,
 				date: sale.date,
-				archived: sale.deletedAt ? true : false,
+				archived: sale.deletedAt ? 1 : 0
 			})
 		}
+		const archiveColumn = worksheet.getColumn("archived")
+		archiveColumn.numFmt = '"TRUE";;"FALSE"'
 
 		// Add data validation for status column
 		worksheet.getColumn("status").eachCell((cell, rowNumber) => {
@@ -117,16 +125,6 @@ export class ExportSalesTemplateUsecase
 					type: "list",
 					allowBlank: false,
 					formulae: ['"completed,pending,cancelled"'],
-				}
-			}
-		})
-
-		worksheet.getColumn("archived").eachCell((cell, rowNumber) => {
-			if (rowNumber > 1) {
-				cell.dataValidation = {
-					type: "list",
-					allowBlank: false,
-					formulae: ['"TRUE,FALSE"'],
 				}
 			}
 		})
@@ -150,7 +148,6 @@ export class ExportSalesTemplateUsecase
 			wrapText: true,
 			vertical: "top",
 		}
-		console.log("new")
 		return await workbook.xlsx.writeBuffer()
 	}
 }

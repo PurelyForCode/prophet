@@ -61,6 +61,72 @@ export class ProductGroupQueryDao extends BaseQueryDao {
 		return Number(result[0].count)
 	}
 
+	async queryExcel(
+		filters: ProductGroupQueryFilters,
+		include: ProductGroupQueryInclude,
+		sort: Sort<ProductGroupSortableFields>,
+	) {
+		const builder = this.knex<ProductGroupDatabaseTable>(
+			this.tableName,
+		).select("*")
+
+		if (filters && filters.archived) {
+			builder.whereNotNull("deleted_at")
+		} else {
+			builder.whereNull("deleted_at")
+		}
+
+		if (filters) {
+			if (filters.name) {
+				builder
+					.whereRaw("(name % ? OR name ILIKE ?)", [
+						filters.name,
+						`%${filters.name}%`,
+					])
+					.orderByRaw("similarity(name, ?) DESC", [filters.name])
+			}
+			if (filters.categoryId) {
+				builder.where("product_category_id", "=", filters.categoryId)
+			}
+		}
+
+		if (sort) {
+			sortQuery<ProductGroupSortableFields>(
+				builder,
+				sort,
+				this.groupSortFieldMap,
+			)
+		} else {
+			sortQuery<ProductGroupSortableFields>(
+				builder,
+				["name"],
+				this.groupSortFieldMap,
+			)
+		}
+		const rows = await builder
+		let productInclude: ProductQueryInclude = {}
+		if (include) {
+			if (include.productSales) {
+				productInclude.sales = true
+			}
+			if (include.productSettings) {
+				productInclude.settings = true
+			}
+		}
+		let groups: ProductGroupQueryDto[] = []
+		for (const row of rows) {
+			const isArchived = row.deleted_at !== null
+			const productQueryDao = new ProductQueryDao(this.knex)
+			const products = await productQueryDao.query(
+				undefined,
+				{ groupId: row.id, archived: isArchived },
+				productInclude,
+				undefined,
+			)
+			groups.push(this.mapToQueryDto(row, products))
+		}
+		return groups
+	}
 	async query(
 		pagination: Pagination,
 		filters: ProductGroupQueryFilters,

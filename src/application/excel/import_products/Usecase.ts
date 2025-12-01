@@ -72,19 +72,20 @@ export class ImportProductsUsecase
 				const groupId = row.getCell(1).value?.toString().trim() || ""
 				const groupName =
 					row.getCell(2).value?.toString().trim() || ""
+				const groupArchived = row.getCell(3).value
 				const productId =
-					row.getCell(3).value?.toString().trim() || ""
-				const productName =
 					row.getCell(4).value?.toString().trim() || ""
-				const stock = Number(row.getCell(5).value) || 0
-				const safetyStock = Number(row.getCell(6).value) || 0
+				const productName =
+					row.getCell(5).value?.toString().trim() || ""
+				const stock = Number(row.getCell(6).value) || 0
+				const safetyStock = Number(row.getCell(7).value) || 0
 				const safetyStockMethod =
-					row.getCell(7).value?.toString().trim() || ""
-				const serviceLevel = Number(row.getCell(8).value) || 95
-				const fillRate = Number(row.getCell(9).value) || 98
+					row.getCell(8).value?.toString().trim() || ""
+				const serviceLevel = Number(row.getCell(9).value) || 95
+				const fillRate = Number(row.getCell(10).value) || 98
 				const classification =
-					row.getCell(10).value?.toString().trim() || "fast"
-				const archived = row.getCell(11)
+					row.getCell(11).value?.toString().trim() || "fast"
+				const productArchived = row.getCell(12).value
 				// Skip empty rows
 				if (!groupName && !productName) {
 					continue
@@ -162,18 +163,26 @@ export class ImportProductsUsecase
 						continue
 					}
 
+					if (existingGroup.deletedAt) {
+						result.errors.push({
+							row: rowNumber,
+							message: `Group with ID ${groupId} is archived`,
+						})
+						continue
+					}
+
 					// Update group if name changed or archived status changed
 					if (
 						existingGroup.name !== groupName ||
-						(archived && !existingGroup.deletedAt) ||
-						(!archived && existingGroup.deletedAt)
+						(groupArchived === 1 && !existingGroup.deletedAt) ||
+						(groupArchived === 0 && existingGroup.deletedAt)
 					) {
 						try {
 							await runInTransaction(
 								this.uow,
 								IsolationLevel.READ_COMMITTED,
 								async () => {
-									if (archived && !existingGroup.deletedAt) {
+									if (groupArchived === 1 && !existingGroup.deletedAt) {
 										const archiveUsecase =
 											new ArchiveProductGroupUsecase(this.uow)
 										await archiveUsecase.call({ id: groupId })
@@ -256,6 +265,7 @@ export class ImportProductsUsecase
 
 						const needsUpdate =
 							existingProduct.name !== productName ||
+							existingProduct.stock !== stock ||
 							existingProduct.safetyStock !== safetyStock ||
 							existingProduct.setting?.classification !== classification ||
 							existingProduct.setting?.fillRate !== fillRate ||
@@ -263,13 +273,13 @@ export class ImportProductsUsecase
 							safetyStockMethod ||
 							existingProduct.setting?.serviceLevel !== serviceLevel
 
-						if (needsUpdate || (archived && !existingProduct.deletedAt)) {
+						if (needsUpdate || (productArchived === 1 && !existingProduct.deletedAt)) {
 							try {
 								await runInTransaction(
 									this.uow,
 									IsolationLevel.READ_COMMITTED,
 									async () => {
-										if (archived && !existingProduct.deletedAt) {
+										if (productArchived === 1 && !existingProduct.deletedAt) {
 											const archiveUsecase = new ArchiveProductUsecase(
 												this.uow,
 											)

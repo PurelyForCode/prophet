@@ -19,7 +19,8 @@ export type CreateSaleInput = {
 	groupId: EntityId
 	quantity: number
 	status: SaleStatusValues
-	date: Date
+	date: Date,
+	deletedAt?: Date
 }
 
 export class CreateSaleUsecase implements Usecase<CreateSaleInput> {
@@ -27,7 +28,7 @@ export class CreateSaleUsecase implements Usecase<CreateSaleInput> {
 		private readonly uow: IUnitOfWork,
 		private readonly idGenerator: IIdGenerator,
 		private readonly eventBus: IEventBus,
-	) {}
+	) { }
 	async call(input: CreateSaleInput) {
 		const groupRepo = this.uow.getProductGroupRepository()
 		const productRepo = this.uow.getProductRepository()
@@ -56,7 +57,7 @@ export class CreateSaleUsecase implements Usecase<CreateSaleInput> {
 			date: input.date,
 			createdAt: now,
 			updatedAt: now,
-			deletedAt: null,
+			deletedAt: input.deletedAt ?? null,
 		})
 		await this.uow.save(sale)
 		await this.eventBus.dispatchAggregateEvents(sale, this.uow)

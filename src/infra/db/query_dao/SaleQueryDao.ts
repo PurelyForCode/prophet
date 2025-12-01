@@ -185,6 +185,18 @@ export class SaleQueryDao extends BaseQueryDao {
 		}
 	}
 
+
+	async getLatest() {
+		const result = await this.knex<SaleDatabaseTable>(`${this.tableName} as s`)
+			.select("s.*").orderBy("date", "desc")
+			.first() as SaleDatabaseTable
+		if (!result) {
+			return null
+		} else {
+			return this.mapToQueryDTO(result)
+		}
+
+	}
 	mapToQueryDTO(row: SaleDatabaseTable): SaleQueryDto {
 		return {
 			id: row.id,

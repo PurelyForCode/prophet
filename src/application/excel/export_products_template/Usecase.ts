@@ -19,16 +19,14 @@ export class ExportProductsTemplateUsecase
 		const productGroupQueryDao = new ProductGroupQueryDao(this.knex)
 
 		// Fetch all product groups
-		const groups = await productGroupQueryDao.query(
-			{ limit: 10000, offset: 0 },
+		const groups = await productGroupQueryDao.queryExcel(
 			{ archived: input.includeArchived ?? false },
 			undefined,
 			undefined,
 		)
 
 		// Fetch all products with settings
-		const products = await productQueryDao.query(
-			{ limit: 10000, offset: 0 },
+		const products = await productQueryDao.queryExcel(
 			{ archived: input.includeArchived ?? false },
 			{ settings: true },
 			undefined,
@@ -42,6 +40,7 @@ export class ExportProductsTemplateUsecase
 		worksheet.columns = [
 			{ header: "Group ID", key: "groupId", width: 40 },
 			{ header: "Group Name", key: "groupName", width: 30 },
+			{ header: "Group Archived", key: "groupArchived", width: 30 },
 			{ header: "Product ID", key: "productId", width: 40 },
 			{ header: "Product Name", key: "productName", width: 30 },
 			{ header: "Stock", key: "stock", width: 12 },
@@ -54,8 +53,13 @@ export class ExportProductsTemplateUsecase
 			{ header: "Service Level", key: "serviceLevel", width: 15 },
 			{ header: "Fill Rate", key: "fillRate", width: 12 },
 			{ header: "Classification", key: "classification", width: 15 },
-			{ header: "Archived", key: "archived", width: 12 },
+			{ header: "Product Archived", key: "productArchived", width: 12 },
 		]
+		const groupArchivedCol = worksheet.getColumn("groupArchived")
+		groupArchivedCol.numFmt = '"TRUE";;"FALSE"'
+
+		const productArchivedCol = worksheet.getColumn("productArchived")
+		productArchivedCol.numFmt = '"TRUE";;"FALSE"'
 
 		// Style header row
 		worksheet.getRow(1).font = { bold: true }
@@ -83,6 +87,7 @@ export class ExportProductsTemplateUsecase
 				worksheet.addRow({
 					groupId: group.id,
 					groupName: group.name,
+					groupArchived: group.deletedAt ? 1 : 0,
 					productId: "",
 					productName: "",
 					stock: "",
@@ -91,13 +96,14 @@ export class ExportProductsTemplateUsecase
 					serviceLevel: "",
 					fillRate: "",
 					classification: "",
-					archived: group.deletedAt ? true : false,
+					productArchived: "",
 				})
 			} else {
 				for (const product of groupProducts) {
 					worksheet.addRow({
 						groupId: group.id,
 						groupName: group.name,
+						groupArchived: group.deletedAt ? 1 : 0,
 						productId: product.id,
 						productName: product.name,
 						stock: product.stock,
@@ -107,7 +113,7 @@ export class ExportProductsTemplateUsecase
 						serviceLevel: product.setting?.serviceLevel || "",
 						fillRate: product.setting?.fillRate || "",
 						classification: product.setting?.classification || "",
-						archived: product.deletedAt ? "TRUE" : "FALSE",
+						productArchived: product.deletedAt ? 1 : 0,
 					})
 				}
 			}
@@ -135,14 +141,27 @@ export class ExportProductsTemplateUsecase
 			}
 		})
 
-		worksheet.getColumn("archived").eachCell((cell, rowNumber) => {
-			if (rowNumber > 1) {
-				cell.dataValidation = {
-					type: "list",
-					allowBlank: false,
-					formulae: ['"TRUE,FALSE"'],
-				}
-			}
+		worksheet.getColumn('groupArchived').eachCell((cell, _rowNumber) => {
+			cell.dataValidation = {
+				type: 'list',
+				allowBlank: false,
+				formulae: ['"0,1"'],
+				showErrorMessage: true,
+				errorStyle: 'error',
+				errorTitle: 'Invalid value',
+				error: 'Value must be 0 or 1',
+			};
+		})
+		worksheet.getColumn('productArchived').eachCell((cell, _rowNumber) => {
+			cell.dataValidation = {
+				type: 'list',
+				allowBlank: false,
+				formulae: ['"0,1"'],
+				showErrorMessage: true,
+				errorStyle: 'error',
+				errorTitle: 'Invalid value',
+				error: 'Value must be 0 or 1',
+			};
 		})
 
 		// Add instructions sheet
