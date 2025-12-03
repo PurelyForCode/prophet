@@ -32,6 +32,12 @@ export const authorize =
 				return
 			}
 
+			if (account.role === "store manager") {
+				session.touch()
+				await next()
+				return
+			}
+
 			// Check for "admin_access"
 			if (requiredPermissions.includes("ADMIN_ACCESS")) {
 				if (account.role !== "admin") {
