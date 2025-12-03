@@ -27,8 +27,14 @@ async function main() {
 	const now = new Date()
 
 	const uow = new UnitOfWork(knexInstance, repositoryFactory)
-	const createAccountUsecase = new CreateAccountUsecase(uow, idGenerator, new PasswordUtility())
-	const fakeId = await createAccountUsecase.call({ password: "testpassword", role: "store manager", username: "test" })
+	let fakeId: undefined | string
+	await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
+		const createAccountUsecase = new CreateAccountUsecase(uow, idGenerator, new PasswordUtility())
+		fakeId = await createAccountUsecase.call({ password: "testpassword", role: "store manager", username: "test" })
+	})
+	if (!fakeId) {
+		throw new Error("account creation did not work in prototype")
+	}
 
 	await createPrototypeProducts(
 		fastGroupId,
