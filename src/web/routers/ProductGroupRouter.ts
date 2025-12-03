@@ -17,7 +17,6 @@ import { includeStringSchema } from "../validation/IncludeStringSchema.js"
 import { ProductGroupNotFoundException } from "../../domain/product_management/exceptions/ProductGroupNotFoundException.js"
 import { CreateProductGroupUsecase } from "../../application/product_management/product_group/create_product_group/usecase.js"
 import { idGenerator } from "../../infra/utils/IdGenerator.js"
-import { fakeId } from "../../fakeId.js"
 import { ArchiveProductGroupUsecase } from "../../application/product_management/product_group/archive_product_group/usecase.js"
 import productRouter from "./ProductRouter.js"
 import { CategoryQueryDao } from "../../infra/db/query_dao/CategoryQueryDao.js"
@@ -131,11 +130,12 @@ app.post(
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
 		const usecase = new CreateProductGroupUsecase(uow, idGenerator)
 		const body = c.req.valid("json")
+		const accountId = c.get("accountId")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
-				accountId: fakeId,
+				accountId: accountId,
 				categoryId: body.categoryId ?? null,
-				name: body.name,
+				groupName: body.name,
 				setting: body.productSettings ?? null,
 			})
 		})

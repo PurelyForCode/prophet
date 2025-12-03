@@ -5,7 +5,6 @@ import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js"
 import { GenerateSingleForecastUsecase } from "../../application/forecasting/generate_single_forecast/Usecase.js"
 import { forecastApi } from "../../infra/services/ForecastApi.js"
 import { zValidator } from "@hono/zod-validator"
-import { fakeId } from "../../fakeId.js"
 import { domainEventBus } from "../../infra/events/EventBusConfiguration.js"
 import { idGenerator } from "../../infra/utils/IdGenerator.js"
 import {
@@ -55,10 +54,11 @@ app.post(
 		)
 		const params = c.req.valid("param")
 		const body = c.req.valid("json")
+		const accountId = c.get("accountId")
 		await usecase.call({
 			groupId: params.groupId,
 			productId: params.productId,
-			accountId: fakeId,
+			accountId: accountId,
 			dataDepth: body.dataDepth,
 			forecastEndDate: body.forecastEndDate,
 			forecastStartDate: body.forecastStartDate,

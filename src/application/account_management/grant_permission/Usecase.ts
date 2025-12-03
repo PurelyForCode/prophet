@@ -5,12 +5,13 @@ import { PermissionGranteeNotFoundException } from "../../../domain/account_mana
 import { PermissionNotFoundException } from "../../../domain/account_management/exceptions/PermissionNotFoundException.js"
 
 export type GrantPermissionInput = {
+	grantorId: EntityId
 	granteeId: EntityId
 	permissionId: EntityId
 }
 
 export class GrantPermissionUsecase {
-	constructor(private readonly uow: IUnitOfWork) {}
+	constructor(private readonly uow: IUnitOfWork) { }
 	async call(input: GrantPermissionInput) {
 		const accountRepo = this.uow.getAccountRepository()
 		const grantee = await accountRepo.findById(input.granteeId)

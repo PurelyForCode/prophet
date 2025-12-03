@@ -7,7 +7,6 @@ import { idGenerator } from "../../infra/utils/IdGenerator.js"
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js"
 import { zValidator } from "@hono/zod-validator"
 import z from "zod"
-import { fakeId } from "../../fakeId.js"
 import { AddItemToDeliveryUsecase } from "../../application/delivery_management/delivery_item/add_item/Usecase.js"
 import { UpdateItemInDeliveryUsecase } from "../../application/delivery_management/delivery_item/update_item/Usecase.js"
 import { RemoveItemOnDeliveryUsecase } from "../../application/delivery_management/delivery_item/remove_item/Usecase.js"
@@ -118,9 +117,10 @@ app.post(
 			domainEventBus,
 		)
 		const body = c.req.valid("json")
+		const accountId = c.get("accountId")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
-				accountId: fakeId,
+				accountId: accountId,
 				items: body.items,
 				status: body.status,
 				supplierId: body.supplierId,

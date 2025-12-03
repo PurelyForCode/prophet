@@ -7,7 +7,6 @@ import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js"
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js"
 import { zValidator } from "@hono/zod-validator"
 import z from "zod"
-import { fakeId } from "../../fakeId.js"
 import { UpdateSaleUsecase } from "../../application/sales_management/update_sale/Usecase.js"
 import { ArchiveSaleUsecase } from "../../application/sales_management/archive_sale/Usecase.js"
 import {
@@ -182,9 +181,10 @@ app.post(
 		const body = c.req.valid("json")
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
 		const usecase = new CreateSaleUsecase(uow, idGenerator, domainEventBus)
+		const accountId = c.get("accountId")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
-				accountId: fakeId,
+				accountId: accountId,
 				groupId: params.groupId,
 				date: body.date,
 				productId: params.productId,

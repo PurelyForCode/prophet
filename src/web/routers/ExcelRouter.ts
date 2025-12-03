@@ -8,7 +8,6 @@ import { ExportProductsTemplateUsecase } from "../../application/excel/export_pr
 import { ExportSalesTemplateUsecase } from "../../application/excel/export_sales_template/Usecase.js"
 import { ImportProductsUsecase } from "../../application/excel/import_products/Usecase.js"
 import { ImportSalesUsecase } from "../../application/excel/import_sales/Usecase.js"
-import { fakeId } from "../../fakeId.js"
 import { zValidator } from "@hono/zod-validator"
 import z from "zod"
 import { booleanStringSchema } from "../validation/BooleanStringSchema.js"
@@ -62,9 +61,9 @@ app.get("/sales/export",
 	})
 
 app.post("/products/import", async (c) => {
-	const accountId = fakeId
 
 	const body = await c.req.parseBody()
+	const accountId = c.get("accountId")
 	const file = body["file"]
 
 	if (!file || !(file instanceof File)) {
@@ -90,7 +89,7 @@ app.post("/products/import", async (c) => {
 })
 
 app.post("/sales/import", async (c) => {
-	const accountId = fakeId
+	const accountId = c.get("accountId")
 
 	const body = await c.req.parseBody()
 	const file = body["file"]

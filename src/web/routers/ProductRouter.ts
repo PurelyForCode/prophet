@@ -9,7 +9,6 @@ import { productSettingSchema } from "../validation/ProductSettingSchema.js"
 import { CreateProductUsecase } from "../../application/product_management/product/create_product/Usecase.js"
 import { runInTransaction } from "../../infra/utils/UnitOfWork.js"
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js"
-import { fakeId } from "../../fakeId.js"
 import { ArchiveProductUsecase } from "../../application/product_management/product/archive_product/Usecase.js"
 import { UpdateProductUsecase } from "../../application/product_management/product/update_product/Usecase.js"
 import saleRouter from "./SaleRouter.js"
@@ -150,9 +149,10 @@ app.post(
 			domainEventBus,
 			idGenerator,
 		)
+		const accountId = c.get("accountId")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
-				accountId: fakeId,
+				accountId: accountId,
 				name: body.name,
 				settings: body.settings ?? undefined,
 				groupId: params.groupId,

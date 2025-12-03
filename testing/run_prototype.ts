@@ -41,6 +41,7 @@ async function main() {
 		fastProductId,
 		"fast product",
 		ProductSetting.defaultConfiguration(now),
+		fakeId
 	)
 
 	await generateSalesData(
@@ -96,6 +97,7 @@ async function main() {
 		slowProductId,
 		"slow product",
 		new ProductSetting(95, "dynamic", "slow", 95, now),
+		fakeId
 	)
 
 	await generateSalesData(

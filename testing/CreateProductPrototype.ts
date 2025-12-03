@@ -13,6 +13,7 @@ export async function createPrototypeProducts(
 	productId: EntityId,
 	name: string,
 	setting: ProductSetting,
+	fakeId: string
 ) {
 	const uow = new UnitOfWork(knexInstance, repositoryFactory)
 	return await runInTransaction(

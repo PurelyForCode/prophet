@@ -19,7 +19,6 @@ import {
 import { includeStringSchema } from "../validation/IncludeStringSchema.js"
 import { sortStringSchema } from "../validation/SortStringSchema.js"
 import { CategoryNotFoundException } from "../../domain/product_management/exceptions/CategoryNotFoundException.js"
-import { fakeId } from "../../fakeId.js"
 import { RemoveProductInCategoryUsecase } from "../../application/product_management/category/remove_product/Usecase.js"
 import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
@@ -27,7 +26,6 @@ const app = new Hono()
 
 app.get(
 	"/",
-
 	authorize(["MANAGE_PRODUCTS"]),
 	zValidator(
 		"query",
@@ -114,8 +112,9 @@ app.post(
 			idGenerator,
 		)
 		const body = c.req.valid("json")
+		const accountId = c.get("accountId")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
-			await usecase.call({ accountId: fakeId, name: body.name })
+			await usecase.call({ accountId: accountId, name: body.name })
 		})
 		return c.json({ message: "Successfully created category" })
 	},

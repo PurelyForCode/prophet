@@ -14,6 +14,7 @@ export const authorize =
 			if (!accountId) {
 				return c.json({ error: "Unauthorized" }, 401)
 			}
+			c.set("accountId", accountId)
 
 			const accountQueryDao = new AccountQueryDao(knexInstance)
 			const account = await accountQueryDao.queryById(accountId, {

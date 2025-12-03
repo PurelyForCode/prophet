@@ -1,4 +1,4 @@
-import { Hono } from "hono"
+import { Context, ContextVariableMap, Hono } from "hono"
 import { runInTransaction, UnitOfWork } from "../../infra/utils/UnitOfWork.js"
 import { knexInstance } from "../../config/Knex.js"
 import { repositoryFactory } from "../../infra/utils/RepositoryFactory.js"
@@ -10,7 +10,6 @@ import { zValidator } from "@hono/zod-validator"
 import z from "zod"
 import { PermissionQueryDao } from "../../infra/db/query_dao/PermissionQueryDao.js"
 import { GrantPermissionUsecase } from "../../application/account_management/grant_permission/Usecase.js"
-import { fakeId } from "../../fakeId.js"
 import { RevokePermissionUsecase } from "../../application/account_management/revoke_permission/Usecase.js"
 import {
 	AccountIncludeField,
@@ -23,7 +22,6 @@ import { RoleValues } from "../../domain/account_management/entities/account/val
 import { ArchiveAccountUsecase } from "../../application/account_management/archive_account/Usecase.js"
 import { UpdateAccountUsecase } from "../../application/account_management/update_account/Usecase.js"
 import { ChangePasswordUsecase } from "../../application/account_management/change_password/Usecase.js"
-import { Password } from "../../domain/account_management/entities/account/value_objects/Password.js"
 import { AccountNotFoundException } from "../../domain/account_management/exceptions/AccountNotFoundException.js"
 import { authorize } from "../middleware/AuthorizeMiddleware.js"
 
@@ -205,7 +203,6 @@ app.patch(
 			accountId: z.uuidv7(),
 		}),
 	),
-
 	zValidator(
 		"json",
 		z.object({
@@ -217,11 +214,12 @@ app.patch(
 		const usecase = new ChangePasswordUsecase(uow, new PasswordUtility())
 		const params = c.req.valid("param")
 		const body = c.req.valid("json")
+		const accountId = c.get("accountId")
 
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				accountId: params.accountId,
-				actorId: fakeId,
+				actorId: accountId,
 				password: body.password,
 			})
 		})
@@ -245,10 +243,12 @@ app.post(
 		const usecase = new GrantPermissionUsecase(uow)
 		const body = c.req.valid("json")
 		const params = c.req.valid("param")
+		const accountId = c.get("accountId")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
 				granteeId: params.accountId,
 				permissionId: body.permissionId,
+				grantorId: accountId
 			})
 		})
 		c.status(201)
@@ -269,9 +269,10 @@ app.delete(
 		const uow = new UnitOfWork(knexInstance, repositoryFactory)
 		const usecase = new RevokePermissionUsecase(uow)
 		const params = c.req.valid("param")
+		const accountId = c.get("accountId")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
-				accountId: fakeId,
+				accountId: accountId,
 				granteeId: params.accountId,
 				permissionId: params.permissionId,
 			})

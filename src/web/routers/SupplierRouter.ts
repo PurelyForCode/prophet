@@ -7,7 +7,6 @@ import { EventBus } from "../../infra/events/DomainEventBus.js"
 import { CreateSupplierUsecase } from "../../application/delivery_management/supplier/create_supplier/Usecase.js"
 import { idGenerator } from "../../infra/utils/IdGenerator.js"
 import { IsolationLevel } from "../../core/interfaces/IUnitOfWork.js"
-import { fakeId } from "../../fakeId.js"
 import { UpdateSupplierUsecase } from "../../application/delivery_management/supplier/update_supplier/Usecase.js"
 import {
 	SupplierIncludeFields,
@@ -125,9 +124,10 @@ app.post(
 		const eventBus = new EventBus()
 		const usecase = new CreateSupplierUsecase(uow, eventBus, idGenerator)
 		const body = c.req.valid("json")
+		const accountId = c.get("accountId")
 		await runInTransaction(uow, IsolationLevel.READ_COMMITTED, async () => {
 			await usecase.call({
-				accountId: fakeId,
+				accountId: accountId,
 				leadTime: body.leadTime,
 				name: body.name,
 			})
