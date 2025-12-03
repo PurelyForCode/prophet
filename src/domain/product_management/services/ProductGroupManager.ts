@@ -22,6 +22,7 @@ export class ProductGroupManager {
 			productGroupName: ProductName
 			settings: ProductSetting | undefined
 			now: Date
+			productName?: ProductName
 		},
 	) {
 		const isNameUnique = await groupRepo.isNameUnique(
@@ -45,7 +46,7 @@ export class ProductGroupManager {
 		group.addVariant(
 			input.productId,
 			input.accountId,
-			ProductName.base(),
+			input.productName ?? ProductName.base(),
 			new ProductStock(0),
 			ProductSetting.defaultConfiguration(new Date()),
 		)

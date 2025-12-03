@@ -9,7 +9,8 @@ import { ProductGroupManager } from "../../../../domain/product_management/servi
 type CreateProductGroupInput = {
 	accountId: EntityId
 	categoryId: EntityId | null
-	name: string
+	groupName: string
+	productName?: string
 	setting: null | {
 		fillRate: number
 		safetyStockCalculationMethod: string
@@ -19,13 +20,13 @@ type CreateProductGroupInput = {
 }
 
 export class CreateProductGroupUsecase
-	implements Usecase<CreateProductGroupInput>
-{
+	implements Usecase<CreateProductGroupInput> {
 	constructor(
 		private uow: IUnitOfWork,
 		private idGenerator: IIdGenerator,
-	) {}
+	) { }
 	async call(input: CreateProductGroupInput): Promise<void> {
+		console.log(input)
 		const productGroupRepo = this.uow.getProductGroupRepository()
 		const productGroupManager = new ProductGroupManager()
 		const now = new Date()
@@ -46,9 +47,10 @@ export class CreateProductGroupUsecase
 				now: now,
 				productCategoryId: input.categoryId,
 				productGroupId: this.idGenerator.generate(),
-				productGroupName: new ProductName(input.name),
+				productGroupName: new ProductName(input.groupName),
 				productId: this.idGenerator.generate(),
 				settings: setting,
+				productName: input.productName ? new ProductName(input.productName) : undefined
 			},
 		)
 		await this.uow.save(productGroup)
