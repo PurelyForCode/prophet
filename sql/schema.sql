@@ -322,4 +322,3 @@ CREATE TABLE inventory_recommendation (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-INSERT INTO account (id, username, password, role) VALUES ('01970607-cdb9-7209-bf1d-f1281b9cc056', 'test', 'password', 'store manager');
