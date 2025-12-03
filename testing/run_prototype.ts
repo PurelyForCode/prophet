@@ -14,7 +14,8 @@ import { CreateSaleUsecase } from "../src/application/sales_management/create_sa
 import { idGenerator } from "../src/infra/utils/IdGenerator.js"
 import { domainEventBus } from "../src/infra/events/EventBusConfiguration.js"
 import { IsolationLevel } from "../src/core/interfaces/IUnitOfWork.js"
-import { fakeId } from "../src/fakeId.js"
+import { CreateAccountUsecase } from "../src/application/account_management/create_account/Usecase.js"
+import { PasswordUtility } from "../src/infra/utils/PasswordUtility.js"
 
 const fastGroupId = "0199c7d3-6473-75d9-abd5-88e78d9ccf56"
 const slowGroupId = "0199c7d3-6473-75d9-abd5-88e78d9ccf58"
@@ -24,6 +25,10 @@ const slowProductId = "019a2e46-972b-7409-89c5-400930266009"
 async function main() {
 	await resetPrototype(knexInstance)
 	const now = new Date()
+
+	const uow = new UnitOfWork(knexInstance, repositoryFactory)
+	const createAccountUsecase = new CreateAccountUsecase(uow, idGenerator, new PasswordUtility())
+	const fakeId = await createAccountUsecase.call({ password: "testpassword", role: "store manager", username: "test" })
 
 	await createPrototypeProducts(
 		fastGroupId,

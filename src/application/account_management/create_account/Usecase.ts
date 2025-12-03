@@ -17,7 +17,7 @@ export class CreateAccountUsecase {
 		private readonly uow: IUnitOfWork,
 		private readonly idGenerator: IIdGenerator,
 		private readonly passwordUtility: IPasswordUtility,
-	) {}
+	) { }
 	async call(input: CreateAccountInput) {
 		const accountRepo = this.uow.getAccountRepository()
 		const permissionRepo = this.uow.getPermissionRepository()
@@ -38,5 +38,6 @@ export class CreateAccountUsecase {
 			password,
 		)
 		await this.uow.save(account)
+		return account.id
 	}
 }
