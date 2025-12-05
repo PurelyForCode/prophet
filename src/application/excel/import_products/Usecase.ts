@@ -120,7 +120,7 @@ export class ImportProductsUsecase
 									await createGroupUsecase.call({
 										accountId: input.accountId,
 										categoryId: null,
-										groupName: groupName,
+										name: groupName,
 										setting: null,
 									})
 								},
